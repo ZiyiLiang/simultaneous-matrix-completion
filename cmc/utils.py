@@ -1,40 +1,43 @@
 import numpy as np   
 import matplotlib.pyplot as plt
+import pandas as pd
 
 
 def plot_before_after_mask(M, mask, vmin=-5, vmax=5):
     # Plot the masked and unmasked matrix side by side
-    fig, axs = plt.subplots(1,2, figsize=(8,4))
+    fig, axs = plt.subplots(1,2, figsize=(12,5))
     fig.tight_layout()
-    plt.subplots_adjust(wspace=0.3)
+    plt.subplots_adjust(wspace=0.05)
 
     # imshow plots matrices 
-    axs[0].imshow(M, vmin=vmin, vmax=vmax)
-    axs[0].title.set_text('Unmasked matrix')
+    im1 = axs[0].imshow(M, vmin=vmin, vmax=vmax)
+    axs[0].title.set_text('Ground truth matrix')
+    plt.colorbar(im1, ax=axs[0], fraction=0.046, pad=0.04)
 
     plot_masked = -100*(1-mask) + np.multiply(M,mask)
-    axs[1].imshow(plot_masked,vmin=vmin, vmax=vmax)
+    im2 = axs[1].imshow(plot_masked,vmin=vmin, vmax=vmax)
     axs[1].title.set_text('Masked matrix')
+    plt.colorbar(im2, ax=axs[1], fraction=0.046, pad=0.04)
     plt.show()
 
 
-def evaluate_mse(M, Mhat, mask):
+def evaluate_mse(M, Mhat, idx):
     """
-    Calculate RMSE on all unobserved entries in mask, for true matrix UVᵀ.
+    Calculate RMSE on the given index set, for true matrix UVᵀ.
     
     Args
     ------
     M:      Ground Truth matrix
     M_hat:  Estimated matrix 
-    mask:   Bernoulli masking with 1 indicating observed, 0 unobserved
+    idx:    Binary matrix where target indexed are labelled 1, 0 otherwise
     
     Returns:
     --------
     rmse:   Mean squared error over all unobserved entries
     """
-    pred = np.multiply(Mhat, mask)
-    truth = np.multiply(M, mask)
-    cnt = np.sum(mask)
+    pred = np.multiply(Mhat, idx)
+    truth = np.multiply(M, idx)
+    cnt = np.sum(idx)
     return np.linalg.norm(pred - truth, "fro") ** 2 / cnt
 
 def theoretical_bound(m, n, r, C=1):
@@ -50,3 +53,13 @@ def theoretical_bound(m, n, r, C=1):
         m = C * n ** (5 / 4) * r * np.log(n)
 
     return np.ceil(m)
+
+
+def evaluate_PI(pi, x):
+    coverage = np.mean([x[i] >= pi[i][0] and x[i] <= pi[i][1] for i in range(len(x))])
+    size = np.mean([pi[i][1] - pi[i][0] for i in range(len(x))])
+    
+    results = pd.DataFrame({})
+    results["Coverage"] = [coverage]
+    results["Size"] = [size]
+    return results

@@ -105,10 +105,11 @@ def svt_solve(M,
         recon_error = np.linalg.norm(mask * (M - X)) / np.linalg.norm(mask * M)
         
         # print progress message regularly.
-        if verbose and i % 10 == 0:  
-            print("Iteration: %i; Rel error: %.4f" % (i + 1, recon_error))
-        if recon_error < eps:
-            print("Stopping criteria met, training terminated.")
-            break
+        if verbose:
+            if i % 10 == 0:  
+                print("Iteration: %i; Rel error: %.4f" % (i + 1, recon_error))
+            if recon_error < eps:
+                print("Stopping criteria met, training terminated.")
+                break
 
     return X

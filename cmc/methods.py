@@ -153,3 +153,40 @@ class mwnchypg():
         plt.show()
         print("The reciprocal of d is {}, note if the value is too large,\
                Laplace method is generally not recommended.".format(1/d))
+        
+    
+
+class Conformal_PI():
+    def _get_calib_scores(self,calib_mask, M, Mhat):
+        # use the absolute value of estimation residual as the conformity scores
+        calib_idx = np.where(calib_mask == 1)
+        return abs(M[calib_idx] - Mhat[calib_idx])
+
+    def marginal_PI(self, calib_mask, test_mask, M, Mhat, alpha):
+        """
+        Caculate conformal prediction interval with marginal coverage.
+
+        Args:
+        ------
+        calib_mask:   Index set for the calibration data.
+        test_mask:    Index set for the test data.
+        M:            Matrix to be estimated.
+        Mhat:         Estimation of M.
+        alpha:        Desired confidence level.
+
+        Return:
+        -------
+        pi:           Prediction interval(s) for the test point(s).  
+        """
+
+        test_idx = np.where(test_mask == 1)
+        calib_scores = self._get_calib_scores(calib_mask, M, Mhat)
+        n_calib = len(calib_scores)
+
+        qhat = np.quantile(calib_scores, np.ceil((n_calib+1)*(1-alpha))/n_calib,
+                            method='higher')
+
+        pi = [[est-qhat, est+qhat] for est in Mhat[test_idx]]
+        return pi
+
+
