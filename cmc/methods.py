@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.integrate import quad
 from scipy.optimize import fsolve
 from math import sqrt, pi
+import pdb
 
 
 class mwnchypg():
@@ -32,6 +33,15 @@ class mwnchypg():
             T *= (1 - x ** (w[i] * r))
         return r*d * x**(r*d - 1) * T
 
+    def _log_trans_integrand(self, x, w, s, d, r, base):
+        """ 
+        Log-scaled transformed integrand for applying the Laplace's method
+        stable to precision loss, suitable for large data set.
+        """
+        T = 0
+        for i in s:
+            T += np.emath.logn(base,1 - x ** (w[i] * r))
+        return np.emath.logn(base,r*d) + (r*d - 1)*np.emath.logn(base,x) + T
     
     def _get_scale(self, w, s, d):
         """
@@ -99,26 +109,32 @@ class mwnchypg():
                 "{} \nError: {} \nRelative error: {}".format(res, err, err/res))
         return res, err
     
-    def laplace_approx(self, w, s, t=0.5, r=None):
+    def laplace_approx(self, w, s, t=0.5, r=None, logscale=False, base=None):
         """
         This function applys the Laplace's method to approximate the transformed integral
 
         Args
         ------
-        w:      list of weights, make sure the weights sum up 1, otherwise the computation
+        w:      List of weights, make sure the weights sum up 1, otherwise the computation
                 may be errorneous. 
-        s:      sampled indexes
-        t:      center of the Taylor expansion, ideally should be located at the maximum of 
+        s:      Sampled indexes
+        t:      Center of the Taylor expansion, ideally should be located at the maximum of 
                 the integrand, default value is 0.5 which is the center of the integration 
                 interval
-        r:      any postive scaling parameter used for the transformed integral, if no value
+        r:      Any postive scaling parameter used for the transformed integral, if no value
                 is provided, r is automatically computed such that the integrand reaches the
                 maximum at t=0.5
+        logscale:   If True, the function will compute the log-scaled Laplace's approximation,
+                    this option is suitable for very large dataset where the extreme sizes
+                    will cause precision overflow if this option is off. 
+        base:   Base value for the log function if logscaled value is preferred, default 
+                value is N, the size of the full data set.
         
         
         Return:
         ---------
-        res:    approximation of the integral by the Laplace's method
+        res:    approximation of the integral by the Laplace's method, or logged value 
+                if logscale is True.
         """
         d = 1-sum(w[s])
         if not r:
@@ -129,14 +145,20 @@ class mwnchypg():
             rw = r * w[i]
             res -= ((1-t**(rw)) * rw * (rw - 1) * t**(rw-2) + (rw)**2 * t**(2*rw-2))/(1-t**(rw))**2
         
-        res = self._trans_integrand(t,w,s,d,r) * sqrt(-2*pi / (res))
+        if logscale:
+            base = len(w) if not base else base
+            res = self._log_trans_integrand(t,w,s,d,r,base) + np.emath.logn(base, sqrt(-2*pi / (res)))
+        else:
+            res = self._trans_integrand(t,w,s,d,r) * sqrt(-2*pi / (res))
+
 
         if self.verbose:
-            print("Laplace's method\n"+"-"*25+"\nResult: {}".format(res))
+            print("Laplace's method\n"+"-"*25+"\nResult: {}".format(res)*(1-logscale) +\
+                  "\nLog-scaled result: {}".format(res)*logscale)
         return res
 
     
-    def check_shape(self, w, s, r=None, bin=1000):
+    def check_shape(self, w, s, logscale=False, base=None, r=None, bin=1000):
         """
         Check if the transformed integrand is suitable for Laplace's method by 
         examining the shape of the integrand and d
@@ -144,15 +166,21 @@ class mwnchypg():
         d = 1-sum(w[s])
         if not r:
             r = self._get_scale(w, s, d)
-
+        
+        print('scaling parameter:',r)
         x = np.linspace(0, 1, bin, endpoint=True)
-        y = self._trans_integrand(x, w, s, d, r)
+        
+        if logscale:
+            base = len(w) if not base else base
+            y = self._log_trans_integrand(x, w, s, d, r, base)
+        else:
+            y = self._trans_integrand(x, w, s, d, r)
         plt.plot(x, y)
         plt.axvline(x=0.5, color='r', ls='--')
-        plt.ylabel("transformed integrand")
+        plt.ylabel("transformed integrand"+"(Log scale)"*logscale)
         plt.show()
-        print("The reciprocal of d is {}, note if the value is too large,\
-               Laplace method is generally not recommended.".format(1/d))
+        print("The reciprocal of d is {}, note if the value is too large, "
+               "Laplace method is generally not recommended.".format(1/d))
         
     
 
