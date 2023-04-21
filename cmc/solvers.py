@@ -3,6 +3,7 @@ import cvxpy as cp
 
 from sklearn.utils.extmath import randomized_svd
 from scipy.sparse.linalg import svds
+from sklearn.metrics import mean_squared_error
 
 
 
@@ -27,7 +28,7 @@ def nnm_solve(M, mask, verbose=True, eps=10**-6, random_state=0):
     objective = cp.Minimize(cp.norm(X, 'nuc'))
     constraints = [cp.abs(cp.multiply(mask, M-X)) <= eps]
     problem = cp.Problem(objective, constraints)
-    problem.solve(solver = cp.SCS, verbose=verbose)
+    problem.solve(solver = cp.SDPA, verbose=verbose)
 
     return X.value
 
@@ -105,11 +106,83 @@ def svt_solve(M,
         recon_error = np.linalg.norm(mask * (M - X)) / np.linalg.norm(mask * M)
         
         # print progress message regularly.
-        if verbose:
-            if i % 10 == 0:  
-                print("Iteration: %i; Rel error: %.4f" % (i + 1, recon_error))
-            if recon_error < eps:
-                print("Stopping criteria met, training terminated.")
-                break
+        if verbose and i % 10 == 0:  
+            print("Iteration: %i; Rel error: %.4f" % (i + 1, recon_error))
+        if recon_error < eps:
+            print("Stopping criteria met, training terminated.")
+            break
 
     return X
+
+
+def pmf_solve(M,
+              mask,
+              k,
+              mu = 1e-2,
+              eps = 10**-6,
+              max_iteration = 1000,
+              random_state = 0
+              ):
+    """
+    Solve probabilistic matrix factorization using alternating least squares.
+    Since loss function is non-convex, each attempt at ALS starts from a
+    random initialization and returns a local optimum.
+    [ Salakhutdinov and Mnih 2008 ]
+    [ Hu, Koren, and Volinksy 2009 ]
+    Parameters:
+    -----------
+    M : m x n array
+        matrix to complete
+    mask : m x n array
+        matrix with entries zero (if missing) or one (if present)
+    k : integer
+        how many factors to use
+    mu : float
+        hyper-parameter penalizing norm of factored U, V
+    epsilon : float
+        convergence condition on the difference between iterative results
+    max_iterations: int
+        hard limit on maximum number of iterations
+    Returns:
+    --------
+    X: m x n array
+        completed matrix
+    """
+    # logger = logging.getLogger(__name__)
+    np.random.seed(random_state)
+    m, n = M.shape
+
+    U = np.random.randn(m, k)
+    V = np.random.randn(n, k)
+
+    C_u = [np.diag(row) for row in mask]
+    C_v = [np.diag(col) for col in mask.T]
+
+    prev_X = np.dot(U, V.T)
+
+    for _ in range(max_iteration):
+
+        for i in range(m):
+            U[i] = np.linalg.solve(np.linalg.multi_dot([V.T, C_u[i], V]) +
+                                   mu * np.eye(k),
+                                   np.linalg.multi_dot([V.T, C_u[i], M[i,:]]))
+
+        for j in range(n):
+            V[j] = np.linalg.solve(np.linalg.multi_dot([U.T, C_v[j], U]) +
+                                   mu * np.eye(k),
+                                   np.linalg.multi_dot([U.T, C_v[j], M[:,j]]))
+
+        X = np.dot(U, V.T)
+
+        mean_diff = np.linalg.norm(X - prev_X) / m / n
+        # if _ % 1 == 0:
+        #     logger.info("Iteration: %i; Mean diff: %.4f" % (_ + 1, mean_diff))
+        if mean_diff < eps:
+            break
+        prev_X = X
+
+    return X
+
+
+
+
