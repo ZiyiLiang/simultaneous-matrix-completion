@@ -109,7 +109,7 @@ def svt_solve(M,
         if verbose and i % 10 == 0:  
             print("Iteration: %i; Rel error: %.4f" % (i + 1, recon_error))
         if recon_error < eps:
-            print("Stopping criteria met, training terminated.")
+            if verbose: print("Stopping criteria met, training terminated.")
             break
 
     return X
@@ -121,13 +121,14 @@ def pmf_solve(M,
               mu = 1e-2,
               eps = 10**-6,
               max_iteration = 1000,
+              verbose = True,
               random_state = 0
               ):
     """
     Solve probabilistic matrix factorization using alternating least squares.
     Since loss function is non-convex, each attempt at ALS starts from a
-    random initialization and returns a local optimum.
-    [ Salakhutdinov and Mnih 2008 ]
+    random initialization and returns a local optimum. Implementation details
+    check the following reference paper.
     [ Hu, Koren, and Volinksy 2009 ]
     Parameters:
     -----------
@@ -148,7 +149,6 @@ def pmf_solve(M,
     X: m x n array
         completed matrix
     """
-    # logger = logging.getLogger(__name__)
     np.random.seed(random_state)
     m, n = M.shape
 
@@ -172,16 +172,17 @@ def pmf_solve(M,
                                    mu * np.eye(k),
                                    np.linalg.multi_dot([U.T, C_v[j], M[:,j]]))
 
-        X = np.dot(U, V.T)
+        X = U @ V.T
 
         mean_diff = np.linalg.norm(X - prev_X) / m / n
-        # if _ % 1 == 0:
-        #     logger.info("Iteration: %i; Mean diff: %.4f" % (_ + 1, mean_diff))
+        if _ % 1 == 0 and verbose:
+            print("Iteration: %i; Mean diff: %.4f" % (_ + 1, mean_diff))
         if mean_diff < eps:
+            if verbose: print("Stopping criteria met, training terminated.")
             break
         prev_X = X
 
-    return X
+    return X, U, V.T
 
 
 
