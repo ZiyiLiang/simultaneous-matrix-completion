@@ -2,9 +2,20 @@ import numpy as np
 from scipy.linalg import orth, sqrtm
 from scipy.stats import norm
 from solvers import _svd_solve
+from sklearn.decomposition import TruncatedSVD
+
+
+
+def _truncated_svd(matrix, k):
+    svd = TruncatedSVD(n_components=k, algorithm='arpack')
+    svd.fit(matrix)
+    U = svd.transform(matrix)
+    S = svd.singular_values_
+    VT = svd.components_
+    return U, S, VT
 
 #random seed
-np.random.seed(42)
+np.random.seed(1)
 
 # Data generation
 n1 = 1000
@@ -31,7 +42,7 @@ p_est = A.sum() / (n1 * n2)
 
 # Spectral Initialization
 M_ipw = M_obs / p_est
-U, S, VT = _svd_solve(M_ipw, k = r, algorithm='arpack')
+U, S, VT = _truncated_svd(M_ipw, k = r)
 M_spectral = U @ np.diag(S) @ VT
 S_sqrt = np.sqrt(S)
 S_sqrt_diag = np.diag(S_sqrt)
@@ -74,7 +85,7 @@ Z = M_spectral.copy()
 # Proximal gradient method
 for t in range(max_iter):
     temp = Z - eta * (Z - M_obs) * A
-    U_, S_, VT_ = _svd_solve(temp, k=r, algorithm='arpack')
+    U_, S_, VT_ = _truncated_svd(temp, k=r)
     Z_new = U_ @ np.diag(np.maximum(0, S_ - lambda_ * eta)) @ VT_
     grad_norm = np.sqrt(np.sum((Z_new - Z) ** 2)) / eta
     Z = Z_new.copy()
@@ -82,7 +93,7 @@ for t in range(max_iter):
         break
 
 # Debiasing
-U_, S_, VT_ = _svd_solve(Z, k=r, algorithm='arpack')
+U_, S_, VT_ = _truncated_svd(Z, k=r)
 
 # temp = TruncatedSVD(n_components=r, algorithm='arpack')
 # temp.fit(Z)
