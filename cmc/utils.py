@@ -55,11 +55,50 @@ def theoretical_bound(m, n, r, C=1):
     return np.ceil(m)
 
 
-def evaluate_PI(pi, x):
-    coverage = np.mean([x[i] >= pi[i][0] and x[i] <= pi[i][1] for i in range(len(x))])
-    size = np.mean([pi[i][1] - pi[i][0] for i in range(len(x))])
+def evaluate_PI(PI, x):
+    coverage = np.mean([x[i] >= PI[i][0] and x[i] <= PI[i][1] for i in range(len(x))])
+    size = np.mean([PI[i][1] - PI[i][0] for i in range(len(x))])
     
     results = pd.DataFrame({})
     results["Coverage"] = [coverage]
     results["Size"] = [size]
     return results
+
+
+def error_heatmap(M, Mhat, mask, vmin=None, vmax=None, cmap=None):
+    pred = np.multiply(Mhat, mask)
+    truth = np.multiply(M, mask)
+    residual = np.abs(pred-truth)
+    residual = residual / np.max(residual)
+    
+    if cmap is None:
+        cmap = plt.cm.get_cmap('viridis').reversed()
+    if vmin is None: 
+        vmin = 0
+    if vmax is None: 
+        # filter out some extreme values for better graph
+        vmax = np.quantile(residual.flatten(), 0.95,method='higher')
+    
+    plt.figure(figsize=(6,4))
+    plt.imshow(residual, cmap=cmap,vmin=vmin, vmax=vmax)
+    plt.title("Absolute residuals")
+    plt.colorbar()
+    plt.show()
+
+
+def residual_hist(M, Mhat, train_mask, calib_mask, test_mask,vmin=0, vmax=None):
+    residual = np.abs(M-Mhat)
+    #residual = residual / np.max(residual)   # normalize residuals
+    res_train = residual[np.where(train_mask==1)]
+    res_calib = residual[np.where(calib_mask==1)]
+    res_test = residual[np.where(test_mask==1)]
+    
+    if vmax == None:
+        vmax = np.quantile(residual.flatten(), 0.95,method='higher')
+    bins = np.linspace(0, vmax, 100)
+
+    plt.hist(res_train, bins, alpha=0.5, label='train')
+    plt.hist(res_calib, bins, alpha=0.5, label='calib')
+    plt.hist(res_test, bins, alpha=0.5, label='test')
+    plt.legend(loc='upper right')
+    plt.show()

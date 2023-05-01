@@ -31,6 +31,7 @@ class mwnchypg():
         T = 1
         for i in s:
             T *= (1 - x ** (w[i] * r))
+        #pdb.set_trace()
         return r*d * x**(r*d - 1) * T
 
     def _log_trans_integrand(self, x, w, s, d, r, base):
@@ -53,7 +54,7 @@ class mwnchypg():
             for i in s:
                 res -= w[i] / (2**(r*w[i]) - 1)
             return res
-        
+
         r = fsolve(z, 1/d, (w,s,d))[0]
         return r
     
@@ -63,8 +64,7 @@ class mwnchypg():
 
         Args
         ------
-        w:      list of weights, make sure the weights sum up 1, otherwise the computation
-                may be errorneous. 
+        w:      list of weights. 
         s:      sampled indexes
         
         Return:
@@ -72,7 +72,7 @@ class mwnchypg():
         res:    direct integration evaluted by numerical method
         err:    estimated error
         """
-        d = 1-sum(w[s])
+        d = sum(w)-sum(w[s])
         res, err = quad(self._integrand, 0, 1, args=(w,s,d))
         if self.verbose:
             print("Direct integration\n"+"-"*25+"\nResult:" \
@@ -87,8 +87,7 @@ class mwnchypg():
 
         Args
         ------
-        w:      list of weights, make sure the weights sum up 1, otherwise the computation
-                may be errorneous. 
+        w:      list of weights. 
         s:      sampled indexes
         r:      any postive scaling parameter used for the transformed integral, if no value
                 is provided, r is automatically computed such that the integrand reaches the
@@ -99,7 +98,7 @@ class mwnchypg():
         res:    direct integration evaluted by numerical method
         err:    estimated error
         """
-        d = 1-sum(w[s])
+        d = sum(w)-sum(w[s])
         if not r:
             r = self._get_scale(w, s, d)
 
@@ -109,14 +108,13 @@ class mwnchypg():
                 "{} \nError: {} \nRelative error: {}".format(res, err, err/res))
         return res, err
     
-    def laplace_approx(self, w, s, t=0.5, r=None, logscale=False, base=None):
+    def laplace_approx(self, w, s, t=0.5, r=None, log_base="auto"):
         """
         This function applys the Laplace's method to approximate the transformed integral
 
         Args
         ------
-        w:      List of weights, make sure the weights sum up 1, otherwise the computation
-                may be errorneous. 
+        w:      List of weights. 
         s:      Sampled indexes
         t:      Center of the Taylor expansion, ideally should be located at the maximum of 
                 the integrand, default value is 0.5 which is the center of the integration 
@@ -124,11 +122,9 @@ class mwnchypg():
         r:      Any postive scaling parameter used for the transformed integral, if no value
                 is provided, r is automatically computed such that the integrand reaches the
                 maximum at t=0.5
-        logscale:   If True, the function will compute the log-scaled Laplace's approximation,
-                    this option is suitable for very large dataset where the extreme sizes
-                    will cause precision overflow if this option is off. 
-        base:   Base value for the log function if logscaled value is preferred, default 
-                value is N, the size of the full data set.
+        log_base:   'auto', None or positive numeric value. If given a positive int, the method
+                    produces logscale approximation with the given base, if 'auto', a base value
+                    is automatically selected to be N, if None, return unlogged result.
         
         
         Return:
@@ -136,55 +132,60 @@ class mwnchypg():
         res:    approximation of the integral by the Laplace's method, or logged value 
                 if logscale is True.
         """
-        d = 1-sum(w[s])
+        d = sum(w)-sum(w[s])
         if not r:
             r = self._get_scale(w, s, d)
+        
+        if log_base == "auto": 
+            log_base = len(w)       
 
         res = (1-r*d)/t**2
         for i in s:
             rw = r * w[i]
             res -= ((1-t**(rw)) * rw * (rw - 1) * t**(rw-2) + (rw)**2 * t**(2*rw-2))/(1-t**(rw))**2
         
-        if logscale:
-            base = len(w) if not base else base
-            res = self._log_trans_integrand(t,w,s,d,r,base) + np.emath.logn(base, sqrt(-2*pi / (res)))
+        if log_base:
+            res = self._log_trans_integrand(t,w,s,d,r,log_base) + np.emath.logn(log_base, sqrt(-2*pi / (res)))
         else:
             res = self._trans_integrand(t,w,s,d,r) * sqrt(-2*pi / (res))
 
 
         if self.verbose:
-            print("Laplace's method\n"+"-"*25+"\nResult: {}".format(res)*(1-logscale) +\
-                  "\nLog-scaled result: {}".format(res)*logscale)
+            print("Laplace's method\n"+"-"*25+"\nResult: {}".format(res)*(log_base is None) +\
+                  "\nLog-scaled result: {}".format(res)*(log_base is not None))
         return res
 
     
-    def check_shape(self, w, s, logscale=False, base=None, r=None, bin=1000):
+    def check_shape(self, w, s, log_base="auto", r=None, bin=1000):
         """
         Check if the transformed integrand is suitable for Laplace's method by 
         examining the shape of the integrand and d
         """
-        d = 1-sum(w[s])
+        d = sum(w)-sum(w[s])
         if not r:
             r = self._get_scale(w, s, d)
         
         print('scaling parameter:',r)
         x = np.linspace(0, 1, bin, endpoint=True)
+
+        if log_base == "auto": 
+            log_base = len(w)
+            print("Showing logscaled integrand with base {}".format(log_base))
         
-        if logscale:
-            base = len(w) if not base else base
-            y = self._log_trans_integrand(x, w, s, d, r, base)
+        if log_base:
+            y = self._log_trans_integrand(x, w, s, d, r, log_base)
         else:
             y = self._trans_integrand(x, w, s, d, r)
         plt.plot(x, y)
         plt.axvline(x=0.5, color='r', ls='--')
-        plt.ylabel("transformed integrand"+"(Log scale)"*logscale)
+        plt.ylabel("transformed integrand"+"(Log scale)"*(log_base is not None))
         plt.show()
         print("The reciprocal of d is {}, note if the value is too large, "
                "Laplace method is generally not recommended.".format(1/d))
         
     
 
-class Conformal_PI():
+class CPI():
     def _get_calib_scores(self,calib_mask, M, Mhat):
         # use the absolute value of estimation residual as the conformity scores
         calib_idx = np.where(calib_mask == 1)
