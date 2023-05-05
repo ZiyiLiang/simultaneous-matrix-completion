@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.integrate import quad
 from scipy.optimize import fsolve
 from math import sqrt, pi
-import pdb
+from tqdm import tqdm
 
 
 class mwnchypg():
@@ -43,19 +43,19 @@ class mwnchypg():
         for i in s:
             T += np.emath.logn(base,1 - x ** (w[i] * r))
         return np.emath.logn(base,r*d) + (r*d - 1)*np.emath.logn(base,x) + T
-    
+
+    def _z(self,r,w,s,d):
+            res = d - 1/r
+            for i in s:
+                res -= w[i] / (2**(r*w[i]) - 1)
+            return res
+     
     def _get_scale(self, w, s, d):
         """
         Compute the scaling parameter r used in the transformed integrand such that
         it reaches the maximum at the center of integration interval, i.e. 1/2.
         """
-        def z(r,w,s,d):
-            res = d - 1/r
-            for i in s:
-                res -= w[i] / (2**(r*w[i]) - 1)
-            return res
-
-        r = fsolve(z, 1/d, (w,s,d))[0]
+        r = fsolve(self._z, 1/d, (w,s,d))[0]
         return r
     
     def direct_integral(self, w, s):
@@ -185,37 +185,144 @@ class mwnchypg():
         
     
 
-class CPI():
-    def _get_calib_scores(self,calib_mask, M, Mhat):
-        # use the absolute value of estimation residual as the conformity scores
-        calib_idx = np.where(calib_mask == 1)
-        return abs(M[calib_idx] - Mhat[calib_idx])
-
-    def marginal_PI(self, calib_mask, test_mask, M, Mhat, alpha):
-        """
-        Caculate conformal prediction interval with marginal coverage.
+class Conformal_PI():
+    def __init__(self, M, Mhat, train_mask, calib_mask, 
+                 verbose=True, progress=True):
+        # Flatten all the matrices to avoid format inconsistency in the following computations
+        self.M = M.flatten(order='C')
+        self.Mhat = Mhat.flatten(order='C')
+        self.train_idxs = np.where(train_mask.flatten(order='C')== 1)[0]
+        self.calib_idxs = np.where(calib_mask.flatten(order='C')== 1)[0]
+        self.verbose = verbose
+        self.progress = progress
+        
+        self.mw = mwnchypg(verbose=False)
+        self.scores = np.abs(self.M - self.Mhat)
+        self.calib_scores = self.scores[self.calib_idxs]
+        self.calib_order = np.argsort(self.calib_scores)
+        self.st_calib_scores = self.calib_scores[self.calib_order]
+        
+    def _weights_single(self, calib_idxs, test_idx, w1, w2, log_base):
+        """ Fix a test point, compute the weights for conformity scores of the given test point and
+            all calibration points
 
         Args:
-        ------
-        calib_mask:   Index set for the calibration data.
-        test_mask:    Index set for the test data.
-        M:            Matrix to be estimated.
-        Mhat:         Estimation of M.
-        alpha:        Desired confidence level.
+        ---------
+        calib_idx:   
+        test_idx:    
+        w1:          Flattened normalized sampling weights(odds) for the calibration points.
+        w2:          Flattened normalized sampling weights(odds) for the test point.
 
         Return:
-        -------
-        pi:           Prediction interval(s) for the test point(s).  
+        ---------
         """
+        n_calib = len(calib_idxs)
+#         naive_weights = np.zeros(n_calib+1)
+        weights = np.zeros(n_calib+1) if log_base else np.ones(n_calib+1) 
+        idxs = list(calib_idxs) + [test_idx]
+        
+#         # The naive way of computing leave-one-out weights
+#         naive_start = time()
+#         for i, idx in enumerate(idxs):
+#             s = idxs[:i] + idxs[i+1:]
+#             naive_weights[i] = self.mw.laplace_approx(w1, s, log_base=log_base)
+            
+            
+#             if not w2[idx]:
+#                 if i == n_calib:
+#                     raise Exception( "Probability of observing the given test point must be positive!")
+#                 naive_weights[i] = -np.inf if log_base else 0
+#             else:
+#                 if log_base:
+#                     naive_weights[i] += np.emath.logn(log_base, w2[idx] / (1 - sum(w2[s])))
+#                 else:
+#                     naive_weights[i] *= w2[idx] / (1 - sum(w2[s]))
+        
+#         # normalize the weights
+#         if log_base:
+#             ln0 = np.max(naive_weights)
+#             naive_weights = np.power(log_base, naive_weights-ln0)
+#         naive_weights /= np.sum(naive_weights)
+#         naive_time = time()-naive_start
+        
+#         speed_start = time()
+        # Speed up weights calculation 
+        d1 = 1 - np.sum(w1[idxs])
+        d2 = 1 - np.sum(w2[idxs])
+        r = self.mw._get_scale(w1, idxs, d1)
+        
+        for i, idx in enumerate(idxs):
+            if not w2[idx]:
+                if i == n_calib:
+                    raise Exception( "Probability of observing the given test point must be positive!")
+                weights[i] = -np.inf if log_base else 0
+            else:
+                if log_base:
+                    weights[i] += np.emath.logn(log_base, (d1+w1[idx])/d1 * 0.5**(r*w1[idx]) / (1-0.5**(r*w1[idx])))
+                    weights[i] += np.emath.logn(log_base, w2[idx] / (d2 + w2[idx]))
+                else:
+                    weights[i] *= (d1+w1[idx])/d1 * 0.5**(r*w1[idx]) / (1-0.5**(r*w1[idx]))
+                    weights[i] *= w2[idx] / (d2 + w2[idx]) 
+                    
+        if log_base:
+            ln0 = np.max(weights)
+            weights = np.power(log_base, weights-ln0)
+        weights /= np.sum(weights)
+        
+        return weights
+    
+    def weighted_PI(self, test_idxs, w1, w2, alpha, allow_inf=True, log_base="auto"):
+        n_test = len(test_idxs)
+        pi = [[]]* n_test
+        
+        if log_base == "auto":
+            log_base = len(self.M)
+        
+        if self.verbose: 
+            print("Computing weighted prediction intervals for {} test points...".format(n_test))
+        
+        
+        # re-standardize w1, w2 by exclude training sampling odds
+        w1 = w1 / (1 - np.sum(w1[self.train_idxs]))
+        w2 = w2 / (1 - np.sum(w2[self.train_idxs]))
+        
+        for i in tqdm(range(n_test), desc="WPI", leave=True, position=0, 
+                      disable = not self.progress):
+            weights = self._weights_single(self.calib_idxs, test_idxs[i], w1, w2, log_base)
+            cweights = np.cumsum(weights[self.calib_order])
+            est = self.Mhat[test_idxs[i]]
+            
+            if cweights[-2] < 1-alpha:
+                pi[i] = [-np.inf, np.inf] if allow_inf else \
+                        [est - self.st_calib_scores[-2], est + self.st_calib_scores[-2]]
+            else:
+                idx = np.argmax(cweights >= 1-alpha)
+                pi[i] = [est - self.st_calib_scores[idx], est + self.st_calib_scores[idx]]
+        
+        return pi
+    
+    
 
-        test_idx = np.where(test_mask == 1)
-        calib_scores = self._get_calib_scores(calib_mask, M, Mhat)
-        n_calib = len(calib_scores)
-
-        qhat = np.quantile(calib_scores, np.ceil((n_calib+1)*(1-alpha))/n_calib,
+    
+    def standard_PI(self, test_idxs, alpha):
+        """
+        Caculate conformal prediction interval with marginal coverage.
+        """
+        n_test = len(test_idxs)
+        n_calib = len(self.calib_scores)
+        pi = [[]]* n_test
+        
+        if self.verbose: 
+            print("Computing standard marginal prediction intervals for {} test points...".format(n_test))
+            
+        qhat = np.quantile(self.calib_scores, np.ceil((n_calib+1)*(1-alpha))/n_calib,
                             method='higher')
 
-        pi = [[est-qhat, est+qhat] for est in Mhat[test_idx]]
+        for i in tqdm(range(n_test), desc="SPI", leave=True, position=0, 
+                      disable = not self.progress):
+            est = self.Mhat[test_idxs[i]]
+            pi[i] = [est-qhat, est+qhat]
+            
         return pi
 
 

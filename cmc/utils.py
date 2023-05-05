@@ -55,13 +55,14 @@ def theoretical_bound(m, n, r, C=1):
     return np.ceil(m)
 
 
-def evaluate_PI(PI, x):
+def evaluate_PI(PI, x, label=None):
+    if label: label = str(label)
     coverage = np.mean([x[i] >= PI[i][0] and x[i] <= PI[i][1] for i in range(len(x))])
     size = np.mean([PI[i][1] - PI[i][0] for i in range(len(x))])
     
     results = pd.DataFrame({})
-    results["Coverage"] = [coverage]
-    results["Size"] = [size]
+    results[label+"Coverage"] = [coverage]
+    results[label+"Size"] = [size]
     return results
 
 
