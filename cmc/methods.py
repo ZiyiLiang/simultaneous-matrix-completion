@@ -202,7 +202,7 @@ class Conformal_PI():
         self.calib_order = np.argsort(self.calib_scores)
         self.st_calib_scores = self.calib_scores[self.calib_order]
         
-    def _weights_single(self, calib_idxs, test_idx, w1, w2, log_base):
+    def _weights_single(self, test_idx, w1, w2, d1, d2, r, log_base):
         """ Fix a test point, compute the weights for conformity scores of the given test point and
             all calibration points
 
@@ -216,53 +216,36 @@ class Conformal_PI():
         Return:
         ---------
         """
-        n_calib = len(calib_idxs)
-#         naive_weights = np.zeros(n_calib+1)
-        weights = np.zeros(n_calib+1) if log_base else np.ones(n_calib+1) 
-        idxs = list(calib_idxs) + [test_idx]
+        #n_calib = len(self.calib_idxs)
+        #weights = np.zeros(n_calib+1) if log_base else np.ones(n_calib+1) 
+        idxs = list(self.calib_idxs) + [test_idx]        
         
-#         # The naive way of computing leave-one-out weights
-#         naive_start = time()
-#         for i, idx in enumerate(idxs):
-#             s = idxs[:i] + idxs[i+1:]
-#             naive_weights[i] = self.mw.laplace_approx(w1, s, log_base=log_base)
-            
-            
-#             if not w2[idx]:
-#                 if i == n_calib:
-#                     raise Exception( "Probability of observing the given test point must be positive!")
-#                 naive_weights[i] = -np.inf if log_base else 0
-#             else:
-#                 if log_base:
-#                     naive_weights[i] += np.emath.logn(log_base, w2[idx] / (1 - sum(w2[s])))
-#                 else:
-#                     naive_weights[i] *= w2[idx] / (1 - sum(w2[s]))
+        # for i, idx in enumerate(idxs):
+        #     if not w2[idx]:
+        #         if i == n_calib:
+        #             raise Exception( "Probability of observing the given test point must be positive!")
+        #         weights[i] = -np.inf if log_base else 0
+        #     else:
+        #         if log_base:
+        #             weights[i] += np.emath.logn(log_base, (d1+w1[idx]-w1[test_idx])/d1 * \
+        #                                         0.5**(r*(w1[idx]-w1[test_idx])) * (1-0.5**(r*w1[test_idx])) / (1-0.5**(r*w1[idx])))
+        #             weights[i] += np.emath.logn(log_base, w2[idx] / (d2 + w2[idx] - w2[test_idx]))
+        #         else:
+        #             weights[i] *= (d1+w1[idx]-w1[test_idx])/d1 * 0.5**(r*(w1[idx]-w1[test_idx])) * \
+        #                           (1-0.5**(r*w1[test_idx])) / (1-0.5**(r*w1[idx]))
+        #             weights[i] *= w2[idx] / (d2 + w2[idx]) 
+
+        if w2[test_idx] == 0:
+            raise Exception( "Probability of observing the given test point must be positive!")
         
-#         # normalize the weights
-#         if log_base:
-#             ln0 = np.max(naive_weights)
-#             naive_weights = np.power(log_base, naive_weights-ln0)
-#         naive_weights /= np.sum(naive_weights)
-#         naive_time = time()-naive_start
-        
-#         speed_start = time()
-        # Speed up weights calculation 
-        d1 = 1 - np.sum(w1[idxs])
-        d2 = 1 - np.sum(w2[idxs])
-        r = self.mw._get_scale(w1, idxs, d1)
-        
-        for i, idx in enumerate(idxs):
-            if not w2[idx]:
-                if i == n_calib:
-                    raise Exception( "Probability of observing the given test point must be positive!")
-                weights[i] = -np.inf if log_base else 0
-            else:
-                if log_base:
-                    weights[i] += np.emath.logn(log_base, (d1+w1[idx])/d1 * 0.5**(r*w1[idx]) / (1-0.5**(r*w1[idx])))
-                    weights[i] += np.emath.logn(log_base, w2[idx] / (d2 + w2[idx]))
-                else:
-                    weights[i] *= (d1+w1[idx])/d1 * 0.5**(r*w1[idx]) / (1-0.5**(r*w1[idx]))
-                    weights[i] *= w2[idx] / (d2 + w2[idx]) 
+        if log_base:
+            weights = np.emath.logn(log_base, (d1+w1[idxs]-w1[test_idx])/d1 * \
+                                                 0.5**(r*(w1[idxs]-w1[test_idx])) * (1-0.5**(r*w1[test_idx])) / (1-0.5**(r*w1[idxs])))
+            weights += np.emath.logn(log_base, w2[idxs] / (d2 + w2[idxs] - w2[test_idx]))
+        else:
+            weights = (d1+w1[idxs]-w1[test_idx])/d1 * 0.5**(r*(w1[idxs]-w1[test_idx])) * \
+                                    (1-0.5**(r*w1[test_idx])) / (1-0.5**(r*w1[idxs]))
+            weights *= w2[idxs] / (d2 + w2[idxs])
                     
         if log_base:
             ln0 = np.max(weights)
@@ -285,10 +268,15 @@ class Conformal_PI():
         # re-standardize w1, w2 by exclude training sampling odds
         w1 = w1 / (1 - np.sum(w1[self.train_idxs]))
         w2 = w2 / (1 - np.sum(w2[self.train_idxs]))
+
+        # Compute universal scaling parameter
+        d1 = 1 - np.sum(w1[self.calib_idxs])
+        d2 = 1 - np.sum(w2[self.calib_idxs])
+        r = self.mw._get_scale(w1, self.calib_idxs, d1)
         
         for i in tqdm(range(n_test), desc="WPI", leave=True, position=0, 
                       disable = not self.progress):
-            weights = self._weights_single(self.calib_idxs, test_idxs[i], w1, w2, log_base)
+            weights = self._weights_single(test_idxs[i], w1, w2, d1, d2, r, log_base)
             cweights = np.cumsum(weights[self.calib_order])
             est = self.Mhat[test_idxs[i]]
             

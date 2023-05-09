@@ -114,15 +114,16 @@ class RandomSampling():
         mask[obs_idx] = 1
         return mask.reshape(self.shape)
     
-    def sample_train_calib(self, mask, prob_calib=0.5, fix_size=True, random_state=0):
+    def sample_train_calib(self, mask, calib_size, fix_size=True, random_state=0):
         mask = mask.flatten(order='C')   # flatten the matrix by rows
         obs_idx = np.where(mask == 1)[0]
         
+        calib_size = int(np.clip(calib_size, 1,len(obs_idx)-1))
         np.random.seed(random_state)
         if fix_size:
-            calib_size = int(len(obs_idx) * prob_calib)
             calib_idx = np.random.choice(obs_idx, calib_size, replace=False)
         else:
+            prob_calib = calib_size / len(obs_idx)
             calib_idx = obs_idx[np.random.binomial(n=1, p=prob_calib, size=self.shape) == 1]
         
         calib_mask = np.array([0] * (self.m * self.n))
