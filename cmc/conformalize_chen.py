@@ -136,15 +136,124 @@ def mc_var_estimate(M_obs, A, r, alpha, method = 'ncvx'):
     CI_left *= M_scale
     CI_right *= M_scale
     M_obs *= M_scale
+    Var = Var * M_scale **2
 
     return Z_d, Var
 
+# def get_calib_scores_weighted_by_variance(calib_mask, M_noiseless, Mhat, Var):
+#     #RETURN FLATTENED CONFORMITY SCORES
+#     # use the absolute value of estimation residual standardlised by variance as the conformity scores
+#
+#     # should flatten the matrix first
+#     calib_idx = np.where(calib_mask.flatten(order = 'c') == 1)
+#     M_noiseless_flat = M_noiseless.flatten(order = 'c')
+#     Mhat_flat = Mhat.flatten(order = 'c')
+#     Var_flat = Var
+#     #pdb.set_trace()
+#     calib_score = abs(M_noiseless_flat[calib_idx] - Mhat_flat[calib_idx]/np.sqrt(Var_flat[calib_idx]) )
+#     pdb.set_trace()
+#     return calib_score
+
+
+
+# def marginal_PI_weighted_by_variance(calib_mask, test_mask, M_noiseless, Mhat, alpha, Var):
+#     """
+#     Caculate conformal prediction interval with marginal coverage.
+#
+#     Args:
+#     ------
+#     calib_mask:   Index set for the calibration data.
+#     test_mask:    Index set for the test data.
+#     M:            Matrix to be estimated.
+#     Mhat:         Estimation of M.
+#     alpha:        Desired confidence level.
+#
+#     Return:
+#     -------
+#     pi:           Prediction interval(s) for the test point(s).
+#     """
+#
+#     test_idx = np.where(test_mask.flatten(order = 'c') == 1)
+#     # should flatten the matrix first
+#     calib_scores = get_calib_scores_weighted_by_variance(calib_mask, M_noiseless, Mhat, Var)
+#     n_calib = len(calib_scores)
+#
+#     qhat = np.quantile(calib_scores, np.ceil((n_calib + 1) * (1 - alpha)) / n_calib,
+#                        method='higher')
+#
+#     #WE HAVE TO FLATTEN IT FIRST
+#     Mhat_flat = Mhat.flatten(order = 'c')
+#     Var_flat = Var.flatten(order = 'c')
+#
+#     pi = [[Mhat_flat[idx] - qhat*np.sqrt(Var_flat[idx]), Mhat_flat[idx] + qhat*np.sqrt(Var_flat[idx])] for idx in test_idx]
+#     pdb.set_trace()
+#     return pi, qhat
+#
+#
+# def evaluate_conformalized_PI(pi, x):
+#
+#     # should flatten the matrix first
+#
+#     coverage = np.mean([x[i] >= pi[i][0] and x[i] <= pi[i][1] for i in range(len(x))])
+#     # coverage = np.mean([np.all((x[i] >= pi[i][0]) & (x[i] <= pi[i][1])) for i in range(len(x))])
+#     size = np.mean([pi[i][1] - pi[i][0] for i in range(len(x))])
+#
+#     results = pd.DataFrame({})
+#     results["Coverage"] = [coverage]
+#     results["Size"] = [size]
+#     return results
+
+
+def run_single_experiment_conformalized_paper(matrix_noisy_unmasked,
+                                              M_noiseless,
+                                              train_mask,
+                                              test_mask,
+                                              calib_mask,
+                                              alpha,
+                                              r_guess = None,
+                                              method='ncvx',
+                                              random_state=0):
+    """
+    run a single experiment
+
+    Args:
+    ---------
+    train_mask: the entries in train set are 1, otherwise 0
+    test_mask: the entries in test set are 1, otherwise 0
+    calib_mask: the entries in calibration set are 1, otherwise 0
+    method: 'nonconvex (default)' or 'convex'
+    """
+
+    M_train = matrix_noisy_unmasked * train_mask
+    Mhat, Var = mc_var_estimate(M_obs=M_train, A = train_mask, r=r_guess, alpha=alpha, method=method)
+    # pdb.set_trace()
+    prediction_interval, conformal_zscore = marginal_PI_weighted_by_variance(calib_mask=calib_mask,
+                                                                               test_mask=test_mask,
+                                                                               M_noiseless = M_noiseless,
+                                                                               Mhat=Mhat,
+                                                                               alpha=alpha,
+                                                                               Var=Var)
+
+    results = evaluate_conformalized_PI(prediction_interval,
+                                        M_noiseless[np.where(test_mask == 1)])
+
+    conformal_quantile = 2 * norm.cdf(conformal_zscore) - 1
+    results['Quantile']=[conformal_quantile]
+    # results['Calib_MSE'] = [calib_mse]
+    results['Alpha'] = [alpha]
+    results['Seed'] = [random_state]
+    results['Calib_size'] = [np.sum(calib_mask)]
+    results['Train_size'] = [np.sum(train_mask)]
+
+    return conformal_zscore
+
+
+#below is tempory
 def get_calib_scores_weighted_by_variance(calib_mask, M_noiseless, Mhat, Var):
     # use the absolute value of estimation residual standardlised by variance as the conformity scores
     calib_idx = np.where(calib_mask == 1)
     calib_score = abs(M_noiseless[calib_idx] - Mhat[calib_idx]/np.sqrt(Var[calib_idx]) )
     return calib_score
-
 
 def marginal_PI_weighted_by_variance(calib_mask, test_mask, M_noiseless, Mhat, alpha, Var):
     """
@@ -174,7 +283,6 @@ def marginal_PI_weighted_by_variance(calib_mask, test_mask, M_noiseless, Mhat, a
     # pdb.set_trace()
     return pi, qhat
 
-
 def evaluate_conformalized_PI(pi, x):
     # coverage = np.mean([x[i] >= pi[i][0] and x[i] <= pi[i][1] for i in range(len(x))])
     # coverage = np.mean([np.all((x[i] >= pi[i][0]) & (x[i] <= pi[i][1])) for i in range(len(x))])
@@ -184,46 +292,3 @@ def evaluate_conformalized_PI(pi, x):
     # results["Coverage"] = [coverage]
     # results["Size"] = [size]
     return results
-
-
-def run_single_experiment_conformalized_paper(matrix_noisy_unmasked,
-                                              M_noiseless,
-                                              train_mask,
-                                              test_mask,
-                                              calib_mask,
-                                              alpha,
-                                              r_guess = None,
-                                              method='ncvx',
-                                              random_state=0):
-    """
-    run a single experiment
-
-    Args:
-    ---------
-    train_mask: the entries in train set are 1, otherwise 0
-    test_mask: the entries in test set are 1, otherwise 0
-    calib_mask: the entries in calibration set are 1, otherwise 0
-    method: 'nonconvex (default)' or 'convex'
-    """
-
-    M_train = matrix_noisy_unmasked * train_mask
-    Mhat, Var = mc_var_estimate(M_obs=M_train, A = train_mask, r=r_guess, alpha=alpha, method=method)
-    prediction_interval, conformal_zscore = marginal_PI_weighted_by_variance(calib_mask=calib_mask,
-                                                                               test_mask=test_mask,
-                                                                               M_noiseless = M_noiseless,
-                                                                               Mhat=Mhat,
-                                                                               alpha=alpha,
-                                                                               Var=Var)
-
-    results = evaluate_conformalized_PI(prediction_interval,
-                                        M_noiseless[np.where(test_mask == 1)])
-
-    conformal_quantile = 2 * norm.cdf(conformal_zscore) - 1
-    results['Quantile']=[conformal_quantile]
-    # results['Calib_MSE'] = [calib_mse]
-    results['Alpha'] = [alpha]
-    results['Seed'] = [random_state]
-    results['Calib_size'] = [np.sum(calib_mask)]
-    results['Train_size'] = [np.sum(train_mask)]
-
-    return conformal_zscore
