@@ -22,6 +22,8 @@ def mc_var_estimate(M_obs, A, r, alpha, method = 'ncvx'):
     Estimate the variance of all entries (including the observed entries)
     Matrix completion by nonconvex methods (convex part commented) and uncertainty quantification
     Nothing is random here so no need to specify random seed
+    REMEMBER TO RESCALE THE OUTPUT IN THIS FUNCTION
+
     Args
     ------
     M_obs:      Noisy matrix observed with shape m x n
@@ -136,7 +138,7 @@ def mc_var_estimate(M_obs, A, r, alpha, method = 'ncvx'):
     CI_left *= M_scale
     CI_right *= M_scale
     M_obs *= M_scale
-    Var = Var * M_scale **2
+    Var = Var * M_scale ** 2
     Z_d *= M_scale
 
     return Z_d, Var
@@ -151,7 +153,8 @@ def get_calib_scores_weighted_by_variance(calib_mask, M_noiseless, Mhat, Var):
     Mhat_flat = Mhat.flatten(order = 'c')
     Var_flat = Var.flatten(order = 'c')
     # pdb.set_trace()
-    calib_score = abs(M_noiseless_flat[calib_idx] - Mhat_flat[calib_idx]/np.sqrt(Var_flat[calib_idx]) )
+    # I missed a bracket here
+    calib_score = abs((M_noiseless_flat[calib_idx] - Mhat_flat[calib_idx])np.sqrt(Var_flat[calib_idx]))
     # pdb.set_trace()
     return calib_score
 
