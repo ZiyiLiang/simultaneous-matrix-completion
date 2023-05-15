@@ -154,7 +154,7 @@ def get_calib_scores_weighted_by_variance(calib_mask, M_noiseless, Mhat, Var):
     Var_flat = Var.flatten(order = 'c')
     # pdb.set_trace()
     # I missed a bracket here
-    calib_score = abs((M_noiseless_flat[calib_idx] - Mhat_flat[calib_idx])np.sqrt(Var_flat[calib_idx]))
+    calib_score = abs((M_noiseless_flat[calib_idx] - Mhat_flat[calib_idx])/np.sqrt(Var_flat[calib_idx]))
     # pdb.set_trace()
     return calib_score
 
