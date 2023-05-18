@@ -120,7 +120,7 @@ def pmf_solve(M,
               k,
               mu = 1e-2,
               eps = 10**-6,
-              max_iteration = 1000,
+              max_iteration = 200,
               verbose = True,
               random_state = 0
               ):
@@ -182,7 +182,7 @@ def pmf_solve(M,
             break
         prev_X = X
 
-    return X, U, V.T
+    return X, U, V
 
 
 

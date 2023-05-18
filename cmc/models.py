@@ -46,7 +46,7 @@ class RandomOrthogonalModel():
     def sample_noiseless(self, random_state):
         """
         Generate noiseless target matrix by sampling factor matrices from 
-        k latent orthonormal vectors 
+        r latent orthonormal vectors 
         """
         np.random.seed(random_state)
         U = ortho_group.rvs(self.m)[:self.r].T

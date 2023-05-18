@@ -254,7 +254,11 @@ class Conformal_PI():
         
         return weights
     
-    def weighted_PI(self, test_idxs, w1, w2, alpha, allow_inf=True, log_base="auto"):
+    def weighted_PI(self, test_mask, w1, w2, alpha, allow_inf=True, log_base="auto"):
+        test_idxs = np.where(test_mask.flatten(order='C')== 1)[0]
+        w1 = w1.flatten(order='C')
+        w2 = w2.flatten(order='C')
+        
         n_test = len(test_idxs)
         pi = [[]]* n_test
         
@@ -266,8 +270,8 @@ class Conformal_PI():
         
         
         # re-standardize w1, w2 by exclude training sampling odds
-        w1 = w1 / (1 - np.sum(w1[self.train_idxs]))
-        w2 = w2 / (1 - np.sum(w2[self.train_idxs]))
+        w1 = w1 / (np.sum(w1) - np.sum(w1[self.train_idxs]))
+        w2 = w2 / (np.sum(w1) - np.sum(w2[self.train_idxs]))
 
         # Compute universal scaling parameter
         d1 = 1 - np.sum(w1[self.calib_idxs])
@@ -292,10 +296,11 @@ class Conformal_PI():
     
 
     
-    def standard_PI(self, test_idxs, alpha):
+    def standard_PI(self, test_mask, alpha):
         """
         Caculate conformal prediction interval with marginal coverage.
         """
+        test_idxs = np.where(test_mask.flatten(order='C')== 1)[0]
         n_test = len(test_idxs)
         n_calib = len(self.calib_scores)
         pi = [[]]* n_test

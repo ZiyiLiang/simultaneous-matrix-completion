@@ -35,7 +35,7 @@ def wsc(X, y_cov, delta=0.1, random_state=0):
 
     
 
-def wsc_estimate(M, U, VT, test_mask, PI, delta=0.1, test_size=0.75, random_state=0):
+def wsc_estimate(M, U, V, test_mask, PI, delta=0.1, test_size=0.75, random_state=0):
     """ 
     Randomly split the test set into training set for finding the worst-slice coverage
     section and evaluation set for esimating the out-of-bag worst-slice coverage. 
@@ -59,20 +59,22 @@ def wsc_estimate(M, U, VT, test_mask, PI, delta=0.1, test_size=0.75, random_stat
         z = np.dot(X,v)
         idx = np.where((z>=a)*(z<=b))
         coverage = np.mean(y_cov[idx])
-        return coverage
+        return coverage, idx
 
     test_idx = np.where(test_mask == 1)
     y_cov = np.array([M[i][j] <= PI[idx][1] and M[i][j] >= PI[idx][0] 
                       for idx, (i,j) in enumerate(zip(*test_idx))])
-    X = np.array([np.concatenate([U[i,:],VT[:,j]]) for i,j in zip(*test_idx)])
+    X = np.array([np.concatenate([U[i,:],V.T[:,j]]) for i,j in zip(*test_idx)])
 
-
-    X_train, X_test, y_train, y_test = train_test_split(X, y_cov, test_size=test_size,
-                                                        random_state=random_state)
+    X_train, X_test, y_train, y_test, _, i_test, _, j_test = train_test_split(X, y_cov, test_idx[0], test_idx[1],
+                                                    test_size=test_size, random_state=random_state)
 
     # Find adversarial parameters
     _, v, a, b = wsc(X_train, y_train, delta=delta, random_state=random_state)
     
     # Estimate coverage
-    coverage = wsc_vab(X_test, y_test, v, a, b)
-    return coverage, (v, a, b)
+    coverage, idx = wsc_vab(X_test, y_test, v, a, b)
+
+    ws_mask = np.zeros_like(test_mask)
+    ws_mask[i_test[idx], j_test[idx]] = 1
+    return coverage, (v, a, b), ws_mask
