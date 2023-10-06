@@ -141,5 +141,5 @@ class PairSampling():
         # Get the training mask
         mask_calib[idxs_calib] = 1
         mask_train = mask_obs - mask_calib
-        return mask_train, mask_calib, mask_drop, idxs_calib
+        return mask_train, idxs_calib, mask_calib, mask_drop
     

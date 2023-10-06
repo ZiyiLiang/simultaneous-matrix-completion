@@ -66,17 +66,24 @@ def evaluate_CI(lower, upper, M, idxs_test, label=None):
     results[label+"Size"] = [size]
     return results
 
-def evaluate_pairedCI(lower, upper, M, idxs_test, label=None):
-    label = str(label)+'_' if label else ''
+
+def evaluate_pairedCI(lower, upper, M, idxs_test, is_inf=None, method=None):
     val = M[idxs_test]
     n_test_pair = len(idxs_test[0]) // 2
     
     covered = (lower < val) & (upper > val)
     pair_covered = [covered[2*i] * covered[2*i+1] for i in range(n_test_pair)]
     
-    coverage = np.mean(pair_covered)
+    pair_coverage = np.mean(pair_covered)
+    coverage = np.mean(covered)
     size = np.mean(upper - lower)
     results = pd.DataFrame({})
-    results[label+"Coverage"] = [coverage]
-    results[label+"Size"] = [size]
+    results["Pair_coverage"] = [pair_coverage]
+    results["Coverage"] = [coverage]
+    results["Size"] = [size]
+    if type(is_inf) != type(None):
+        results["Inf_prop"] = [np.mean(is_inf)]
+    if method:
+        results["Method"] = [method]
     return results
+
