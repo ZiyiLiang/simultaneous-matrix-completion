@@ -129,4 +129,7 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# logs and results
 /results
+/experiments_synthetic/results
+/experiments_synthetic/logs

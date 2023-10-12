@@ -58,7 +58,7 @@ alpha = 0.1
 ###############
 # Output file #
 ###############
-outdir = "../results/exp_hpm/"
+outdir = "./results/exp_hpm/"
 os.makedirs(outdir, exist_ok=True)
 outfile_name = str(n1) + "by" + str(n2) + "_rtrue" + str(r_true) + "_rguess" + str(r_guess)
 outfile_name += "_prob" + str(prob_obs) +  "_" + str(solver) + "_" + str(model) + "_seed" + str(seed)
