@@ -99,7 +99,7 @@ class PairedCI_hpm():
         is_inf = np.zeros(n_test_pairs) # positions where interval length is infinity   
         
         if self.verbose:
-            print("Computing prediction intervals for {} test pairs...".format(n_test_pairs))
+            print("Computing conformal prediction intervals for {} test pairs...".format(n_test_pairs))
             sys.stdout.flush()
                 
         for i in tqdm(range(n_test_pairs), desc="CI", leave=True, position=0, 
@@ -156,7 +156,7 @@ def benchmark_CI(M, Mhat, idxs_calib, idxs_test, alpha, verbose = True):
     alpha_corrected = alpha / 2
     
     if verbose:
-        print("Computing prediction intervals for {} test pairs...".format(n_test_pairs))
+        print("Computing prediction intervals with Bonferroni correction with alpha {} for {} test pairs...".format(alpha, n_test_pairs))
         sys.stdout.flush()
 
     residuals = np.abs(M - Mhat)
