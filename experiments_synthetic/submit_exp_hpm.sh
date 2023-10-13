@@ -1,29 +1,29 @@
 #!/bin/bash
 
 # Parameters
-# N1_LIST=(100 300 500)
-# N2_LIST=(100 300 500)
-# R_TRUE_LIST=(5 10 20)
-# R_GUESS_LIST=(5 10 20)
-# PROB_LIST=(0.1 0.3)
-# SOLVER_LIST=(pmf)
-# MODEL_LIST=(RFM)
-# SEED_LIST=$(seq 1 4)
-
-# test job
-N1_LIST=(500)
-N2_LIST=(500)
-R_TRUE_LIST=(20)
-R_GUESS_LIST=(20)
-PROB_LIST=(0.1)
+N1_LIST=(100 300 500)
+N2_LIST=(100 300 500)
+R_TRUE_LIST=(5 10 20)
+R_GUESS_LIST=(5 10 20)
+PROB_LIST=(0.1 0.3)
 SOLVER_LIST=(pmf)
 MODEL_LIST=(RFM)
-SEED_LIST=$(seq 1 2)
+SEED_LIST=$(seq 1 4)
+
+# test job
+#N1_LIST=(500)
+#N2_LIST=(500)
+#R_TRUE_LIST=(20)
+#R_GUESS_LIST=(20)
+#PROB_LIST=(0.1)
+#SOLVER_LIST=(pmf)
+#MODEL_LIST=(RFM)
+#SEED_LIST=$(seq 1 2)
 
 
 # Slurm parameters
 MEMO=12G                             # Memory required (12 GB)
-TIME=00-04:00:00                    # Time required (2 h)
+TIME=00-06:00:00                    # Time required (6 h)
 CORE=1                              # Cores required (1)
 
 # Assemble order prefix
@@ -43,7 +43,7 @@ for SEED in $SEED_LIST; do
                     for PROB in "${PROB_LIST[@]}"; do
                         for SOLVER in "${SOLVER_LIST[@]}"; do
                             for MODEL in "${MODEL_LIST[@]}"; do
-                                JOBN="n1"$N1"_n2"$N2"_rtrue"$R_TRUE"_rguess"$R_GUESS"_prob"$PROB"_"$SOLVER"_"$MODEL"_seed"$SEED
+                                JOBN=$N1"by"$N2"_rtrue"$R_TRUE"_rguess"$R_GUESS"_prob"$PROB"_"$SOLVER"_"$MODEL"_seed"$SEED
                                 OUT_FILE=$OUT_DIR"/"$JOBN".txt"
                                 COMPLETE=0
                                 #ls $OUT_FILE

@@ -38,7 +38,7 @@ if True: # Input parameters
 # Fixed data parameters
 max_test_pairs = 1000         # Maximum number of test pairs 
 matrix_generation_seed = 0    # Data matrix is fixed 
-repetition = 1
+repetition = 30
 verbose = True
 
 methods = ["conformal", 
