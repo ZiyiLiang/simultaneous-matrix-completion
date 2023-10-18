@@ -31,5 +31,5 @@ results_hpm <- results.raw %>%
   group_by(Method, n1, n2, r_true, r_guess, prob_obs, Key) %>%
   summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))%>%
 #  pivot_wider(names_from = 'Key', values_from = 'Value') %>%
-  filter(n1 == 500, n2 == 500, r_true == 20, r_guess==20, Key == 'Size')
+  filter(n1 == 500, n2 == 500, r_true == 20, r_guess==20)
 

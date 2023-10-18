@@ -140,10 +140,10 @@ def run_single_experiment(M, alpha, size_obs, n_calib_pairs, max_test_pairs, r_g
         
         is_inf = np.zeros(n_test_pairs)
         if method == "conformal":
-            ci_method = PairedCI_hpm(M, Mhat, mask_obs, mask_train, idxs_calib)
+            ci_method = PairedCI_hpm(M, Mhat, mask_obs, idxs_calib)
             lower, upper, is_inf, _ = ci_method.get_CI(idxs_test, alpha, allow_inf)
         elif method == "naive":
-            ci_method = PairedCI_hpm(M, Mhat, mask_obs, mask_train, idxs_calib)
+            ci_method = PairedCI_hpm(M, Mhat, mask_obs, idxs_calib)
             lower, upper = ci_method.naive_CI(idxs_test, alpha)       
         elif method == "bonferroni":
             lower, upper = benchmark_CI(M, Mhat, idxs_calib, idxs_test, alpha)

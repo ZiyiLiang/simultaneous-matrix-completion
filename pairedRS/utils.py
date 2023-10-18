@@ -20,6 +20,29 @@ def plot_before_after_mask(M, mask, vmin=-5, vmax=5):
     plt.colorbar(im2, ax=axs[1], fraction=0.046, pad=0.04)
     plt.show()
 
+    
+
+def error_heatmap(M, Mhat, mask, vmin=None, vmax=None, cmap=None):
+    pred = np.multiply(Mhat, mask)
+    truth = np.multiply(M, mask)
+    residual = np.abs(pred-truth)
+    residual = residual / np.max(residual)
+    
+    if cmap is None:
+        cmap = plt.cm.get_cmap('viridis').reversed()
+    if vmin is None: 
+        vmin = 0
+    if vmax is None: 
+        # filter out some extreme values for better graph
+        vmax = np.quantile(residual.flatten(), 0.95,method='higher')
+    
+    plt.figure(figsize=(6,4))
+    plt.imshow(residual, cmap=cmap,vmin=vmin, vmax=vmax)
+    plt.title("Absolute residuals")
+    plt.colorbar()
+    plt.show()
+
+
 
 def evaluate_mse(M, Mhat, idx):
     """

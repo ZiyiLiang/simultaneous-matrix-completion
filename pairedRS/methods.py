@@ -7,7 +7,7 @@ class PairedCI_hpm():
     """ 
     Conformalized CI for pairs generated with the homogeneous pairs model.
     """
-    def __init__(self, M, Mhat, mask_obs, mask_train, idxs_calib, 
+    def __init__(self, M, Mhat, mask_obs, idxs_calib, 
                  verbose=True, progress=True):
         self.n1, self.n2 = M.shape[0], M.shape[1]
         self.Mhat = Mhat
