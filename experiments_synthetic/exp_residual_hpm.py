@@ -35,13 +35,13 @@ if True: # Input parameters
     noise_model = sys.argv[8]
     a = int(sys.argv[9])
     b = int(sys.argv[10])
-    mu = float(sys.argv[11])
+    mu = int(sys.argv[11])
     seed = int(sys.argv[12])
 
 
 # Fixed data parameters
-max_test_pairs = 1000         # Maximum number of test pairs 
-matrix_generation_seed = 0    # Data matrix is fixed 
+max_test_pairs = 1000            # Maximum number of test pairs 
+matrix_generation_seed = 2023    # Data matrix is fixed 
 repetition = 2
 verbose = True
 
@@ -50,6 +50,7 @@ methods = ["conformal",
            "bonferroni", 
            "uncorrected"]
 model = "RFM"
+solver = "pmf"
 
 # Other parameters
 size_obs = int(n1 * n2 * prob_obs)
