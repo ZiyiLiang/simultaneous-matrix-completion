@@ -142,4 +142,44 @@ class PairSampling():
         mask_calib[idxs_calib] = 1
         mask_train = mask_obs - mask_calib
         return mask_train, idxs_calib, mask_calib, mask_drop
+
+
+
+# This class models and adds user-dependent noises to the true data matrix
+class NoiseModel():
+    def __init__(self, random_state=None):
+        if random_state is None: 
+            self.rng = np.random.default_rng()
+        else:
+            self.rng = np.random.default_rng(random_state)
     
+    def get_noisy_matrix(self, M, gamma_n=0, gamma_m=0, model='beta', a=1, b=1, mu=1, alpha=0.1, normalize=False):
+        n1, n2 = M.shape
+        
+        # baseline noise
+        base_noise = self.rng.normal(0,1, M.shape)
+        
+        # user-dependent noise
+        if model == 'beta':
+            row_noise = self.rng.beta(a, b, n1)
+            row_noise = np.transpose(np.tile(row_noise, (n2,1)))
+        elif model == 'step':
+            row_noise_small = self.rng.normal(0,1,n1)
+            row_noise_large = self.rng.normal(mu,0.1,n1)
+            is_large = self.rng.binomial(1,alpha/2,n1)
+            row_noise = is_large*row_noise_large + (1-is_large)*row_noise_small
+            row_noise = np.transpose(np.tile(row_noise, (n2,1)))
+        else:
+            raise ValueError('Unknown noise model! Use either \'beta\' or \'step\'!')
+            
+        if normalize:
+            base_noise /= np.max(base_noise)
+            row_noise /= np.max(row_noise)
+            M /= np.max(M)
+        
+        # noise mixture
+        noise = (1-gamma_m)*base_noise + gamma_m*row_noise
+        # noisy matrix
+        M = (1-gamma_n)*M + gamma_n*noise
+        
+        return M   

@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 
-def plot_before_after_mask(M, mask, vmin=None, vmax=None, bad_color='grey'):
+def plot_before_after_mask(M, mask, vmin=None, vmax=None, bad_color='grey', figsize=(12,5)):
     # Plot the masked and unmasked matrix side by side
-    fig, axs = plt.subplots(1,2, figsize=(12,5))
+    fig, axs = plt.subplots(1,2, figsize=figsize)
     fig.tight_layout()
     plt.subplots_adjust(wspace=0.05)
 
@@ -28,7 +28,7 @@ def plot_before_after_mask(M, mask, vmin=None, vmax=None, bad_color='grey'):
 
     
 
-def error_heatmap(M, Mhat, mask, vmin=None, vmax=None, cmap=None, bad_color='white'):
+def error_heatmap(M, Mhat, mask, vmin=None, vmax=None, cmap=None, bad_color='white',figsize=(6,4)):
     pred = np.multiply(Mhat, mask)
     truth = np.multiply(M, mask)
     residual = np.abs(pred-truth)
@@ -44,7 +44,7 @@ def error_heatmap(M, Mhat, mask, vmin=None, vmax=None, cmap=None, bad_color='whi
         vmax = np.quantile(residual[np.where(mask==1)].flatten(), 0.95,method='higher')
     
     residual[np.where(mask==0)]=np.nan
-    plt.figure(figsize=(6,4))
+    plt.figure(figsize=figsize)
     plt.imshow(residual, cmap=cmap,vmin=vmin, vmax=vmax)
     plt.title("Absolute residuals")
     plt.colorbar()
