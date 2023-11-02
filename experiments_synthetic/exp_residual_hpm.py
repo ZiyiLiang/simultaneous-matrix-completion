@@ -189,7 +189,7 @@ for i in tqdm(range(repetition), desc="Repetitions", leave=True, position=0):
     random_state = repetition * seed + i
 
     res = run_single_experiment(M_true, alpha, size_obs, n_calib_pairs, max_test_pairs, 
-                          r_true, r_guess, gamma_n=gamma_n, gamma_m=gamma_m, model=model, a=a, b=b, mu=mu,
+                          r_true, r_guess, gamma_n=gamma_n, gamma_m=gamma_m, noise_model=noise_model, a=a, b=b, mu=mu,
                           random_state=random_state)
     
     results = pd.concat([results, res])
