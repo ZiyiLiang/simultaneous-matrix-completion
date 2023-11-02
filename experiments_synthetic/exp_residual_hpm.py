@@ -38,11 +38,11 @@ if True: # Input parameters
     mu = int(sys.argv[11])
     seed = int(sys.argv[12])
 
-
+print("a is", a, ",b is", b, ",mu is", mu)
 # Fixed data parameters
 max_test_pairs = 1000            # Maximum number of test pairs 
 matrix_generation_seed = 2023    # Data matrix is fixed 
-repetition = 2
+repetition = 100
 verbose = True
 
 methods = ["conformal", 

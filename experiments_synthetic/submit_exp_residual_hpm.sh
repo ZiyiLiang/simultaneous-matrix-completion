@@ -1,33 +1,33 @@
 #!/bin/bash
 
 # Parameters
-# N1_LIST=(100)
-# N2_LIST=(100)
-# R_TRUE_LIST= (3)
-# R_GUESS_LIST=(3)
-# PROB_LIST=(0.2)
-# GN_LIST=(0.1 0.2 0.3 0.4 0.5)
-# GM_LIST=(0.9)
-# NM_LIST=(step)
-# A_LIST=(1)     # Values of a, b do not matter if model is 'step'
-# B_LIST=(1)     
-# MU_LIST=$(seq 1 2 30)  # Value of mu do not matter if model is 'beta'
-# SEED_LIST=$(seq 1 2)
-
-
-# test job
 N1_LIST=(100)
 N2_LIST=(100)
 R_TRUE_LIST=(3)
 R_GUESS_LIST=(3)
 PROB_LIST=(0.2)
-GN_LIST=(0.5)
+GN_LIST=(0.1 0.2 0.3 0.4 0.5)
 GM_LIST=(0.9)
 NM_LIST=(step)
 A_LIST=(1)     # Values of a, b do not matter if model is 'step'
 B_LIST=(1)     
-MU_LIST=(30)  # Value of mu do not matter if model is 'beta'
+MU_LIST=$(seq 2 2 30)  # Value of mu do not matter if model is 'beta'
 SEED_LIST=$(seq 1 2)
+
+
+# test job
+#N1_LIST=(100)
+#N2_LIST=(100)
+#R_TRUE_LIST=(3)
+#R_GUESS_LIST=(3)
+#PROB_LIST=(0.2)
+#GN_LIST=(0.5)
+#GM_LIST=(0.9)
+#NM_LIST=(step)
+#A_LIST=(1)     # Values of a, b do not matter if model is 'step'
+#B_LIST=(1)     
+#MU_LIST=(30)  # Value of mu do not matter if model is 'beta'
+#SEED_LIST=$(seq 1 2)
 
 
 # Slurm parameters
@@ -54,7 +54,7 @@ for SEED in $SEED_LIST; do
                             for GM in "${GM_LIST[@]}"; do
                                 for A in "${A_LIST[@]}"; do
                                     for B in "${B_LIST[@]}"; do
-                                        for MU in "${MU_LIST[@]}"; do
+                                        for MU in $MU_LIST; do
                                             for NM in "${NM_LIST[@]}"; do
                                                 JOBN=$N1"by"$N2"_rtrue"$R_TRUE"_rguess"$R_GUESS"_prob"$PROB"_gn"$GN"_gm"$GM"_"$NM"_a"$A"_b"$B"_mu"$MU"_seed"$SEED
                                                 OUT_FILE=$OUT_DIR"/"$JOBN".txt"
