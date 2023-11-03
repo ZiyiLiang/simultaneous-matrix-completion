@@ -138,5 +138,5 @@ dmypy.json
 /setup.sh
 
 # R saves
-*.RData
-*.Rhistory
+.RData
+.Rhistory
