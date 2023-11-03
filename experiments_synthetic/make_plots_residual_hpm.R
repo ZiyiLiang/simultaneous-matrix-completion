@@ -46,23 +46,23 @@ make_plot <- function(xmax=2000) {
     mutate(Method = factor(Method, Method.values, Method.labels)) %>%
     mutate(Key = factor(Key, key.values, key.labels))    
   pp <- results_hpm %>%
-    filter(gamma_n == 0.5) %>%
-    ggplot(aes(x=mu, y=Value, color=Method, shape=Method)) +
+    filter(mu==30) %>%
+    ggplot(aes(x=gamma_n, y=Value, color=Method, shape=Method)) +
     geom_point(alpha=0.75) +
     geom_line() +
     #geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se)) +
     geom_hline(data=df.nominal, aes(yintercept=Value)) +
-    geom_point(data=df.ghost, aes(x=30,y=Value), alpha=0) +
+    geom_point(data=df.ghost, aes(x=0.5,y=Value), alpha=0) +
     scale_color_manual(values=color.scale) +
     scale_shape_manual(values=shape.scale) +
     facet_wrap(.~Key, scales="free") +
     #scale_x_continuous(trans='log10', lim=c(500,xmax), breaks=c(500,1000,2000)) +
     #        scale_y_continuous(trans='log10') +
-    xlab("Row-wise noise magnitude") +
+    xlab("Row-wise noise proportion") +
     ylab("") +
     theme_bw()
   pp
-  #ggsave(sprintf("%s/exp_residual_hpm.pdf", fig.dir), pp, device=NULL, width=5.5, height=2)
+  ggsave(sprintf("%s/exp_residual_hpm_mu%i.pdf", fig.dir, 30), pp, device=NULL, width=5.5, height=2)
 }
 
 make_plot()

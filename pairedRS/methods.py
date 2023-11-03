@@ -151,6 +151,8 @@ class PairedCI_hpm():
             sys.stdout.flush()
         return lower, upper
 
+
+
 def benchmark_CI(M, Mhat, idxs_calib, idxs_test, alpha, verbose = True):
     n_test_pairs = len(idxs_test[0])//2
     alpha_corrected = alpha / 2
