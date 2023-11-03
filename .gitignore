@@ -136,3 +136,7 @@ dmypy.json
 
 # cluster setup
 /setup.sh
+
+# R saves
+*.RData
+*.Rhistory
