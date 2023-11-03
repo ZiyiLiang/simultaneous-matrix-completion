@@ -133,3 +133,6 @@ dmypy.json
 /results
 /experiments_synthetic/results
 /experiments_synthetic/logs
+
+# cluster setup
+/setup.sh
