@@ -7,9 +7,9 @@ class weights_hpm():
     Conformalized CI for pairs generated with the homogeneous pairs model.
     """
 
-    def __init__(self, mask_obs, idxs_calib,
+    def __init__(self, n1 , n2, mask_obs, idxs_calib,
                  verbose=True, progress=True):
-        self.n1, self.n2 = M.shape[0], M.shape[1]
+        self.n1, self.n2 = n1, n2
         self.verbose = verbose
         self.progress = progress
         self.mask_obs = mask_obs
@@ -77,3 +77,27 @@ class weights_hpm():
         weights /= np.sum(weights)
 
         return weights
+
+    def get_weights(self, idxs_test, alpha, allow_inf=True):
+        n_test_pairs = len(idxs_test[0]) // 2
+        weights_list = [[]] * n_test_pairs
+
+        # for i in tqdm(range(n_test_pairs), desc="CI", leave=True, position=0,
+        #               disable=not self.progress):
+        #     idx_test = (idxs_test[0][2 * i: 2 * (i + 1)], idxs_test[1][2 * i: 2 * (i + 1)])
+        #     user_test = idx_test[0][0]
+        #
+        #     weights = self._weight_single(user_test, self.users_calib)[:-1]
+        #     weights_list[i] = weights
+
+        # no show the progress bar
+        for i in range(n_test_pairs):
+            idx_test = (idxs_test[0][2 * i: 2 * (i + 1)], idxs_test[1][2 * i: 2 * (i + 1)])
+            user_test = idx_test[0][0]
+
+            weights = self._weight_single(user_test, self.users_calib)[:-1]
+            weights_list[i] = weights
+
+        # --- [DEBUG]for deubugging purpose, also return the weights ---#
+        # return the confidence interval in the matrix format
+        return weights_list
