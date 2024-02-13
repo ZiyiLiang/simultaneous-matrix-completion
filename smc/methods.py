@@ -42,7 +42,8 @@ class QuerySampling():
         sub_mask[sub_idx] = 1
         return sub_mask.reshape(self.shape), (mask-sub_mask).reshape(self.shape)
     
-    def sample_train_calib(self, mask_obs, n_queries, k, random_state=0):
+
+    def sample_train_calib(self, mask_obs, calib_size, k, random_state=0):
         rng = np.random.default_rng(random_state)
 
         k = int(k) 
@@ -50,7 +51,7 @@ class QuerySampling():
         mask_calib = np.zeros_like(mask_obs)
         n_obs = np.sum(mask_obs, axis=1)   # Check the observation# in each row
 
-        assert n_queries <= np.sum(n_obs // k), "Too many calibration queries and not enough observations!"
+        n_queries = self._validate_calib_size(self, calib_size, n_obs, k)
         idxs_calib = (-np.ones(k * n_queries, dtype=int),\
                       -np.ones(k * n_queries, dtype=int))
         
@@ -92,13 +93,43 @@ class QuerySampling():
         return mask_train, idxs_calib, mask_calib
     
 
+    def _validate_calib_size(self, calib_size, n_obs, k):
+        """
+        validation helper to check if the calibration size is meaningful
+        """
+        calib_size_type = np.asarray(calib_size).dtype.kind
+        max_calib_num = int(np.sum(n_obs // k))
+
+        if (
+            calib_size_type == "i"
+            and (calib_size >= max_calib_num or calib_size <= 0)
+            or calib_size_type == "f"
+            and (calib_size <= 0 or calib_size >= 1)
+        ):
+            raise ValueError(
+                "calib_size={0} should be either positive and smaller"
+                " than the maximum possible calibration number {1} or a float in the "
+                "(0, 1) range".format(calib_size, max_calib_num)
+            )
+        
+        if calib_size is not None and calib_size_type not in ("i", "f"):
+            raise ValueError("Invalid value for calib_size: {}".format(calib_size))
+        
+        if calib_size_type == "f":
+            n_calib = int(calib_size * max_calib_num)
+        elif calib_size is None:
+            n_calib = int(0.5 * max_calib_num)
+        
+        return n_calib
+
+
 
 class SimulCI():
     """ 
     This class computes the simultaneous conformal prediction region for test query with length k
     """
     def __init__(self, M, Mhat, mask_obs, idxs_calib, k,
-                 w_obs=None, verbose=True, progress=True):
+                w_obs=None, verbose=True, progress=True):
         self.n1, self.n2 = M.shape[0], M.shape[1]
         self.k = int(k)
         self.Mhat = Mhat
@@ -106,6 +137,7 @@ class SimulCI():
         self.progress = progress
         self.mask_obs = mask_obs
         self.mask_miss = np.array(1-mask_obs)
+
         # If the observation sampling weights is not given, assume it is uniform.
         if w_obs is None:
             w_obs = np.ones_like(Mhat)
@@ -117,7 +149,7 @@ class SimulCI():
         self.n_miss = self.n2 - self.n_obs
         # Number of observations in each row after random dropping
         self.n_obs_drop = self.n_obs - self.n_obs % self.k
-        
+                
         # Note that calib indexs should be a tuple
         # idxs_calib[0] is an array of row indexes
         # idxs_calib[1] is an array of col indexes
@@ -136,15 +168,17 @@ class SimulCI():
         # get the row index of each calibration query
         self.rows_calib = np.array([self.idxs_calib[0][k * i] for i in range(self.n_calib_queries)])
 
-    
-    # This function implements the scores as the maximum of the absolute prediction errors
+
     def _get_calib_scores(self):
+        """
+        This function implements the scores as the maximum of the absolute prediction errors
+        """
         for i in range(self.n_calib_queries):
-            scores = self.abs_err[(self.idxs_calib[0][self.k*i: self.k*(i+1)], self.idxs_calib[0][self.k*i: self.k*(i+1)])]
+            scores = self.abs_err[(self.idxs_calib[0][self.k*i: self.k*(i+1)], self.idxs_calib[1][self.k*i: self.k*(i+1)])]
             self.calib_scores[i] = np.max(scores) 
 
 
-    def _compute_universal(self, w_test, w_obs):
+    def _compute_universal(self, w_test):
         # Compute the sum of weights for the pruned missing set over each row
         w_miss = np.multiply(w_test, self.mask_miss)
         sr_prune = np.sum(w_miss, axis=1)
@@ -155,7 +189,7 @@ class SimulCI():
         sr_miss = np.sum(w_miss, axis=1)
 
         # Compute the sum of sampling weights on the missing set
-        delta = np.sum(np.multiply(w_obs, self.mask_miss))
+        delta = np.sum(np.multiply(self.w_obs, self.mask_miss))
 
         # Compute the scaling parameter
         def _z(r,w,d):
@@ -163,19 +197,19 @@ class SimulCI():
             for i in range(len(w)):
                 res -= w[i] / (2**(r*w[i]) - 1)
             return res
-        scale = fsolve(_z, 1/delta, (w_obs[np.where(self.mask_obs==1)], delta))[0]
+        scale = fsolve(_z, 1/delta, (self.w_obs[np.where(self.mask_obs==1)], delta))[0]
 
         return sr_prune, sw_prune, sr_miss, delta, scale
     
 
-    def _weight_single(self, idx_test, row_test, w_test, w_obs, 
+    def _weight_single(self, idx_test, row_test, w_test, 
                        sr_prune, sw_prune, sr_miss, delta, scale):
         weights = np.ones(self.n_calib_queries + 1)
 
         # Sum of test sampling weights for the test query
         sw_test = np.sum(w_test[idx_test])
         # Sum of observation sampling weights for the test query
-        sw_obs_test = np.sum(w_obs[idx_test])
+        sw_obs_test = np.sum(self.w_obs[idx_test])
         # Augmented index set
         idxs_full = (np.concatenate([self.idxs_calib[0], idx_test[0]]),np.concatenate([self.idxs_calib[1], idx_test[1]]))
         rows_full = np.concatenate([self.rows_calib,[row_test]])
@@ -217,11 +251,11 @@ class SimulCI():
                     prob_cal *= (self.n_obs_drop[row_i]-j)/(self.n_obs_drop[row_test]+self.k-j)
         
             # Compute the prob of sampling the given observation entries
-            diff = np.sum(w_obs[idx_i]) - sw_obs_test
+            diff = np.sum(self.w_obs[idx_i]) - sw_obs_test
             prob_obs = 0.5**(scale * diff)*(delta + diff)/delta
             for j in range(self.k):
-                prob_obs *= 1 - 0.5**(scale * w_obs[idx_test[0][j], idx_test[1][j]])
-                prob_obs /= 1 - 0.5**(scale * w_obs[idx_i[0][j], idx_i[1][j]])
+                prob_obs *= 1 - 0.5**(scale * self.w_obs[idx_test[0][j], idx_test[1][j]])
+                prob_obs /= 1 - 0.5**(scale * self.w_obs[idx_i[0][j], idx_i[1][j]])
             
             weights[i] = prob_test * prob_cal * prob_obs
         
@@ -229,9 +263,7 @@ class SimulCI():
         return weights[:-1]
     
 
-    def get_CI(self, idxs_test, alpha, w_test=None, w_obs=None, allow_inf=True):
-        if w_obs is None:
-            w_obs = np.ones_like(self.Mhat)
+    def get_CI(self, idxs_test, alpha, w_test=None, allow_inf=True):
         if w_test is None:
             w_test = np.ones_like(self.Mhat)
         
@@ -252,8 +284,8 @@ class SimulCI():
             row_test = idx_test[0][0]
 
             # Compute constant components in weights that are invariant to test query
-            sr_prune, sw_prune, sr_miss, delta, scale = self._compute_universal(w_test, w_obs)
-            weights = self._weight_single(idx_test, row_test, w_test, w_obs, sr_prune, sw_prune, sr_miss, delta, scale)
+            sr_prune, sw_prune, sr_miss, delta, scale = self._compute_universal(w_test)
+            weights = self._weight_single(idx_test, row_test, w_test, sr_prune, sw_prune, sr_miss, delta, scale)
 
             weights_list[i] = weights
             cweights = np.cumsum(weights[self.calib_order])
@@ -286,10 +318,10 @@ class SimulCI():
             print("Computing naive prediction intervals for {} test queries...".format(n_test_queries))
             sys.stdout.flush()
         
-        alpha_corrected = (1 - alpha) / (1 + 1/self.n_calib_queries)
+        level_corrected = (1 - alpha) * (1 + 1/self.n_calib_queries)
         est = np.array(self.Mhat[idxs_test])
         
-        if alpha_corrected >= 1:
+        if level_corrected >= 1:
             is_inf = np.ones(n_test_queries)
             if allow_inf:
                 lower = np.repeat(-np.inf, len(idxs_test[0]))
@@ -299,7 +331,7 @@ class SimulCI():
                 upper = est + self.st_calib_scores[-1]
         else:
             is_inf = np.zeros(n_test_queries)
-            qnt = np.quantile(self.calib_scores, 1 - alpha, method="higher")
+            qnt = np.quantile(self.calib_scores, level_corrected, method="higher")
             lower = est - qnt
             upper = est + qnt
 
@@ -308,3 +340,34 @@ class SimulCI():
             sys.stdout.flush()
         return lower, upper, is_inf
     
+
+
+class Bonf_benchmark():
+    """ 
+    This class computes the Bonferrroni-style simultaneous confidence region
+    """
+    def __init__(self, M, Mhat, mask_obs, idxs_calib, k,
+                w_obs=None, verbose=True, progress=True):
+        self.k = int(k)
+        self.verbose = verbose
+        self.progress = progress
+        
+        # Apply simultaneous conformal inference method with k=1
+        self.sci = SimulCI(M, Mhat, mask_obs, idxs_calib, 1,
+                           w_obs=w_obs, verbose=False, progress=self.progress)
+        
+    
+    def get_CI(self, idxs_test, alpha, w_test=None,  allow_inf=True):
+        if w_test is None:
+            w_test = np.ones_like(self.Mhat)
+
+        n_test_entries = len(idxs_test[0])
+        n_test_queries = n_test_entries//self.k
+        alpha_corrected = alpha/self.k
+
+        if self.verbose:
+            print("Computing Bonferroni-style intervals for {} test queries...".format(n_test_queries))
+            sys.stdout.flush()
+                
+        lower, upper, is_inf, _ = self.sci.get_CI(self, idxs_test, alpha_corrected, w_test, allow_inf)
+        return lower, upper, is_inf
