@@ -1,4 +1,5 @@
 import numpy as np   
+import pandas as pd
 import sys
 import pdb
 
@@ -20,15 +21,35 @@ class QuerySampling():
         self.shape = (self.n1, self.n2)
         
     
-    def sample_submask(self, sub_size, mask=None, w=None, random_state=0):
+    def sample_submask(self, sub_size=None, mask=None, w=None, random_state=0):
+        """
+        Sample a subset from any given mask without replacement, sampling weights are optional.
+        
+        Parameters
+        ----------
+        sub_size: int or float, optional
+            Size of the submask, either a float in (0,1) or a positive integer smaller than 
+            size of the parent mask. Default is 0.5.
+        mask : ndarray, optional
+            The parent mask used for sampling should be an array consisting of 0s and 1s. 
+            Default is all 1s.
+        w : ndarray, optional
+            non-negative sampling weights, dimension should match the
+            shape of mask. Default is uniform weights.
+
+        Returns
+        -------
+        Splits the parent mask into two ndarrays, the sampled submask and its complement.
+        """
+
         rng = np.random.default_rng(random_state)
         
         if mask is None:
             mask = np.ones(self.shape, dtype=int)
         mask = mask.flatten(order='C')   
         obs_idx = np.where(mask == 1)[0]
-        sub_size = int(np.clip(sub_size, 1,len(obs_idx)-1))
-
+        n_sub = self._validate_sub_size(sub_size, len(obs_idx))
+        
         if w is not None:
             w = w.flatten(order='C')     
         else:
@@ -36,14 +57,70 @@ class QuerySampling():
         
         # Make sure the weights sum up to 1 at selected indices
         w /= np.sum(w[obs_idx])
-        sub_idx = rng.choice(obs_idx, sub_size, replace=False, p=w[obs_idx])
+        sub_idx = rng.choice(obs_idx, n_sub, replace=False, p=w[obs_idx])
 
         sub_mask = np.zeros(np.prod(self.shape), dtype=int)
         sub_mask[sub_idx] = 1
         return sub_mask.reshape(self.shape), (mask-sub_mask).reshape(self.shape)
     
+    
+    def _validate_sub_size(self, sub_size, n):
+        """
+        validation helper to check if the size of  submask is meaningful
+        """
+        sub_size_type = np.asarray(sub_size).dtype.kind
 
-    def sample_train_calib(self, mask_obs, calib_size, k, random_state=0):
+        if (
+            sub_size_type == "i"
+            and (sub_size >= n or sub_size <= 0)
+            or sub_size_type == "f"
+            and (sub_size <= 0 or sub_size >= 1)
+        ):
+            raise ValueError(
+                "sub_size={0} should be either positive and smaller"
+                " than the maximum possible sample number {1} or a float in the "
+                "(0, 1) range".format(sub_size, n)
+            )
+        
+        if sub_size is not None and sub_size_type not in ("i", "f"):
+            raise ValueError("Invalid value for sub_size: {}".format(sub_size))
+        
+        if sub_size_type == "f":
+            n_sub = int(sub_size * n)
+        elif sub_size is None:
+            n_sub = int(0.5 * n)
+        
+        return n_sub
+
+
+    def sample_train_calib(self, mask_obs, k, calib_size=None, max_n_calib=None, random_state=0):
+        """
+        Split the observed indices into training set and calibration queries.
+
+        Parameters
+        ----------
+        mask_obs : ndarray
+            The parent mask used for sampling should be an array consisting of 0s and 1s. 
+        k : int
+            Positive integer smaller than number of cols
+        calib_size : int or float, optional
+            Size of the submask, either a float in (0,1) or a positive integer smaller than 
+            size of the parent mask. Default is 0.5.
+        max_n_calib : int, optional
+            Optional positive integer, if provided, number of calibration queries will be capped
+            at this value.
+
+        Returns
+        -------
+        mask_train : ndarray
+            array of 0s and 1s, with 1 indicating the index is in the training set
+        idxs_calib : tuple of arrays
+            idxs_calib[0] is an array of row indexes
+            idxs_calib[1] is an array of col indexes
+            k consecutive entries form a calibration query
+        mask_calib : ndarray
+            array of 0s and 1s, with 1 indicating the index is in the calibration set
+        """
         rng = np.random.default_rng(random_state)
 
         k = int(k) 
@@ -51,7 +128,7 @@ class QuerySampling():
         mask_calib = np.zeros_like(mask_obs)
         n_obs = np.sum(mask_obs, axis=1)   # Check the observation# in each row
 
-        n_queries = self._validate_calib_size(self, calib_size, n_obs, k)
+        n_queries = self._validate_calib_size(calib_size, n_obs, k, max_n_calib)
         idxs_calib = (-np.ones(k * n_queries, dtype=int),\
                       -np.ones(k * n_queries, dtype=int))
         
@@ -93,12 +170,17 @@ class QuerySampling():
         return mask_train, idxs_calib, mask_calib
     
 
-    def _validate_calib_size(self, calib_size, n_obs, k):
+    def _validate_calib_size(self, calib_size, n_obs, k, max_n_calib):
         """
         validation helper to check if the calibration size is meaningful
         """
         calib_size_type = np.asarray(calib_size).dtype.kind
         max_calib_num = int(np.sum(n_obs // k))
+
+        if max_n_calib is not None:
+            max_n_calib = int(np.clip(max_n_calib, 1, max_calib_num))
+        else:
+            max_n_calib = max_calib_num
 
         if (
             calib_size_type == "i"
@@ -117,31 +199,51 @@ class QuerySampling():
         
         if calib_size_type == "f":
             n_calib = int(calib_size * max_calib_num)
+        elif calib_size_type == "i":
+            n_calib = calib_size
         elif calib_size is None:
             n_calib = int(0.5 * max_calib_num)
         
-        return n_calib
+        return np.min([n_calib, max_n_calib])
 
 
 
 class SimulCI():
     """ 
     This class computes the simultaneous conformal prediction region for test query with length k
+
+    Attributes
+    ----------
+    M : 2d array
+        A partially observed matrix.
+    Mhat : 2d array
+        An estimation of M.
+    mask_obs : 2d array
+        Array of 0s and 1s, where 1 indicates the index is observed.
+    idxs_calib: tuple of arrays
+        idxs_calib[0] is an array of row indexes
+        idxs_calib[1] is an array of col indexes
+        k consecutive entries form a calibration query
+    k : int
+        query size 
+    w_obs : ndarray, optional
+        non-negative sampling weights for the observed entreis, dimension should match the
+        shape of the input matrix. Default is uniform weights.
+    verbose : bool, optional
+        If True, messages will be printed.
+    progress : bool, optional
+        If True, progress bars will be printed.
     """
     def __init__(self, M, Mhat, mask_obs, idxs_calib, k,
                 w_obs=None, verbose=True, progress=True):
-        self.n1, self.n2 = M.shape[0], M.shape[1]
         self.k = int(k)
-        self.Mhat = Mhat
+        self.Mhat = np.array(Mhat)
+        self.n1, self.n2 = self.Mhat.shape[0], self.Mhat.shape[1]
         self.verbose = verbose
         self.progress = progress
-        self.mask_obs = mask_obs
+        self.mask_obs = np.array(mask_obs)
         self.mask_miss = np.array(1-mask_obs)
-
-        # If the observation sampling weights is not given, assume it is uniform.
-        if w_obs is None:
-            w_obs = np.ones_like(Mhat)
-        self.w_obs = w_obs
+        self.w_obs = self._validate_w(w_obs)
         
         # Number of observations in each row
         self.n_obs = np.sum(mask_obs, axis=1)
@@ -150,18 +252,12 @@ class SimulCI():
         # Number of observations in each row after random dropping
         self.n_obs_drop = self.n_obs - self.n_obs % self.k
                 
-        # Note that calib indexs should be a tuple
-        # idxs_calib[0] is an array of row indexes
-        # idxs_calib[1] is an array of col indexes
-        # k consecutive entries from a calibration query
         self.idxs_calib = idxs_calib
         self.n_calib_queries = len(idxs_calib[0])//self.k
         self.calib_scores = np.zeros(self.n_calib_queries)
-        
-        self.abs_err = np.abs(M - self.Mhat)
-        
+                
         # Compute the calibration scores
-        self._get_calib_scores()
+        self._get_calib_scores(np.abs(M - self.Mhat))
         self.calib_order = np.argsort(self.calib_scores)
         self.st_calib_scores = self.calib_scores[self.calib_order]
         
@@ -169,12 +265,12 @@ class SimulCI():
         self.rows_calib = np.array([self.idxs_calib[0][k * i] for i in range(self.n_calib_queries)])
 
 
-    def _get_calib_scores(self):
+    def _get_calib_scores(self, abs_err):
         """
         This function implements the scores as the maximum of the absolute prediction errors
         """
         for i in range(self.n_calib_queries):
-            scores = self.abs_err[(self.idxs_calib[0][self.k*i: self.k*(i+1)], self.idxs_calib[1][self.k*i: self.k*(i+1)])]
+            scores = abs_err[(self.idxs_calib[0][self.k*i: self.k*(i+1)], self.idxs_calib[1][self.k*i: self.k*(i+1)])]
             self.calib_scores[i] = np.max(scores) 
 
 
@@ -263,16 +359,78 @@ class SimulCI():
         return weights[:-1]
     
 
+    def _validate_w(self, w):
+        """
+        validation helper to check if the sampling weights are valid
+        """
+        
+        if w is None:
+            return np.ones_like(self.Mhat)
+        
+        message = "Weights should be formatted as a numpy.ndarray of non-negative numbers, "+\
+                  "and the dimension should match that of the input matrix, i.e. {}.".format(self.Mhat.shape)
+
+        if type(w) != type(self.Mhat):
+            raise ValueError(message)
+        
+        w_type = w.dtype.kind
+        if w_type not in ("i", "f"):
+            raise ValueError(message)
+        
+        if (
+            w.shape != self.Mhat.shape 
+            or np.any(w < 0)
+        ):
+            raise ValueError(message)
+            
+        return w
+    
+
+
+    def _initialize_df(self, a_list, n):
+        """
+        Helper that initializes the confidence interval DataFrame
+        """
+        df = pd.DataFrame({})
+
+        df["alpha"] = a_list
+        df["lower"] = [np.zeros(n) for _ in a_list]
+        df["upper"] = [np.zeros(n) for _ in a_list]
+        df["is_inf"] = [np.zeros(n) for _ in a_list]
+        
+        return df
+    
+
     def get_CI(self, idxs_test, alpha, w_test=None, allow_inf=True):
-        if w_test is None:
-            w_test = np.ones_like(self.Mhat)
-        
+        """
+        Compute the confidence intervals for all test queries at any confidence levels
+
+        Parameters
+        ----------
+        idxs_test: tuple 
+            idxs_test[0] is the row indices of the test points and
+            idxs_test[1] is the column indices, k consecutive indices are treated as a query
+        alpha : float or list of floats
+        w_test : ndarray, optional
+            non-negative sampling weights for the test points, dimension should match the
+            shape of the input matrix. Default is uniform weights.
+        allow_inf: bool
+            If True, the output intervals might be (-np.inf, np.inf).
+
+        Returns
+        -------
+        DataFrame
+            a pandas DataFrame with 4 columns: alpha, lower, upper, is_inf
+            alpha: numeric value of confidence level.
+            lower: array of lower confidence bounds.
+            upper: array of upper confidence bounds.
+            is_inf: array of 0s and 1s where 1 indicates the method outputs (-np.inf, np.inf).
+        """
+        w_test = self._validate_w(w_test)
         n_test_queries = len(idxs_test[0])//self.k
-        weights_list = [[]]*n_test_queries
+        a_list = np.array(alpha).reshape(-1)
         
-        upper = np.zeros(n_test_queries * self.k)    # upper confidence bound
-        lower = np.zeros(n_test_queries * self.k)    # lower confidence bound
-        is_inf = np.zeros(n_test_queries) # queries for which interval length is infinity   
+        df = self._initialize_df(a_list=a_list, n = n_test_queries * self.k)
         
         if self.verbose:
             print("Computing conformal prediction intervals for {} test queries...".format(n_test_queries))
@@ -287,58 +445,59 @@ class SimulCI():
             sr_prune, sw_prune, sr_miss, delta, scale = self._compute_universal(w_test)
             weights = self._weight_single(idx_test, row_test, w_test, sr_prune, sw_prune, sr_miss, delta, scale)
 
-            weights_list[i] = weights
+            #pdb.set_trace()        
+
             cweights = np.cumsum(weights[self.calib_order])
             est = np.array(self.Mhat[idx_test])
-                        
-            if cweights[-1] < 1-alpha:
-                is_inf[i] = 1
-                if allow_inf:
-                    lower[self.k*i : self.k*(i+1)] = -np.inf
-                    upper[self.k*i : self.k*(i+1)] = np.inf
+
+            for row, a in enumerate(a_list):          
+                if cweights[-1] < 1-a:
+                    df.loc[row, "is_inf"][self.k*i : self.k*(i+1)] = 1
+                    if allow_inf:
+                        df.loc[row, "lower"][self.k*i : self.k*(i+1)] = -np.inf
+                        df.loc[row, "upper"][self.k*i : self.k*(i+1)] = np.inf
+                    else:
+                        df.loc[row, "lower"][self.k*i : self.k*(i+1)] = est - self.st_calib_scores[-1]
+                        df.loc[row, "upper"][self.k*i : self.k*(i+1)] = est + self.st_calib_scores[-1]
                 else:
-                    lower[self.k*i : self.k*(i+1)] = est - self.st_calib_scores[-1]
-                    upper[self.k*i : self.k*(i+1)] = est + self.st_calib_scores[-1]
-            else:
-                idx = np.argmax(cweights >= 1-alpha)
-                lower[self.k*i : self.k*(i+1)] = est - self.st_calib_scores[idx]
-                upper[self.k*i : self.k*(i+1)] = est + self.st_calib_scores[idx]
+                    idx = np.argmax(cweights >= 1-a)
+                    df.loc[row, "lower"][self.k*i : self.k*(i+1)] = est - self.st_calib_scores[idx]
+                    df.loc[row, "upper"][self.k*i : self.k*(i+1)] = est + self.st_calib_scores[idx]
         
         if self.verbose:
             print("Done!")
             sys.stdout.flush()
             
-        #--- [DEBUG]for deubugging purpose, also return the weights ---#
-        return lower, upper, is_inf, weights_list
+        return df
     
 
-    def naive_CI(self, idxs_test, alpha, allow_inf=True):
-        n_test_queries = len(idxs_test[0])//self.k
-        if self.verbose:
-            print("Computing naive prediction intervals for {} test queries...".format(n_test_queries))
-            sys.stdout.flush()
+    # def naive_CI(self, idxs_test, alpha, allow_inf=True):
+    #     n_test_queries = len(idxs_test[0])//self.k
+    #     if self.verbose:
+    #         print("Computing naive prediction intervals for {} test queries...".format(n_test_queries))
+    #         sys.stdout.flush()
         
-        level_corrected = (1 - alpha) * (1 + 1/self.n_calib_queries)
-        est = np.array(self.Mhat[idxs_test])
+    #     level_corrected = (1 - alpha) * (1 + 1/self.n_calib_queries)
+    #     est = np.array(self.Mhat[idxs_test])
         
-        if level_corrected >= 1:
-            is_inf = np.ones(n_test_queries)
-            if allow_inf:
-                lower = np.repeat(-np.inf, len(idxs_test[0]))
-                upper = np.repeat(np.inf, len(idxs_test[0]))
-            else:
-                lower = est - self.st_calib_scores[-1]
-                upper = est + self.st_calib_scores[-1]
-        else:
-            is_inf = np.zeros(n_test_queries)
-            qnt = np.quantile(self.calib_scores, level_corrected, method="higher")
-            lower = est - qnt
-            upper = est + qnt
+    #     if level_corrected >= 1:
+    #         is_inf = np.ones(n_test_queries)
+    #         if allow_inf:
+    #             lower = np.repeat(-np.inf, len(idxs_test[0]))
+    #             upper = np.repeat(np.inf, len(idxs_test[0]))
+    #         else:
+    #             lower = est - self.st_calib_scores[-1]
+    #             upper = est + self.st_calib_scores[-1]
+    #     else:
+    #         is_inf = np.zeros(n_test_queries)
+    #         qnt = np.quantile(self.calib_scores, level_corrected, method="higher")
+    #         lower = est - qnt
+    #         upper = est + qnt
 
-        if self.verbose:
-            print("Done!")
-            sys.stdout.flush()
-        return lower, upper, is_inf
+    #     if self.verbose:
+    #         print("Done!")
+    #         sys.stdout.flush()
+    #     return lower, upper, is_inf
     
 
 
@@ -358,16 +517,22 @@ class Bonf_benchmark():
         
     
     def get_CI(self, idxs_test, alpha, w_test=None,  allow_inf=True):
-        if w_test is None:
-            w_test = np.ones_like(self.Mhat)
-
         n_test_entries = len(idxs_test[0])
         n_test_queries = n_test_entries//self.k
-        alpha_corrected = alpha/self.k
+
+        # Make Bonferroni correction on the confidence level
+        a_list = np.array(alpha).reshape(-1)
+        corrected_list = a_list/self.k
 
         if self.verbose:
             print("Computing Bonferroni-style intervals for {} test queries...".format(n_test_queries))
             sys.stdout.flush()
-                
-        lower, upper, is_inf, _ = self.sci.get_CI(self, idxs_test, alpha_corrected, w_test, allow_inf)
-        return lower, upper, is_inf
+
+        df = self.sci.get_CI(idxs_test, corrected_list, w_test=w_test, allow_inf=allow_inf)
+
+        if self.verbose:
+            print("Done!")
+            sys.stdout.flush()
+        
+        df.alpha = a_list
+        return df
