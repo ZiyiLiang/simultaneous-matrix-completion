@@ -20,36 +20,47 @@ if True:
     # Parse input arguments
     print ('Number of arguments:', len(sys.argv), 'arguments.')
     print ('Argument List:', str(sys.argv))
-    if len(sys.argv) != 9:
+    if len(sys.argv) != 7:
         print("Error: incorrect number of parameters.")
         quit()
 
     n1 = int(sys.argv[1])
     n2 = int(sys.argv[2])
     r = int(sys.argv[3])
-    prop_obs = float(sys.argv[4])
-    gamma_n = float(sys.argv[5])
-    gamma_m = float(sys.argv[6])
-    mu = int(sys.argv[7])
-    seed = int(sys.argv[8])
-
+    exp = int(sys.argv[4])
+    mu = int(sys.argv[5])
+    seed = int(sys.argv[6])
+    
 # Fixed data parameters
-max_test_queries = 500            
+max_test_queries = 100            
 max_calib_queries = 1000
 matrix_generation_seed = 2024    # Data matrix is fixed 
-repetition = 1
 
 methods = ["conformal", 
            "benchmark"]
 model = "RFM"
 solver = "pmf"
 noise_model = "step"
+prop_obs = 0.2
+gamma_n = 0.5
+gamma_m = 0.9
 k_list = np.arange(1,6)
 
 # Other parameters
 verbose = True
 allow_inf = False
 alpha = 0.1
+
+# Experiment-specific parameters
+if exp == "vary_k":
+    k_list = np.arange(1,11)
+    repetition = 2
+elif exp == "vary_mu":
+    k_list = [2,5,10]
+    repetition = 5
+else:
+    print("Error: Unkown type of experiment.")
+    quit()
 
 
 
@@ -58,12 +69,10 @@ alpha = 0.1
 ###############
 outdir = "./results/exp_uniform/"
 os.makedirs(outdir, exist_ok=True)
-outfile_name = str(n1) + "by" + str(n2) + "_r" + str(r) + "_prob" + str(prob_obs)
-outfile_name += "_gn" + str(gamma_n) + "_gm" + str(gamma_m) + "_mu" + str(mu) + "_seed" + str(seed)
+outfile_name = str(n1) + "by" + str(n2) + "_r" + str(r) + "_prob" + "_mu" + str(mu) + "_seed" + str(seed)
 outfile = outdir + outfile_name + ".txt"
 print("Output file: {:s}".format(outfile), end="\n")
 sys.stdout.flush()
-
 
 # Header for results file
 def add_header(df):
@@ -114,7 +123,7 @@ def run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_cali
 
     #------Sample test queries------#
     #-------------------------------#
-    n_test_queries = min(int(0.99 * np.sum(np.sum(mask_test, axis=1) // k)), max_calib_queries)
+    n_test_queries = min(int(0.99 * np.sum(np.sum(mask_test, axis=1) // k)), max_test_queries)
     _, idxs_test, _ = sampler.sample_train_calib(mask_test, k, calib_size=n_test_queries, random_state=random_state)  
     if verbose:
         print("Training size:{}, calib size: {}, test size: {}\n".format(np.sum(mask_train), n_calib_queries, n_test_queries))
@@ -165,11 +174,12 @@ def run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_cali
             for i, m in enumerate(["Bonferroni", "Uncorrected"]):
                 lower, upper, is_inf= df.loc[i].lower, df.loc[i].upper, df.loc[i].is_inf
                 res = pd.concat([res, evaluate_SCI(lower, upper, M, idxs_test, is_inf=is_inf, method=m)])
-        
-                
-    res['Calib_size'] = n_calib_queries
-    res['Train_size'] = np.sum(mask_train)
-    res['Test_size'] = n_test_queries
+
+
+    res['k'] = k     
+    res['Calib_queries'] = n_calib_queries
+    res['Train_entries'] = np.sum(mask_train)
+    res['Test_queries'] = n_test_queries
     res['random_state'] = random_state
     return res
 
@@ -180,12 +190,23 @@ def run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_cali
 #####################
 results = pd.DataFrame({})
 
-for k in tqdm(range(len(k_list)), desc="k", leave=True, position=0):
-    random_state = repetition * seed + i
-
-    res = run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_calib_queries,
-                          r, gamma_n=0, gamma_m=0, mu=1, random_state=0)
+for i in tqdm(range(1, repetition+1), desc="Repetitions", leave=True, position=0):
+    random_state = repetition * (seed-1) + i
     
-    results = pd.concat([results, res])
+    for k in tqdm(range(len(k_list)), desc="k", leave=True, position=0):
+
+        res = run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_calib_queries,
+                            r, gamma_n=gamma_n, gamma_m=gamma_m, mu=mu, random_state=seed)
+        
+        results = pd.concat([results, res])
 
 add_header(results)
+
+
+
+#####################
+#    Save Results   #
+#####################
+results.to_csv(outfile, index=False)
+print("\nResults written to {:s}\n".format(outfile))
+sys.stdout.flush()
