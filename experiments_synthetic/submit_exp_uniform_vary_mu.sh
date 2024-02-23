@@ -5,8 +5,10 @@ N1=200
 N2=200
 R=5
 EXP="vary_mu" 
-MU_LIST==$(seq 0 3 30)
-SEED_LIST=$(seq 1 100)
+MU_LIST=$(seq 0 3 30)
+SEED_LIST=$(seq 1 200)
+#MU_LIST=(20)
+#SEED_LIST=(0 1)
 
 # Slurm parameters
 MEMO=12G                             # Memory required (12 GB)

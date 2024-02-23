@@ -27,8 +27,8 @@ if True:
     n1 = int(sys.argv[1])
     n2 = int(sys.argv[2])
     r = int(sys.argv[3])
-    exp = int(sys.argv[4])
-    mu = int(sys.argv[5])
+    exp = sys.argv[4]
+    mu = float(sys.argv[5])
     seed = int(sys.argv[6])
     
 # Fixed data parameters
@@ -44,7 +44,6 @@ noise_model = "step"
 prop_obs = 0.2
 gamma_n = 0.5
 gamma_m = 0.9
-k_list = np.arange(1,6)
 
 # Other parameters
 verbose = True
@@ -54,10 +53,10 @@ alpha = 0.1
 # Experiment-specific parameters
 if exp == "vary_k":
     k_list = np.arange(1,11)
-    repetition = 2
+    repetition = 1
 elif exp == "vary_mu":
     k_list = [2,5,10]
-    repetition = 5
+    repetition = 1
 else:
     print("Error: Unkown type of experiment.")
     quit()
@@ -117,7 +116,7 @@ def run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_cali
     #-------------------------------#
     n1, n2 = M_true.shape
     sampler = QuerySampling(n1,n2)
-    mask_obs, mask_test = sampler.sample_submask(size_obs=prop_obs, random_state=random_state)
+    mask_obs, mask_test = sampler.sample_submask(sub_size=prop_obs, random_state=random_state)
     n_calib_queries = min(int(0.5 * np.sum(np.sum(mask_obs, axis=1) // k)), max_calib_queries)
 
 
@@ -126,7 +125,7 @@ def run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_cali
     n_test_queries = min(int(0.99 * np.sum(np.sum(mask_test, axis=1) // k)), max_test_queries)
     _, idxs_test, _ = sampler.sample_train_calib(mask_test, k, calib_size=n_test_queries, random_state=random_state)  
     if verbose:
-        print("Training size:{}, calib size: {}, test size: {}\n".format(np.sum(mask_train), n_calib_queries, n_test_queries))
+        print("Training size:{}, calib size: {}, test size: {}\n".format(np.sum(mask_obs)-n_calib_queries*k, n_calib_queries, n_test_queries))
         sys.stdout.flush()
 
     
@@ -164,16 +163,16 @@ def run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_cali
         #-------------------------------#
         if method == "conformal":
             ci_method = SimulCI(M, Mhat, mask_obs, idxs_calib, k)
-            df = ci_method.get_CI(idxs_test, alpha, allow_inf)
+            df = ci_method.get_CI(idxs_test, alpha, allow_inf=allow_inf)
             lower, upper, is_inf= df.loc[0].lower, df.loc[0].upper, df.loc[0].is_inf
-            res = pd.concat([res, evaluate_SCI(lower, upper, M, idxs_test, is_inf=is_inf, method=method)])
+            res = pd.concat([res, evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=is_inf, method=method)])
         else:
             a_list = [alpha, alpha * k]
             ci_method = Bonf_benchmark(M, Mhat, mask_obs, idxs_calib, k)
-            df = ci_method.get_CI(idxs_test, a_list, allow_inf)
+            df = ci_method.get_CI(idxs_test, a_list, allow_inf=allow_inf)
             for i, m in enumerate(["Bonferroni", "Uncorrected"]):
                 lower, upper, is_inf= df.loc[i].lower, df.loc[i].upper, df.loc[i].is_inf
-                res = pd.concat([res, evaluate_SCI(lower, upper, M, idxs_test, is_inf=is_inf, method=m)])
+                res = pd.concat([res, evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=is_inf, method=m)])
 
 
     res['k'] = k     
@@ -193,7 +192,7 @@ results = pd.DataFrame({})
 for i in tqdm(range(1, repetition+1), desc="Repetitions", leave=True, position=0):
     random_state = repetition * (seed-1) + i
     
-    for k in tqdm(range(len(k_list)), desc="k", leave=True, position=0):
+    for k in tqdm(k_list, desc="k", leave=True, position=0):
 
         res = run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_calib_queries,
                             r, gamma_n=gamma_n, gamma_m=gamma_m, mu=mu, random_state=seed)
