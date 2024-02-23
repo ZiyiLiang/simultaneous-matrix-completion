@@ -134,6 +134,7 @@ dmypy.json
 /experiments_synthetic/results
 /experiments_synthetic/logs
 /experiments_synthetic/cleanup.sh
+/archived/results
 
 # cluster setup
 /setup.sh
