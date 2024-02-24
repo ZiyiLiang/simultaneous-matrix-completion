@@ -52,7 +52,7 @@ alpha = 0.1
 
 # Experiment-specific parameters
 if exp == "vary_k":
-    k_list = np.arange(1,11)
+    k_list = np.arange(2,11)
     repetition = 1
 elif exp == "vary_mu":
     k_list = [2,5,10]

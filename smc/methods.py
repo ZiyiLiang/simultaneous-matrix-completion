@@ -435,18 +435,16 @@ class SimulCI():
         if self.verbose:
             print("Computing conformal prediction intervals for {} test queries...".format(n_test_queries))
             sys.stdout.flush()
-                
+
+        # Compute constant components in weights that are invariant to test query
+        sr_prune, sw_prune, sr_miss, delta, scale = self._compute_universal(w_test)      
+        
         for i in tqdm(range(n_test_queries), desc="CI", leave=True, position=0, 
                       disable = not self.progress):
             idx_test = (idxs_test[0][self.k*i : self.k*(i+1)], idxs_test[1][self.k*i : self.k*(i+1)])
             row_test = idx_test[0][0]
 
-            # Compute constant components in weights that are invariant to test query
-            sr_prune, sw_prune, sr_miss, delta, scale = self._compute_universal(w_test)
             weights = self._weight_single(idx_test, row_test, w_test, sr_prune, sw_prune, sr_miss, delta, scale)
-
-            #pdb.set_trace()        
-
             cweights = np.cumsum(weights[self.calib_order])
             est = np.array(self.Mhat[idx_test])
 
