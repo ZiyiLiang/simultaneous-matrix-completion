@@ -131,7 +131,7 @@ dmypy.json
 
 # logs and results
 /results
-/experiments_synthetic/results_hpc
+/experiments_synthetic/results*
 /experiments_synthetic/logs
 /experiments_synthetic/cleanup.sh
 /archived/results
