@@ -10,25 +10,25 @@ SCALE_LIST=(0.5)
 SEED_LIST=(0)
 
 # Slurm parameters
-MEMO=1G                             # Memory required (1 GB)
-TIME=00-02:00:00                    # Time required (2 h)
+MEMO=2G                             # Memory required (1 GB)
+TIME=00-01:00:00                    # Time required (2 h)
 CORE=1                              # Cores required (1)
 
 # Assemble order                                               prefix
 ORDP="sbatch --mem="$MEMO" --nodes=1 --ntasks=1 --cpus-per-task=1 --time="$TIME
 
 # Create directory for log files
-LOGS="logs/exp_uniform"
+LOGS="logs/exp_biased_obs"
 mkdir -p $LOGS
 
 comp=0
 incomp=0
 
-OUT_DIR="results/exp_uniform"
+OUT_DIR="results/exp_biased_obs"
 mkdir -p $OUT_DIR
 for SEED in $SEED_LIST; do
     for MU in $MU_LIST; do
-        JOBN=$N1"by"$N2"_r"$R"_mu"$MU"_seed"$SEED
+        JOBN=$N1"by"$N2"_r"$R"_scale"$SCALE"_seed"$SEED
         OUT_FILE=$OUT_DIR"/"$JOBN".txt"
         COMPLETE=0
         #ls $OUT_FILE
@@ -40,7 +40,7 @@ for SEED in $SEED_LIST; do
         if [[ $COMPLETE -eq 0 ]]; then
         ((incomp++))
 	    # Script to be run
-        SCRIPT="exp_uniform.sh $N1 $N2 $R $MU $SEED"
+        SCRIPT="exp_biased_obs.sh $N1 $N2 $R $SCALE $SEED"
         # Define job name
         OUTF=$LOGS"/"$JOBN".out"
         ERRF=$LOGS"/"$JOBN".err"
