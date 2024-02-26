@@ -20,16 +20,15 @@ if True:
     # Parse input arguments
     print ('Number of arguments:', len(sys.argv), 'arguments.')
     print ('Argument List:', str(sys.argv))
-    if len(sys.argv) != 7:
+    if len(sys.argv) != 6:
         print("Error: incorrect number of parameters.")
         quit()
 
     n1 = int(sys.argv[1])
     n2 = int(sys.argv[2])
     r = int(sys.argv[3])
-    exp = sys.argv[4]
-    mu = float(sys.argv[5])
-    seed = int(sys.argv[6])
+    mu = float(sys.argv[4])
+    seed = int(sys.argv[5])
     
 # Fixed data parameters
 max_test_queries = 100            
@@ -50,16 +49,8 @@ verbose = True
 allow_inf = False
 alpha = 0.1
 
-# Experiment-specific parameters
-if exp == "vary_k":
-    k_list = np.arange(2,11)
-    repetition = 1
-elif exp == "vary_mu":
-    k_list = [2,5,10]
-    repetition = 1
-else:
-    print("Error: Unkown type of experiment.")
-    quit()
+k_list = np.arange(2,11)
+repetition = 5
 
 
 
