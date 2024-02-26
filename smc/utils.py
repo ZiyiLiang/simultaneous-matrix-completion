@@ -5,6 +5,11 @@ import pandas as pd
 
 
 def plot_before_after_mask(M, mask, vmin=None, vmax=None, bad_color='grey', figsize=(12,5)):
+    if vmin is None:
+        vmin = np.min(M)
+    if vmax is None:
+        vmax = np.max(M)
+    
     # Plot the masked and unmasked matrix side by side
     fig, axs = plt.subplots(1,2, figsize=figsize)
     fig.tight_layout()
