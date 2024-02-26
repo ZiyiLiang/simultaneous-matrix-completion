@@ -47,7 +47,7 @@ verbose = True
 allow_inf = False
 alpha = 0.1
 
-k_list = [3,5,8]
+k_list = [3,5,8,12]
 repetition = 1
 
 
@@ -101,13 +101,13 @@ def run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_cali
 
     #--------Observation bias-------#
     #-------------------------------#
+    n1, n2 = M_true.shape
     bm = SamplingBias(n1,n2)
     w_obs = bm.inc_weights(scale = scale)
 
     
     #-------Generate masks----------#
     #-------------------------------#
-    n1, n2 = M_true.shape
     sampler = QuerySampling(n1,n2)
     mask_obs, mask_test = sampler.sample_submask(sub_size=prop_obs, w=w_obs, random_state=random_state)
     n_calib_queries = min(int(0.5 * np.sum(np.sum(mask_obs, axis=1) // k)), max_calib_queries)

@@ -106,3 +106,30 @@ class NoiseModel():
         M = (1-gamma_n)*M + gamma_n*noise
         
         return M   
+
+
+
+class SamplingBias():
+    def __init__(self, m, n, normalize=True):
+        self.m = m
+        self.n = n
+        self.shape = (self.m, self.n)
+        self.std = normalize
+        
+    def latent_weights(self, U, V, r, v, a, b, scale=0.5):
+        r = int(len(v)/2)
+        x = np.tile(np.dot(U, v[:r]), (len(U),1)).T + np.tile(np.dot(V, v[r:]), (len(U),1))
+        w = np.zeros_like(x)
+        w[np.where((x <= b) & (x >= a))] = 1
+        w[np.where(x > b)] = scipy.stats.norm.pdf(x[np.where(x > b)], loc=b, scale=scale)/scipy.stats.norm.pdf(b, loc=b, scale=scale)
+        w[np.where(x < a)] = scipy.stats.norm.pdf(x[np.where(x < a)], loc=a, scale=scale)/scipy.stats.norm.pdf(a, loc=a, scale=scale)
+        return w/np.sum(w) if self.std else w
+
+    def unif_weights(self):
+        w = np.ones(self.shape)
+        return w/np.sum(w) if self.std else w
+
+    def inc_weights(self, scale=1):
+        w = np.arange(1, self.m*self.n+1)**scale/(self.m*self.n)
+        w = w.reshape(self.shape)
+        return w/np.sum(w) if self.std else w

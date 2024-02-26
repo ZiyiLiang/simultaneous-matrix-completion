@@ -54,4 +54,4 @@ for SEED in $SEED_LIST; do
     done
 done
 
-echo "Jobs completed: $comp, unfinished jobs: $incomp"
+echo "Jobs already completed: $comp, submitted unfinished jobs: $incomp"
