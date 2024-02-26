@@ -27,7 +27,7 @@ if True:
     n1 = int(sys.argv[1])
     n2 = int(sys.argv[2])
     r = int(sys.argv[3])
-    mu = float(sys.argv[4])
+    mu = int(sys.argv[4])
     seed = int(sys.argv[5])
     
 # Fixed data parameters
@@ -59,7 +59,7 @@ repetition = 5
 ###############
 outdir = "./results/exp_uniform/"
 os.makedirs(outdir, exist_ok=True)
-outfile_name = str(n1) + "by" + str(n2) + "_r" + str(r) + "_prob" + "_mu" + str(mu) + "_seed" + str(seed)
+outfile_name = str(n1) + "by" + str(n2) + "_r" + str(r) + "_mu" + str(mu) + "_seed" + str(seed)
 outfile = outdir + outfile_name + ".txt"
 print("Output file: {:s}".format(outfile), end="\n")
 sys.stdout.flush()
@@ -186,7 +186,7 @@ for i in tqdm(range(1, repetition+1), desc="Repetitions", leave=True, position=0
     for k in tqdm(k_list, desc="k", leave=True, position=0):
 
         res = run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_calib_queries,
-                            r, gamma_n=gamma_n, gamma_m=gamma_m, mu=mu, random_state=seed)
+                            r, gamma_n=gamma_n, gamma_m=gamma_m, mu=mu, random_state=random_state)
         
         results = pd.concat([results, res])
 
