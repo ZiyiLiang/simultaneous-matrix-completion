@@ -5,7 +5,7 @@ N1=500
 N2=500
 R=10
 SCALE_LIST=$(seq 0.0 0.2 1.6)
-SEED_LIST=$(seq 1 60)
+SEED_LIST=$(seq 1 200)
 #SCALE_LIST=(0.5)
 #SEED_LIST=(1)
 
