@@ -32,14 +32,14 @@ if True:
     
 # Fixed data parameters
 max_test_queries = 100            
-max_calib_queries = 1000
+max_calib_queries = 1500
 matrix_generation_seed = 2024    # Data matrix is fixed 
 
 methods = ["conformal", 
            "benchmark"]
 model = "RFM"
 solver = "pmf"
-prop_obs = 0.2
+prop_obs = 0.3
 
 
 # Other parameters
@@ -47,7 +47,7 @@ verbose = True
 allow_inf = False
 alpha = 0.1
 
-k_list = np.arange(2,15,2)
+k_list = np.arange(2,11)
 repetition = 1
 
 

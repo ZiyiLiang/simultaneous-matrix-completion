@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # Parameters
-N1=500
-N2=500
-R=10
-SCALE_LIST=$(seq 0.0 0.2 1.6)
-SEED_LIST=$(seq 1 200)
-#SCALE_LIST=(0.5)
+N1=300
+N2=300
+R=8
+#SCALE_LIST=$(seq 0.0 0.2 1.4)
+SEED_LIST=$(seq 1 20)
+SCALE_LIST=(1 1.2 1.4)
 #SEED_LIST=(1)
 
 # Slurm parameters

@@ -14,11 +14,11 @@ results.raw <- do.call("rbind", lapply(ifile.list, function(ifile) {
   df <- read_delim(sprintf("%s/%s", idir, ifile), delim=",", col_types=cols())
 }))
 
-key.values <- c("Query_coverage", "Coverage", "Size")
-key.labels <- c("Query coverage", "Coverage", "Size")
+key.values <- c("Query_coverage", "Coverage", "Size", "Inf_prop")
+key.labels <- c("Query coverage", "Coverage", "Size", "Inf_prop")
 
 Method.values <- c("conformal", "Bonferroni", "Uncorrected")
-Method.labels <- c("Conformal", "Bonferroni", "Uncorrected")
+Method.labels <- c("Simultaneous", "Bonferroni", "Uncorrected")
 
 color.scale <- c("#566be9", "#56b5e9", "#CC79A7", "orange")
 shape.scale <- c(15, 4, 8, 1)
@@ -30,28 +30,23 @@ results_hpm <- results.raw %>%
   mutate(Key = factor(Key, key.values, key.labels)) %>%
   group_by(Method, gamma_n, gamma_m, mu,k, Key) %>%
   summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T)) %>%
-  filter(Key!='Coverage', k!=10, k!=9)
+  filter(Key!='Coverage', Key!='Inf_prop' , k!=10, k!=9)
  
-# results_filtered <- results.raw %>%
+# results_hpm <- results.raw %>%
 #   mutate(Method = factor(Method, Method.values, Method.labels)) %>%
-#   pivot_longer(cols=c(`Query_coverage`, `Coverage`,`Size`), names_to='Key', values_to='Value') %>%
+#   pivot_longer(cols=c(`Query_coverage`, `Coverage`,`Size`, `Inf_prop`), names_to='Key', values_to='Value') %>%
 #   mutate(Key = factor(Key, key.values, key.labels)) %>%
-#   group_by(Method, gamma_n, gamma_m, mu, Key) %>%
-#   filter(Method=='Uncorrected')%>%
+#   group_by(Method, gamma_n, gamma_m, mu,k, Key) %>%
 #   summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
 
 
-# results_filtered <- results.raw %>%
-#   filter(Method=='Uncorrected')
-
-
-
 ## Make nice plots for paper
-make_plot <- function(exp, val, xmax=2000) {
+make_plot <- function(exp, val, xmax=2000, sv=TRUE) {
   plot.alpha <- 0.9
   df.nominal <- tibble(Key=c("Query_coverage"), Value=plot.alpha) %>%
     mutate(Key = factor(Key, key.values, key.labels))    
   df.ghost <- tibble(Key=c("Query_coverage", "Size"), Value=c(0.9,10), Method="conformal") %>%
+#  df.ghost <- tibble(Key=c("Query_coverage", "Coverage", "Size","Inf_prop"), Value=c(0.9,0.9,10,0), Method="conformal") %>%
     mutate(Method = factor(Method, Method.values, Method.labels)) %>%
     mutate(Key = factor(Key, key.values, key.labels)) 
   
@@ -61,7 +56,7 @@ make_plot <- function(exp, val, xmax=2000) {
       ggplot(aes(x=k, y=Value, color=Method, shape=Method)) +
       geom_point(alpha=0.75) +
       geom_line() +
-      geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se)) +
+      geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.5) +
       geom_hline(data=df.nominal, aes(yintercept=Value)) +
       scale_color_manual(values=color.scale) +
       scale_shape_manual(values=shape.scale) +
@@ -69,7 +64,9 @@ make_plot <- function(exp, val, xmax=2000) {
       xlab("Query size K") +
       ylab("") +
       theme_bw()
-    ggsave(sprintf("%s/exp_uniform_%s_mu%i.pdf", fig.dir, exp, val), pp, device=NULL, width=5.5, height=2)
+    if (sv == TRUE){
+      ggsave(sprintf("%s/exp_uniform_%s_mu%i.pdf", fig.dir, exp, val), pp, device=NULL, width=5.5, height=2)}
+    else{pp}
   }
   else{
     pp <- results_hpm %>%
@@ -77,7 +74,7 @@ make_plot <- function(exp, val, xmax=2000) {
       ggplot(aes(x=mu, y=Value, color=Method, shape=Method)) +
       geom_point(alpha=0.75) +
       geom_line() +
-      geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se)) +
+      geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.5) +
       geom_hline(data=df.nominal, aes(yintercept=Value)) +
       scale_color_manual(values=color.scale) +
       scale_shape_manual(values=shape.scale) +
@@ -85,8 +82,9 @@ make_plot <- function(exp, val, xmax=2000) {
       xlab("Column-wise magnitude") +
       ylab("") +
       theme_bw()
-    ggsave(sprintf("%s/exp_uniform_%s_k%i.pdf", fig.dir, exp, val), pp, device=NULL, width=5.5, height=2)
-    
+    if (sv == TRUE){
+      ggsave(sprintf("%s/exp_uniform_%s_k%i.pdf", fig.dir, exp, val), pp, device=NULL, width=5.5, height=2)}
+    else{pp}
   }
 }
 
