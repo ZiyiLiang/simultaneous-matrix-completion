@@ -33,7 +33,7 @@ shape.scale <- c(15, 4, 8, 1)
 #   summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T)) %>%
 #   filter(Key!='Coverage')
 
-resultsmakeplot <- results.raw %>%
+results <- results.raw %>%
   mutate(Method = factor(Method, Method.values, Method.labels)) %>%
   pivot_longer(cols=c(`Query_coverage`, `Coverage`,`Size`, `Inf_prop`), names_to='Key', values_to='Value') %>%
   mutate(Key = factor(Key, key.values, key.labels)) %>%
