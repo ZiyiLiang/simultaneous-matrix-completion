@@ -1,21 +1,21 @@
 #!/bin/bash
 
 # Parameters
-N1=300
-N2=300
+N1=400
+N2=400
 R=8
 #SCALE_LIST=$(seq 0.0 0.2 1.4)
 SEED_LIST=$(seq 1 20)
-SCALE_LIST=(1 1.2 1.4)
+SCALE_LIST=$(seq 1.0 0.2 1.4)
 #SEED_LIST=(1)
 
 # Slurm parameters
-MEMO=3G                             # Memory required (1 GB)
-TIME=00-01:00:00                    # Time required (2 h)
+MEMO=2G                             # Memory required (1 GB)
+TIME=00-02:00:00                    # Time required (2 h)
 CORE=1                              # Cores required (1)
 
 # Assemble order                                               prefix
-ORDP="sbatch --mem="$MEMO" --nodes=1 --ntasks=1 --cpus-per-task=1 --time="$TIME
+ORDP="sbatch --mem="$MEMO" --nodes=1 --ntasks=1 --cpus-per-task=1 --time="$TIME" --account=sesia_1124 --partition=main"
 
 # Create directory for log files
 LOGS="logs/exp_biased_obs"

@@ -32,7 +32,7 @@ if True:
     
 # Fixed data parameters
 max_test_queries = 100            
-max_calib_queries = 1500
+max_calib_queries = 2000
 matrix_generation_seed = 2024    # Data matrix is fixed 
 
 methods = ["conformal", 
@@ -47,7 +47,7 @@ verbose = True
 allow_inf = False
 alpha = 0.1
 
-k_list = np.arange(2,11)
+k_list = np.arange(8,9)
 repetition = 1
 
 
