@@ -25,13 +25,10 @@ color.scale <- c("#566be9", "#56b5e9", "#CC79A7", "orange")
 shape.scale <- c(15, 4, 8, 1)
 
 
-# results <- results.raw %>%
-#   mutate(Method = factor(Method, Method.values, Method.labels)) %>%
-#   pivot_longer(cols=c(`Query_coverage`, `Coverage`,`Size`), names_to='Key', values_to='Value') %>%
-#   mutate(Key = factor(Key, key.values, key.labels)) %>%
-#   group_by(Method, scale,k, Key) %>%
-#   summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T)) %>%
-#   filter(Key!='Coverage')
+
+
+full_graph = FALSE
+
 
 results <- results.raw %>%
   mutate(Method = factor(Method, Method.values, Method.labels)) %>%
@@ -40,17 +37,10 @@ results <- results.raw %>%
   group_by(Method, scale,k, Key) %>%
   summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
 
-# results_filtered <- results.raw %>%
-#   mutate(Method = factor(Method, Method.values, Method.labels)) %>%
-#   pivot_longer(cols=c(`Query_coverage`, `Coverage`,`Size`), names_to='Key', values_to='Value') %>%
-#   mutate(Key = factor(Key, key.values, key.labels)) %>%
-#   group_by(Method, gamma_n, gamma_m, mu, Key) %>%
-#   filter(Method=='Uncorrected')%>%
-#   summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
-
-
-# results_filtered <- results.raw %>%
-#   filter(Method=='Uncorrected')
+if (full_graph == FALSE){
+  results <- results %>%
+    filter(Key != "Coverage", Key != "Inf_prop")
+}
 
 
 
@@ -58,19 +48,26 @@ results <- results.raw %>%
 make_plot <- function(exp, val, xmax=2000, sv=TRUE) {
   plot.alpha <- 0.9
   df.nominal <- tibble(Key=c("Query_coverage"), Value=plot.alpha) %>%
-    mutate(Key = factor(Key, key.values, key.labels))    
-  df.ghost <- tibble(Key=c("Query_coverage", "Coverage", "Size","Inf_prop"), Value=c(0.9,0.9,10,0), Method="conformal") %>%
-  #df.ghost <- tibble(Key=c("Query_coverage", "Size"), Value=c(0.9,10), Method="conformal") %>%
-    mutate(Method = factor(Method, Method.values, Method.labels)) %>%
-    mutate(Key = factor(Key, key.values, key.labels)) 
+    mutate(Key = factor(Key, key.values, key.labels))
+  if (full_graph){
+    df.ghost <- tibble(Key=c("Query_coverage", "Coverage", "Size","Inf_prop"), Value=c(0.9,0.9,10,0), Method="conformal") %>%
+      mutate(Method = factor(Method, Method.values, Method.labels)) %>%
+      mutate(Key = factor(Key, key.values, key.labels)) 
+  }
+  else{
+    df.ghost <- tibble(Key=c("Query_coverage", "Size"), Value=c(0.9,10), Method="conformal") %>%
+      mutate(Method = factor(Method, Method.values, Method.labels)) %>%
+      mutate(Key = factor(Key, key.values, key.labels))
+  }
   
+    
   if (exp=="vary_k"){
     pp <- results %>%
       filter(scale==val)%>%
       ggplot(aes(x=k, y=Value, color=Method, shape=Method)) +
       geom_point(alpha=0.75) +
       geom_line() +
-      geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.5) +
+      geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.3) +
       geom_hline(data=df.nominal, aes(yintercept=Value)) +
       scale_color_manual(values=color.scale) +
       scale_shape_manual(values=shape.scale) +
@@ -90,7 +87,7 @@ make_plot <- function(exp, val, xmax=2000, sv=TRUE) {
       ggplot(aes(x=scale, y=Value, color=Method, shape=Method)) +
       geom_point(alpha=0.75) +
       geom_line() +
-      geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.5) +
+      geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.03) +
       geom_hline(data=df.nominal, aes(yintercept=Value)) +
       scale_color_manual(values=color.scale) +
       scale_shape_manual(values=shape.scale) +
@@ -107,8 +104,8 @@ make_plot <- function(exp, val, xmax=2000, sv=TRUE) {
 }
 
 exp_list <- c("vary_k", "vary_scale")
-k_list <- seq(2, 15, by = 2)
-scale_list <-  seq(0, 1.6, by = 0.2)
+k_list <- seq(2, 8, by = 1)
+scale_list <-  seq(0.5, 1.2, by = 0.1)
 
 
 for (exp in exp_list) {
