@@ -4,9 +4,9 @@
 N1=400
 N2=400
 R=8
-#SCALE_LIST=$(seq 0.0 0.2 1.4)
-SEED_LIST=$(seq 1 20)
-SCALE_LIST=$(seq 1.0 0.2 1.4)
+SCALE_LIST=$(seq 0.5 0.1 1.2)
+SEED_LIST=$(seq 1 200)
+#SCALE_LIST=$(seq 1.0 0.2 1.4)
 #SEED_LIST=(1)
 
 # Slurm parameters
