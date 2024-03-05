@@ -73,7 +73,8 @@ def evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=None, method=None):
     results["Coverage"] = [coverage]
     results["Size"] = [size]
     if type(is_inf) != type(None):
-        results["Inf_prop"] = [np.mean(is_inf)]
+        query_is_inf = [np.any(is_inf[k*i:k*(i+1)]) for i in range(n_test_queries)]
+        results["Inf_prop"] = [np.mean(query_is_inf)]
     if method:
         results["Method"] = [method]
     return results

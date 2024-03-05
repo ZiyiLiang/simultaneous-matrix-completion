@@ -128,7 +128,7 @@ class QuerySampling():
         mask_calib = np.zeros_like(mask_obs)
         n_obs = np.sum(mask_obs, axis=1)   # Check the observation# in each row
 
-        n_queries = self._validate_calib_size(calib_size, n_obs, k, max_n_calib)
+        n_queries = self._validate_query_size(calib_size, n_obs, k, max_n_calib, "calib")
         idxs_calib = (-np.ones(k * n_queries, dtype=int),\
                       -np.ones(k * n_queries, dtype=int))
         
@@ -170,41 +170,126 @@ class QuerySampling():
         return mask_train, idxs_calib, mask_calib
     
 
-    def _validate_calib_size(self, calib_size, n_obs, k, max_n_calib):
+
+    def sample_test(self, mask_missing, k, test_size=None, max_n_test=None, w=None, replace=False, random_state=0):
+        """
+        (Weighted) Sampling of the test queries from the missing indices with or without replacement.
+
+        Parameters
+        ----------
+        mask_missing : ndarray
+            The parent mask used for sampling should be an array consisting of 0s and 1s. 
+        k : int
+            Positive integer smaller than number of cols
+        test_size : int or float, optional
+            Size of the submask, either a float in (0,1) or a positive integer smaller than 
+            size of the parent mask. Default is 0.5.
+        max_n_test : int, optional
+            Optional positive integer, if provided, number of calibration queries will be capped
+            at this value.
+        w : ndarray, optional
+            non-negative sampling weights for the observed entreis, dimension should match the
+            shape of the input matrix. Default is uniform weights.
+        replacement : Boolean, optional
+            Sample with replacement if True, else sample without replacement. Default is False.
+
+        Returns
+        -------
+        idxs_test : tuple of arrays
+            idxs_test[0] is an array of row indexes
+            idxs_test[1] is an array of col indexes
+            k consecutive entries form a test query
+        """
+        rng = np.random.default_rng(random_state)
+
+        if w is None:
+            w = np.ones_like(mask_missing)
+        else:
+            w = np.array(w)
+
+        mask_w_pos = np.zeros_like(w)
+        mask_w_pos[np.where(w>0)] = 1
+        mask_avail =  mask_w_pos * mask_missing
+        n_avail = np.sum(mask_avail, axis=1)   # Check the number of available indices in each row
+
+        n_queries = self._validate_query_size(test_size, n_avail, k, max_n_test, "test")
+        idxs_test = (-np.ones(k * n_queries, dtype=int),\
+                      -np.ones(k * n_queries, dtype=int))
+        
+
+        avail_idxs, num_idxs, avail_w, row_w = {}, {}, {}, {}
+        for i in range(self.n1):
+            if n_avail[i] >= k:
+                idxs = np.where(mask_avail[i]==1)[0]
+                avail_idxs[i] = idxs
+                num_idxs[i] = len(idxs)
+                avail_w[i] = w[i][idxs]
+                row_w[i] = np.sum(avail_w[i])
+
+        # Sample test queries
+        for i in range(n_queries):
+            rows, prob = list(row_w.keys()), list(row_w.values())
+            prob /= np.sum(prob)
+            row = rng.choice(rows, p=prob) 
+            
+            # Sample the test queries
+            selected = rng.choice(num_idxs[row], k, replace=False, p=avail_w[row])
+            idxs_test[0][k*i : k*(i+1)] = row
+            idxs_test[1][k*i : k*(i+1)] = avail_idxs[selected]
+            
+            if not replace:
+                # Update the available indices by removing the selected query
+                if num_idxs[row] <= 2*k:
+                    del avail_idxs[row]
+                    del num_idxs[row]
+                    del avail_w[row]
+                    del row_w[row]
+                else:
+                    remain = np.array([l for l in range(num_idxs[row]) if l not in selected])
+                    avail_idxs[row] = avail_idxs[row][remain]
+                    num_idxs[row] -= k
+                    avail_w[row] = avail_w[row][remain]
+                    row_w[row] -= np.sum(avail_w[row][selected])
+             
+        return idxs_test
+
+
+
+    def _validate_query_size(self, query_size, n, k, max_n_query, param_name):
         """
         validation helper to check if the calibration size is meaningful
         """
-        calib_size_type = np.asarray(calib_size).dtype.kind
-        max_calib_num = int(np.sum(n_obs // k))
+        query_size_type = np.asarray(query_size).dtype.kind
+        max_query_num = int(np.sum(n // k))
 
-        if max_n_calib is not None:
-            max_n_calib = int(np.clip(max_n_calib, 1, max_calib_num))
+        if max_n_query is not None:
+            max_n_query = int(np.clip(max_n_query, 1, max_query_num))
         else:
-            max_n_calib = max_calib_num
+            max_n_query = max_query_num
 
         if (
-            calib_size_type == "i"
-            and (calib_size >= max_calib_num or calib_size <= 0)
-            or calib_size_type == "f"
-            and (calib_size <= 0 or calib_size >= 1)
+            query_size_type == "i"
+            and (query_size >= max_query_num or query_size <= 0)
+            or query_size_type == "f"
+            and (query_size <= 0 or query_size >= 1)
         ):
             raise ValueError(
-                "calib_size={0} should be either positive and smaller"
-                " than the maximum possible calibration number {1} or a float in the "
-                "(0, 1) range".format(calib_size, max_calib_num)
+                "{0}_size={1} should be either positive and smaller"
+                " than the maximum possible number {2} or a float in the "
+                "(0, 1) range".format(param_name, query_size, max_query_num)
             )
         
-        if calib_size is not None and calib_size_type not in ("i", "f"):
-            raise ValueError("Invalid value for calib_size: {}".format(calib_size))
+        if query_size is not None and query_size_type not in ("i", "f"):
+            raise ValueError("Invalid value for {0}_size: {1}".format(param_name, query_size))
         
-        if calib_size_type == "f":
-            n_calib = int(calib_size * max_calib_num)
-        elif calib_size_type == "i":
-            n_calib = calib_size
-        elif calib_size is None:
-            n_calib = int(0.5 * max_calib_num)
+        if query_size_type == "f":
+            n_query = int(query_size * max_query_num)
+        elif query_size_type == "i":
+            n_query = query_size
+        elif query_size is None:
+            n_query = int(0.5 * max_query_num)
         
-        return np.min([n_calib, max_n_calib])
+        return np.min([n_query, max_n_query])
 
 
 
@@ -467,35 +552,6 @@ class SimulCI():
             sys.stdout.flush()
             
         return df
-    
-
-    # def naive_CI(self, idxs_test, alpha, allow_inf=True):
-    #     n_test_queries = len(idxs_test[0])//self.k
-    #     if self.verbose:
-    #         print("Computing naive prediction intervals for {} test queries...".format(n_test_queries))
-    #         sys.stdout.flush()
-        
-    #     level_corrected = (1 - alpha) * (1 + 1/self.n_calib_queries)
-    #     est = np.array(self.Mhat[idxs_test])
-        
-    #     if level_corrected >= 1:
-    #         is_inf = np.ones(n_test_queries)
-    #         if allow_inf:
-    #             lower = np.repeat(-np.inf, len(idxs_test[0]))
-    #             upper = np.repeat(np.inf, len(idxs_test[0]))
-    #         else:
-    #             lower = est - self.st_calib_scores[-1]
-    #             upper = est + self.st_calib_scores[-1]
-    #     else:
-    #         is_inf = np.zeros(n_test_queries)
-    #         qnt = np.quantile(self.calib_scores, level_corrected, method="higher")
-    #         lower = est - qnt
-    #         upper = est + qnt
-
-    #     if self.verbose:
-    #         print("Done!")
-    #         sys.stdout.flush()
-    #     return lower, upper, is_inf
     
 
 
