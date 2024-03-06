@@ -4,14 +4,14 @@
 N1=400
 N2=400
 R=8
-SCALE_LIST=$(seq 0.5 0.1 1.2)
+SCALE_LIST=$(seq 0.5 0.05 1.0)
 SEED_LIST=$(seq 1 200)
 #SCALE_LIST=$(seq 1.0 0.2 1.4)
 #SEED_LIST=(1)
 
 # Slurm parameters
 MEMO=2G                             # Memory required (1 GB)
-TIME=00-02:00:00                    # Time required (2 h)
+TIME=00-01:30:00                    # Time required (2 h)
 CORE=1                              # Cores required (1)
 
 # Assemble order                                               prefix

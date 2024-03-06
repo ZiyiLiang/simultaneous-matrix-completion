@@ -57,7 +57,7 @@ repetition = 1
 ###############
 outdir = "./results/exp_biased_obs/"
 os.makedirs(outdir, exist_ok=True)
-outfile_name = str(n1) + "by" + str(n2) + "_r" + str(r) + "_scale" + str(round(scale,1)) + "_seed" + str(seed)
+outfile_name = f"{n1}by{n2}_r{r}_scale{scale:.2f}_seed{seed}"
 outfile = outdir + outfile_name + ".txt"
 print("Output file: {:s}".format(outfile), end="\n")
 sys.stdout.flush()
