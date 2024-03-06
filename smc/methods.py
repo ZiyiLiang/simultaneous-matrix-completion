@@ -217,25 +217,25 @@ class QuerySampling():
                       -np.ones(k * n_queries, dtype=int))
         
 
-        avail_idxs, num_idxs, avail_w, row_w = {}, {}, {}, {}
+        avail_idxs, num_idxs, avail_w, sum_w = {}, {}, {}, {}
         for i in range(self.n1):
             if n_avail[i] >= k:
                 idxs = np.where(mask_avail[i]==1)[0]
                 avail_idxs[i] = idxs
                 num_idxs[i] = len(idxs)
                 avail_w[i] = w[i][idxs]
-                row_w[i] = np.sum(avail_w[i])
+                sum_w[i] = np.sum(avail_w[i])
 
         # Sample test queries
         for i in range(n_queries):
-            rows, prob = list(row_w.keys()), list(row_w.values())
+            rows, prob = list(sum_w.keys()), list(sum_w.values())
             prob /= np.sum(prob)
             row = rng.choice(rows, p=prob) 
             
             # Sample the test queries
-            selected = rng.choice(num_idxs[row], k, replace=False, p=avail_w[row])
+            selected = rng.choice(num_idxs[row], k, replace=False, p=avail_w[row]/sum_w[row])
             idxs_test[0][k*i : k*(i+1)] = row
-            idxs_test[1][k*i : k*(i+1)] = avail_idxs[selected]
+            idxs_test[1][k*i : k*(i+1)] = avail_idxs[row][selected]
             
             if not replace:
                 # Update the available indices by removing the selected query
@@ -243,14 +243,14 @@ class QuerySampling():
                     del avail_idxs[row]
                     del num_idxs[row]
                     del avail_w[row]
-                    del row_w[row]
+                    del sum_w[row]
                 else:
                     remain = np.array([l for l in range(num_idxs[row]) if l not in selected])
                     avail_idxs[row] = avail_idxs[row][remain]
                     num_idxs[row] -= k
                     avail_w[row] = avail_w[row][remain]
-                    row_w[row] -= np.sum(avail_w[row][selected])
-             
+                    sum_w[row] = np.sum(avail_w[row])
+                                 
         return idxs_test
 
 
