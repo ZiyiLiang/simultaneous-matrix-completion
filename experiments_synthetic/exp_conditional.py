@@ -32,7 +32,7 @@ if True:
 
 
 # Fixed data parameters
-max_test_queries = 1000            
+max_test_queries = 500            
 max_calib_queries = 1000
 matrix_generation_seed = 2024    # Data matrix is fixed 
 
@@ -49,7 +49,7 @@ allow_inf = False
 alpha = 0.1
 
 k_list = np.arange(2,9)
-repetition = 1
+repetition = 5
 
 
 

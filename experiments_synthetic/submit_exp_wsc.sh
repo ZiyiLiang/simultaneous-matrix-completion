@@ -1,29 +1,29 @@
 #!/bin/bash
 
 # Parameters
-N1=400
-N2=400
-R=8
+N1=300
+N2=300
+R=6
 EXP="wsc"
-#SEED_LIST=$(seq 1 200)
-SEED_LIST=(1)
+SEED_LIST=$(seq 1 60)
+#SEED_LIST=(1)
 
 # Slurm parameters
-MEMO=2G                             # Memory required (1 GB)
-TIME=00-01:30:00                    # Time required (2 h)
+MEMO=1G                             # Memory required (1 GB)
+TIME=00-01:00:00                    # Time required (2 h)
 CORE=1                              # Cores required (1)
 
 # Assemble order                                               prefix
 ORDP="sbatch --mem="$MEMO" --nodes=1 --ntasks=1 --cpus-per-task=1 --time="$TIME" --account=sesia_1124 --partition=main"
 
 # Create directory for log files
-LOGS="logs/exp_conditional/"$EXP
+LOGS="logs/exp_conditional_"$EXP
 mkdir -p $LOGS
 
 comp=0
 incomp=0
 
-OUT_DIR="results/exp_conditional"$EXP
+OUT_DIR="results/exp_conditional_"$EXP
 mkdir -p $OUT_DIR
 for SEED in $SEED_LIST; do
     JOBN=$N1"by"$N2"_r"$R"_seed"$SEED
