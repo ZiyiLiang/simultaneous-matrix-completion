@@ -1,4 +1,5 @@
 import numpy as np   
+import scipy.stats as stats
 from scipy.stats import ortho_group
 
 
@@ -121,8 +122,8 @@ class SamplingBias():
         x = np.tile(np.dot(U, v[:r]), (len(U),1)).T + np.tile(np.dot(V, v[r:]), (len(U),1))
         w = np.zeros_like(x)
         w[np.where((x <= b) & (x >= a))] = 1
-        w[np.where(x > b)] = scipy.stats.norm.pdf(x[np.where(x > b)], loc=b, scale=scale)/scipy.stats.norm.pdf(b, loc=b, scale=scale)
-        w[np.where(x < a)] = scipy.stats.norm.pdf(x[np.where(x < a)], loc=a, scale=scale)/scipy.stats.norm.pdf(a, loc=a, scale=scale)
+        w[np.where(x > b)] = stats.norm.pdf(x[np.where(x > b)], loc=b, scale=scale)/stats.norm.pdf(b, loc=b, scale=scale)
+        w[np.where(x < a)] = stats.norm.pdf(x[np.where(x < a)], loc=a, scale=scale)/stats.norm.pdf(a, loc=a, scale=scale)
         return w/np.sum(w) if self.std else w
 
     def unif_weights(self):

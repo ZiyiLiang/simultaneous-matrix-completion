@@ -88,7 +88,7 @@ make_plot <- function(exp, val, xmax=2000, sv=TRUE) {
       ylab("") +
       theme_bw()
     if (sv == TRUE){
-      ggsave(sprintf("%s/exp_biased_obs_%s_scale%.1f.pdf", fig.dir, exp, val), pp, device=NULL, width=5.5, height=img_height)}
+      ggsave(sprintf("%s/exp_biased_obs_%s_scale%.2f.pdf", fig.dir, exp, val), pp, device=NULL, width=5.5, height=img_height)}
     else{
       pp
     }
@@ -118,7 +118,7 @@ make_plot <- function(exp, val, xmax=2000, sv=TRUE) {
 
 exp_list <- c("vary_k", "vary_scale")
 k_list <- seq(2, 8, by = 1)
-scale_list <-  seq(0.5, 1.2, by = 0.1)
+scale_list <-  seq(0.5, 1, by = 0.05)
 
 
 for (exp in exp_list) {

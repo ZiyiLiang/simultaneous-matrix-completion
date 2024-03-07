@@ -9,6 +9,7 @@ ifile.list <- list.files(idir)
 
 # Output directory
 fig.dir <- "~/GitHub/conformal-matrix-completion/results/figures/exp_uniform"
+dir.create(fig.dir, showWarnings = FALSE)
 
 results.raw <- do.call("rbind", lapply(ifile.list, function(ifile) {
   df <- read_delim(sprintf("%s/%s", idir, ifile), delim=",", col_types=cols())
@@ -30,7 +31,7 @@ results_hpm <- results.raw %>%
   mutate(Key = factor(Key, key.values, key.labels)) %>%
   group_by(Method, gamma_n, gamma_m, mu,k, Key) %>%
   summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T)) %>%
-  filter(Key!='Coverage', Key!='Inf_prop' , k!=10, k!=9)
+  filter(Key!='Coverage', Key!='Inf_prop')
  
 # results_hpm <- results.raw %>%
 #   mutate(Method = factor(Method, Method.values, Method.labels)) %>%
