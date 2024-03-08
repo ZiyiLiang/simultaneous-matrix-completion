@@ -52,7 +52,7 @@ allow_inf = False
 alpha = 0.1
 
 k_list = np.arange(2,9)
-repetition = 3
+repetition = 1
 
 
 
@@ -72,6 +72,7 @@ def add_header(df):
     df["n2"] = n2
     df['alpha'] = alpha
     df['r'] = r
+    df['delta'] = delta
     df['exp'] = exp
     return df
 
@@ -105,7 +106,7 @@ M = nm.get_noisy_matrix(M, gamma_n=gamma_n, gamma_m=gamma_m, model=noise_model,
 # Define Experiment #
 #####################
 def run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_calib_queries,
-                          r, random_state=0):
+                          r, delta, random_state=0):
     res = pd.DataFrame({})
 
 
@@ -138,9 +139,9 @@ def run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_cali
     #---------Test queries----------#
     #-------------------------------#
     if exp == "wsc":
-        wsc_param, mask_test = wsc_estimate(M, Mhat, Uhat, Vhat, mask_miss, delta=0.2, random_state=random_state)
+        wsc_param, mask_test = wsc_estimate(M, Mhat, Uhat, Vhat, mask_miss, delta=0.1, random_state=random_state)
         bias = SamplingBias(n1,n2)
-        w = bias.latent_weights(Uhat, Vhat, r, *wsc_param, scale=(wsc_param[2]-wsc_param[1])/3)
+        w = bias.latent_weights(Uhat, Vhat, r, *wsc_param, scale=(wsc_param[2]-wsc_param[1])/5)
     else:
         print("Unknown type of experiment.")
         quit()
