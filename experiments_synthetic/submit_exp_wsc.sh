@@ -1,15 +1,15 @@
 #!/bin/bash
 
 # Parameters
-N1=300
-N2=300
-R=6
+N1=400
+N2=400
+R=8
 EXP="wsc"
-SEED_LIST=$(seq 1 60)
+SEED_LIST=$(seq 1 100)
 #SEED_LIST=(1)
 
 # Slurm parameters
-MEMO=1G                             # Memory required (1 GB)
+MEMO=2G                             # Memory required (1 GB)
 TIME=00-01:00:00                    # Time required (2 h)
 CORE=1                              # Cores required (1)
 

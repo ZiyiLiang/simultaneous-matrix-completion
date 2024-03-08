@@ -32,16 +32,15 @@ if True:
 
 
 # Fixed data parameters
-max_test_queries = 500            
-max_calib_queries = 1000
+max_test_queries = 200            
+max_calib_queries = 2000
 matrix_generation_seed = 2024    # Data matrix is fixed 
 
 methods = ["conditional", 
            "unconditional"]
 model = "RFM"
 solver = "pmf"
-noise_model = "step"
-prop_obs = 0.3
+prop_obs = 0.2
 
 # Other parameters
 verbose = True
@@ -49,7 +48,7 @@ allow_inf = False
 alpha = 0.1
 
 k_list = np.arange(2,9)
-repetition = 5
+repetition = 3
 
 
 
@@ -129,7 +128,7 @@ def run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_cali
     #---------Test queries----------#
     #-------------------------------#
     if exp == "wsc":
-        wsc_param, mask_test = wsc_estimate(M, Mhat, Uhat, Vhat, mask_miss, random_state=random_state)
+        wsc_param, mask_test = wsc_estimate(M, Mhat, Uhat, Vhat, mask_miss, delta=0.2, random_state=random_state)
         bias = SamplingBias(n1,n2)
         w = bias.latent_weights(Uhat, Vhat, r, *wsc_param, scale=(wsc_param[2]-wsc_param[1])/5)
     else:
