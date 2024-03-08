@@ -20,7 +20,7 @@ if True:
     # Parse input arguments
     print ('Number of arguments:', len(sys.argv), 'arguments.')
     print ('Argument List:', str(sys.argv))
-    if len(sys.argv) != 6:
+    if len(sys.argv) != 7:
         print("Error: incorrect number of parameters.")
         quit()
 
@@ -52,8 +52,8 @@ verbose = True
 allow_inf = False
 alpha = 0.1
 
-k_list = np.arange(2,9)
-repetition = 1
+k_list = np.arange(1,5)
+repetition = 2
 
 
 
