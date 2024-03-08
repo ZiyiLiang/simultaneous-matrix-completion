@@ -27,8 +27,9 @@ if True:
     n1 = int(sys.argv[1])
     n2 = int(sys.argv[2])
     r = int(sys.argv[3])
-    exp = str(sys.argv[4])
-    seed = int(sys.argv[5])
+    delta = float(sys.argv[4])
+    exp = str(sys.argv[5])
+    seed = int(sys.argv[6])
 
 
 # Fixed data parameters
@@ -61,7 +62,7 @@ repetition = 1
 ###############
 outdir = f"./results/exp_conditional_{exp}/"
 os.makedirs(outdir, exist_ok=True)
-outfile_name = f"{n1}by{n2}_r{r}_seed{seed}"
+outfile_name = f"{n1}by{n2}_r{r}_delta{delta:.2f}_seed{seed}"
 outfile = outdir + outfile_name + ".txt"
 print("Output file: {:s}".format(outfile), end="\n")
 sys.stdout.flush()
@@ -139,7 +140,7 @@ def run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_cali
     #---------Test queries----------#
     #-------------------------------#
     if exp == "wsc":
-        wsc_param, mask_test = wsc_estimate(M, Mhat, Uhat, Vhat, mask_miss, delta=0.1, random_state=random_state)
+        wsc_param, mask_test = wsc_estimate(M, Mhat, Uhat, Vhat, mask_miss, delta=delta, random_state=random_state)
         bias = SamplingBias(n1,n2)
         w = bias.latent_weights(Uhat, Vhat, r, *wsc_param, scale=(wsc_param[2]-wsc_param[1])/5)
     else:
@@ -181,7 +182,7 @@ for i in tqdm(range(1, repetition+1), desc="Repetitions", leave=True, position=0
     for k in tqdm(k_list, desc="k", leave=True, position=0):
 
         res = run_single_experiment(M, k, alpha, prop_obs, max_test_queries, max_calib_queries,
-                          r, random_state=random_state)
+                          r, delta, random_state=random_state)
         
         results = pd.concat([results, res])
 

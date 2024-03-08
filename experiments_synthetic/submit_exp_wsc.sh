@@ -5,7 +5,8 @@ N1=400
 N2=400
 R=8
 EXP="wsc"
-SEED_LIST=$(seq 1 200)
+SEED_LIST=$(seq 1 100)
+delta_LIST=$(seq 0.1 0.02 0.2)
 #SEED_LIST=(1)
 
 # Slurm parameters
@@ -26,29 +27,31 @@ incomp=0
 OUT_DIR="results/exp_conditional_"$EXP
 mkdir -p $OUT_DIR
 for SEED in $SEED_LIST; do
-    JOBN=$N1"by"$N2"_r"$R"_seed"$SEED
-    OUT_FILE=$OUT_DIR"/"$JOBN".txt"
-    COMPLETE=0
-    #ls $OUT_FILE
-    if [[ -f $OUT_FILE ]]; then
-    COMPLETE=1
-    ((comp++))
-    fi
+    for DELTA in $DELTA_LIST; do
+        JOBN=$N1"by"$N2"_r"$R"_delta"$DELTA"_seed"$SEED
+        OUT_FILE=$OUT_DIR"/"$JOBN".txt"
+        COMPLETE=0
+        #ls $OUT_FILE
+        if [[ -f $OUT_FILE ]]; then
+        COMPLETE=1
+        ((comp++))
+        fi
 
-    if [[ $COMPLETE -eq 0 ]]; then
-    ((incomp++))
-    # Script to be run
-    SCRIPT="exp_conditional.sh $N1 $N2 $R $EXP $SEED"
-    # Define job name
-    OUTF=$LOGS"/"$JOBN".out"
-    ERRF=$LOGS"/"$JOBN".err"
-    # Assemble slurm order for this job
-    ORD=$ORDP" -J "$JOBN" -o "$OUTF" -e "$ERRF" "$SCRIPT
-    # Print order
-    echo $ORD
-    # Submit order
-    $ORD
-    fi
+        if [[ $COMPLETE -eq 0 ]]; then
+        ((incomp++))
+        # Script to be run
+        SCRIPT="exp_conditional.sh $N1 $N2 $R $DELTA $EXP $SEED"
+        # Define job name
+        OUTF=$LOGS"/"$JOBN".out"
+        ERRF=$LOGS"/"$JOBN".err"
+        # Assemble slurm order for this job
+        ORD=$ORDP" -J "$JOBN" -o "$OUTF" -e "$ERRF" "$SCRIPT
+        # Print order
+        echo $ORD
+        # Submit order
+        $ORD
+        fi
+    done
 done
 
 echo "Jobs already completed: $comp, submitted unfinished jobs: $incomp"
