@@ -37,7 +37,7 @@ if True:
 max_test_queries = 200            
 max_calib_queries = 2000
 matrix_generation_seed = 2024
-max_iterations = 30
+max_iterations = 10
 
 methods = ["conformal", 
            "benchmark"]
@@ -48,7 +48,7 @@ verbose = True
 allow_inf = False
 alpha = 0.1
 
-k_list = np.arange(2,6)
+k_list = np.arange(2,3)
 repetition = 1
 
 
@@ -57,15 +57,15 @@ repetition = 1
 #  Load data  #
 ###############
 base_path = "../data/"
-ds = DataSet(base_path, data_name, matrix_generation_seed)
 
 if data_name == "movielens":
-    n1, n2 = ds.shape 
+    num_columns, num_rows = None, None 
     prop_train = 0.8
     ll, uu = 0, 5
 
-M, mask_avail, mask_miss = ds.sample(n1, n2)
-
+M, mask_avail, _ = load_data(base_path, data_name, replace_nan=-1, 
+                                     num_rows=num_rows, num_columns=num_columns, random_state=matrix_generation_seed)
+n1,n2 = M.shape
 
 ###############
 # Output file #
@@ -112,8 +112,11 @@ def run_single_experiment(M, k, alpha, prop_train, max_test_queries, max_calib_q
     #-------------------------------#
     n_test_queries = min(int(0.99 * np.sum(np.sum(mask_test, axis=1) // k)), max_test_queries)
     _, idxs_test, _ = sampler.sample_train_calib(mask_test, k, calib_size=n_test_queries, random_state=random_state)  
+    del mask_test
+    
+    n_train = np.sum(mask_obs)-n_calib_queries*k
     if verbose:
-        print("Training size:{}, calib size: {}, test size: {}\n".format(np.sum(mask_obs)-n_calib_queries*k, n_calib_queries, n_test_queries))
+        print("Training size:{}, calib size: {}, test size: {}\n".format(n_train, n_calib_queries, n_test_queries))
         sys.stdout.flush()
 
 
@@ -133,14 +136,15 @@ def run_single_experiment(M, k, alpha, prop_train, max_test_queries, max_calib_q
         print("Running matrix completion algorithm on the splitted training set...")
         sys.stdout.flush()
         if solver == "pmf":
-            Mhat, _, _ = pmf_solve(M, mask_train, k=r, max_iterations = max_iterations, verbose=verbose, random_state=random_state)
+            Mhat, _, _ = pmf_solve(M, mask_train, k=r, max_iteration = max_iterations, verbose=verbose, random_state=random_state)
         elif solver == "svt":
-            Mhat = svt_solve(M, mask_train, verbose = verbose, random_state = random_state)
+            Mhat = svt_solve(M, mask_train, max_iteration = max_iterations, verbose = verbose, random_state = random_state)
         print("Done training!\n")
         sys.stdout.flush()
 
         print("Estimating missingness on the splitted training set...")
         w_obs=estimate_P(mask_train, prop_train, r=5)
+        del mask_train
         print("Done estimating!\n")
         sys.stdout.flush()
     
@@ -162,10 +166,12 @@ def run_single_experiment(M, k, alpha, prop_train, max_test_queries, max_calib_q
                 lower, upper = clip_intervals(lower, upper)
                 res = pd.concat([res, evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=is_inf, method=m)])
 
+        # free memory
+        del ci_method, lower, upper, is_inf
 
     res['k'] = k     
     res['Calib_queries'] = n_calib_queries
-    res['Train_entries'] = np.sum(mask_train)
+    res['Train_entries'] = n_train
     res['Test_queries'] = n_test_queries
     res['random_state'] = random_state
     return res

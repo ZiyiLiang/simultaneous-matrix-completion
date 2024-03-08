@@ -1,5 +1,6 @@
 import numpy as np
 import cvxpy as cp
+import sys
 
 from sklearn.utils.extmath import randomized_svd
 from scipy.sparse.linalg import svds
@@ -54,7 +55,7 @@ def svt_solve(M,
               tau = None,
               delta = None,
               eps = 10**-4,
-              max_iterations = 1000,
+              max_iteration = 1000,
               algorithm = 'propack',
               verbose = True,
               random_state = 0
@@ -90,7 +91,7 @@ def svt_solve(M,
     k = 0    # number of principle components to be calculated
     Y = np.zeros_like(M)
     
-    for i in range(max_iterations):
+    for i in range(max_iteration):
         k += 1
         U, S, VT = _svd_solve(Y, k, algorithm)
         # rerun svd with more components if estimated rank is too small 
@@ -108,8 +109,10 @@ def svt_solve(M,
         # print progress message regularly.
         if verbose and i % 10 == 0:  
             print("Iteration: %i; Rel error: %.4f" % (i + 1, recon_error))
+            sys.stdout.flush()
         if recon_error < eps:
             if verbose: print("Stopping criteria met, training terminated.")
+            sys.stdout.flush()
             break
 
     return X
@@ -177,8 +180,10 @@ def pmf_solve(M,
         mean_diff = np.linalg.norm(X - prev_X) / m / n
         if _ % 1 == 0 and verbose:
             print("Iteration: %i; Mean diff: %.4f" % (_ + 1, mean_diff))
+            sys.stdout.flush()
         if mean_diff < eps:
             if verbose: print("Stopping criteria met, training terminated.")
+            sys.stdout.flush()
             break
         prev_X = X
 
