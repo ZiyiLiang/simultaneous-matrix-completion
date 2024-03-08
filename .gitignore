@@ -143,3 +143,6 @@ dmypy.json
 # R saves
 .RData
 .Rhistory
+
+# Datasets
+/data
