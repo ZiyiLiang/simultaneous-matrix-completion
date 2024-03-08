@@ -40,7 +40,11 @@ methods = ["conditional",
            "unconditional"]
 model = "RFM"
 solver = "pmf"
-prop_obs = 0.2
+noise_model = "step"
+mu = 10
+gamma_n = 0.5
+gamma_m = 0.9
+prop_obs = 0.3
 
 # Other parameters
 verbose = True
@@ -87,7 +91,13 @@ if verbose:
     print('Fixing the ground truth matrix generated from the {} model.\n'.format(model))
     sys.stdout.flush()
 
-U, V, M = mm.sample_noiseless(matrix_generation_seed)
+
+#---------Noisy Matrix----------#
+#-------------------------------#
+_, _, M = mm.sample_noiseless(matrix_generation_seed)
+nm = NoiseModel(matrix_generation_seed)
+M = nm.get_noisy_matrix(M, gamma_n=gamma_n, gamma_m=gamma_m, model=noise_model, 
+                        mu=mu, alpha=alpha, normalize=False)
 
 
 
@@ -130,7 +140,7 @@ def run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_cali
     if exp == "wsc":
         wsc_param, mask_test = wsc_estimate(M, Mhat, Uhat, Vhat, mask_miss, delta=0.2, random_state=random_state)
         bias = SamplingBias(n1,n2)
-        w = bias.latent_weights(Uhat, Vhat, r, *wsc_param, scale=(wsc_param[2]-wsc_param[1])/5)
+        w = bias.latent_weights(Uhat, Vhat, r, *wsc_param, scale=(wsc_param[2]-wsc_param[1])/3)
     else:
         print("Unknown type of experiment.")
         quit()

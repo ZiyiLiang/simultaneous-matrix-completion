@@ -87,16 +87,16 @@ make_plot <- function(results, exp, xmax=2000, sv=TRUE) {
     if (sv == TRUE){
       ggsave(sprintf("%s/exp_conditional.pdf", fig.dir), pp, device=NULL, width=5.5, height=img_height)}
     else{
-      pp
+      print(pp)
     }
   }
 }
 
 # Graphing parameters
 exp_list <- c("wsc")
-k_list <- seq(2, 8, by = 1)
 full_graph <- TRUE
+sv <- FALSE
 for (exp in exp_list) {
   results <- generate_results(exp, full_graph)
-  make_plot(results, exp, sv=TRUE)
+  make_plot(results, exp, sv=sv)
 }
