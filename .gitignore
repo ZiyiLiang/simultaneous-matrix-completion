@@ -134,6 +134,8 @@ dmypy.json
 /experiments_synthetic/results*
 /experiments_synthetic/logs
 /experiments_synthetic/cleanup.sh
+/experiments_real/results*
+/experiments_real/logs
 /archived/results
 /archived/results_hpc
 

@@ -15,31 +15,29 @@ results.raw <- do.call("rbind", lapply(ifile.list, function(ifile) {
   df <- read_delim(sprintf("%s/%s", idir, ifile), delim=",", col_types=cols())
 }))
 
-key.values <- c("Query_coverage", "Coverage", "Size", "Inf_prop")
-key.labels <- c("Query coverage", "Coverage", "Size", "Inf_prop")
+plot_full = FALSE
+
+if (plot_full){
+  key.values <- c("Query_coverage", "Coverage", "Size", "Inf_prop")
+  key.labels <- c("Query coverage", "Coverage", "Size", "Inf_prop")
+} else{
+  key.values <- c("Query_coverage", "Size")
+  key.labels <- c("Query coverage", "Size")
+}
 
 Method.values <- c("conformal", "Bonferroni", "Uncorrected")
-Method.labels <- c("Simultaneous", "Bonferroni", "Uncorrected")
+Method.labels <- c("Simultaneous", "Bonferroni", "Individual")
 
 color.scale <- c("#566be9", "#56b5e9", "#CC79A7", "orange")
 shape.scale <- c(15, 4, 8, 1)
 
 
-results_hpm <- results.raw %>%
+results <- results.raw %>%
   mutate(Method = factor(Method, Method.values, Method.labels)) %>%
-  pivot_longer(cols=c(`Query_coverage`, `Coverage`,`Size`), names_to='Key', values_to='Value') %>%
+  pivot_longer(cols=key.values, names_to='Key', values_to='Value') %>%
   mutate(Key = factor(Key, key.values, key.labels)) %>%
   group_by(Method, gamma_n, gamma_m, mu,k, Key) %>%
-  summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T)) %>%
-  filter(Key!='Coverage', Key!='Inf_prop')
- 
-# results_hpm <- results.raw %>%
-#   mutate(Method = factor(Method, Method.values, Method.labels)) %>%
-#   pivot_longer(cols=c(`Query_coverage`, `Coverage`,`Size`, `Inf_prop`), names_to='Key', values_to='Value') %>%
-#   mutate(Key = factor(Key, key.values, key.labels)) %>%
-#   group_by(Method, gamma_n, gamma_m, mu,k, Key) %>%
-#   summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
-
+  summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
 
 ## Make nice plots for paper
 make_plot <- function(exp, val, xmax=2000, sv=TRUE) {
@@ -53,7 +51,7 @@ make_plot <- function(exp, val, xmax=2000, sv=TRUE) {
   
   if (exp=="vary_k"){
     pp <- results_hpm %>%
-      filter(mu==val)%>%
+      filter(mu %in% val)%>%
       ggplot(aes(x=k, y=Value, color=Method, shape=Method)) +
       geom_point(alpha=0.75) +
       geom_line() +
@@ -105,3 +103,28 @@ for (exp in exp_list) {
     make_plot(exp, val)
   }
 }
+
+
+plot.alpha <- 0.9
+df.nominal <- tibble(Key=c("Query_coverage"), Value=plot.alpha) %>%
+  mutate(Key = factor(Key, key.values, key.labels))    
+df.ghost <- tibble(Key=c("Query_coverage", "Size"), Value=c(0.9,10), Method="conformal") %>%
+  #  df.ghost <- tibble(Key=c("Query_coverage", "Coverage", "Size","Inf_prop"), Value=c(0.9,0.9,10,0), Method="conformal") %>%
+  mutate(Method = factor(Method, Method.values, Method.labels)) %>%
+  mutate(Key = factor(Key, key.values, key.labels)) 
+pp <- results %>%
+  filter(mu %in% c(0,15,30))%>%
+  mutate(mu = sprintf("Magnitude: %i", mu))%>%
+  ggplot(aes(x=k, y=Value, color=Method, shape=Method)) +
+  geom_point(alpha=0.75) +
+  geom_line() +
+  geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.5) +
+  geom_hline(data=df.nominal, aes(yintercept=Value)) +
+  scale_color_manual(values=color.scale) +
+  scale_shape_manual(values=shape.scale) +
+  facet_wrap(Key~mu, scales="free") +
+  xlab("Query size K") +
+  ylab("") +
+  theme_bw()
+pp
+
