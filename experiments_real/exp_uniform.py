@@ -37,7 +37,7 @@ if True:
 max_test_queries = 200            
 max_calib_queries = 2000
 matrix_generation_seed = 2024
-max_iterations = 10
+max_iterations = 20
 
 methods = ["conformal", 
            "benchmark"]
@@ -48,7 +48,7 @@ verbose = True
 allow_inf = False
 alpha = 0.1
 
-k_list = np.arange(2,3)
+k_list = np.arange(2,9)
 repetition = 1
 
 
@@ -59,7 +59,7 @@ repetition = 1
 base_path = "../data/"
 
 if data_name == "movielens":
-    num_columns, num_rows = None, None 
+    num_columns, num_rows = 800, 1000 
     prop_train = 0.8
     ll, uu = 0, 5
 
