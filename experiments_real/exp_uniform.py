@@ -34,10 +34,9 @@ if True:
     seed = int(sys.argv[3])
     
 # Fixed data parameters
-max_test_queries = 200            
 max_calib_queries = 2000
 matrix_generation_seed = 2024
-max_iterations = 20
+max_iterations = 10
 
 methods = ["conformal", 
            "benchmark"]
@@ -47,8 +46,6 @@ solver = "pmf"
 verbose = True
 allow_inf = False
 alpha = 0.1
-
-k_list = np.arange(2,9)
 repetition = 1
 
 
@@ -59,9 +56,20 @@ repetition = 1
 base_path = "../data/"
 
 if data_name == "movielens":
-    num_columns, num_rows = 800, 1000 
+    num_columns, num_rows = None, None 
     prop_train = 0.8
+    max_test_queries = 200            
     ll, uu = 0, 5
+    k_list = np.arange(2,9)
+
+elif data_name == "books":
+    num_columns, num_rows = None, 2500
+    prop_train = 0.9
+    max_test_queries = 100
+    ll, uu = 0, 5      
+    k_list = np.arange(2,5)      
+
+
 
 M, mask_avail, _ = load_data(base_path, data_name, replace_nan=-1, 
                                      num_rows=num_rows, num_columns=num_columns, random_state=matrix_generation_seed)

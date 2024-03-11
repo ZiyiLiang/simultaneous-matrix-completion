@@ -1,4 +1,6 @@
 import sys
+import json
+import csv
 import numpy as np
 import pandas as pd
 
@@ -8,7 +10,10 @@ def load_data(base_path, data_name, replace_nan=-1, num_rows=None, num_columns=N
     # Load the data
     if data_name == "movielens":
         data_raw = pd.read_csv(base_path+"/ml-100k/u.data", sep='\t', names=['userid', 'movieid', 'rating', 'timestamp'])
-        data = data_raw.pivot(index='movieid', columns='userid', values='rating')
+        data = data_raw.pivot(index='movieid', columns='userid', values='rating')    
+    elif data_name == "books":
+        data_raw = pd.read_csv(base_path+"/amazon/small_books.csv")
+        data = data_raw.pivot_table(index='user_id', columns='item_id', values='rating')
     else:
         print("Unknown dataset!")
 
@@ -35,3 +40,28 @@ def load_data(base_path, data_name, replace_nan=-1, num_rows=None, num_columns=N
 
     return M, mask_obs, mask_miss
 
+def amazon_books_small(base_path):
+    least_user_ratings = 30
+    least_item_ratings = 800
+
+    df = pd.read_csv(base_path+'/amazon/Books.csv', names=["item_id", "user_id", "rating", "timestamp"])
+
+    # Extract item_id that start with "00" and sort the dataframe by timestamp in descending order
+    df_small = df[df['item_id'].str.startswith('00')].sort_values(by='timestamp', ascending=False)
+    del df
+
+    # Drop duplicates ratings based on user_id and item_id, keeping the latest rating
+    df_small.drop_duplicates(subset=['user_id', 'item_id'], keep='first', inplace=True)
+    df_small.drop(columns=['timestamp'], inplace=True)
+
+    # Count the number of ratings for each user_id and item_id
+    user_ratings = df_small['user_id'].value_counts()
+    item_ratings = df_small['item_id'].value_counts()
+
+    # Filter out user_id and item_id
+    valid_user_ids = user_ratings[user_ratings >= least_user_ratings].index
+    valid_item_ids = item_ratings[item_ratings >= least_item_ratings].index
+
+    filtered_df = df_small[(df_small['user_id'].isin(valid_user_ids)) & (df_small['item_id'].isin(valid_item_ids))]
+    filtered_df.to_csv(base_path+'/amazon/small_books.csv', index=False)
+    print("Small Amazon books dataset saved.")
