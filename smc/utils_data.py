@@ -44,7 +44,7 @@ def amazon_books_small(base_path):
     least_user_ratings = 30
     least_item_ratings = 800
 
-    df = pd.read_csv(base_path+'/amazon/Books.csv', names=["item_id", "user_id", "rating", "timestamp"])
+    df = pd.read_csv(base_path+'/amazon_full/Books.csv', names=["item_id", "user_id", "rating", "timestamp"])
 
     # Extract item_id that start with "00" and sort the dataframe by timestamp in descending order
     df_small = df[df['item_id'].str.startswith('00')].sort_values(by='timestamp', ascending=False)

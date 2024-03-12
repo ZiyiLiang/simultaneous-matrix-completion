@@ -2,6 +2,8 @@ options(width=160)
 
 library(tidyverse)
 library(kableExtra)
+library(ggplot2)
+
 
 setwd("~/GitHub/conformal-matrix-completion/experiments_synthetic/results_hpc")
 idir <- "results/exp_uniform/"
@@ -19,19 +21,21 @@ results.raw <- do.call("rbind", lapply(ifile.list, function(ifile) {
 Method.values <- c("conformal", "Bonferroni", "Uncorrected")
 Method.labels <- c("Simultaneous", "Bonferroni", "Individual")
 
-color.scale <- c("#566be9", "#56b5e9", "#CC79A7", "orange")
+#color.scale <- c("#566be9", "#56b5e9", "#CC79A7", "orange")
+color.scale <- c( "blue", "#56b5e9", "#CC66CC" )
 shape.scale <- c(15, 4, 8, 1)
+alpha.scale <- c(1, 0.5, 0.8)
 
 plot_full = FALSE
 
 if (plot_full){
   key.values <- c("Query_coverage", "Coverage", "Size", "Inf_prop")
-  key.labels <- c("Query coverage", "Coverage", "Size", "Inf_prop")
-  height <- 5
+  key.labels <- c("Query cov.", "Coverage", "Size", "Inf_prop")
+  height <- 3.5
 }else{
   key.values <- c("Query_coverage","Size")
-  key.labels <- c("Query coverage","Size")
-  height <- 3
+  key.labels <- c("Query cov.","Size")
+  height <- 2.5
 }
 
 if (plot_full){
@@ -56,64 +60,65 @@ make_plot <- function(results, exp, val, xmax=2000, sv=TRUE) {
   plot.alpha <- 0.9
   df.nominal <- tibble(Key=c("Query_coverage"), Value=plot.alpha) %>%
     mutate(Key = factor(Key, key.values, key.labels))    
-#   df.ghost <- tibble(Key=c("Query_coverage", "Size"), Value=c(0.9,10), Method="conformal") %>%
-# #  df.ghost <- tibble(Key=c("Query_coverage", "Coverage", "Size","Inf_prop"), Value=c(0.9,0.9,10,0), Method="conformal") %>%
-#     mutate(Method = factor(Method, Method.values, Method.labels)) %>%
-#     mutate(Key = factor(Key, key.values, key.labels)) 
+  df.placeholder <- tibble(Key=c("Query_coverage"), Value=c(1, 0.7)) %>%
+    mutate(Key = factor(Key, key.values, key.labels))
 #   
   if (exp=="vary_k"){
     pp <- results %>%
       filter(mu %in% val)%>%
       mutate(mu = paste0("\U03BC: ", mu))%>%
       ggplot(aes(x=k, y=Value, color=Method, shape=Method)) +
-      geom_point(alpha=0.75) +
+      geom_point(alpha=0.9) +
       geom_line() +
-      geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.5) +
+      geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.3) +
       geom_hline(data=df.nominal, aes(yintercept=Value)) +
+      geom_hline(data=df.placeholder, aes(yintercept=Value), alpha=0) +
+      ggh4x::facet_grid2(Key~mu, scales="free_y", independent = "y") +
       scale_color_manual(values=color.scale) +
       scale_shape_manual(values=shape.scale) +
-      facet_grid(Key~mu, scales="free") +
+      scale_alpha_manual(values=alpha.scale) +
       xlab("Query size K") +
       ylab("") +
       theme_bw()
     if (sv == TRUE){
-      ggsave(sprintf("%s/exp_uniform_%s.pdf", fig.dir, exp), pp, device=NULL, width=5.5, height=height)}
-    else{pp}
+      ggsave(sprintf("%s/exp_uniform_%s.pdf", fig.dir, exp), pp, device=NULL, width=6.5, height=height)}
+    else{print(pp)}
   }
   else{
-    pp <- result %>%
+    pp <- results %>%
       filter(k %in% val)%>%
+      filter(!(mu %in% c(3,9,15,21,27)))%>%
+      mutate(k = paste0("k: ", k))%>%
       ggplot(aes(x=mu, y=Value, color=Method, shape=Method)) +
-      geom_point(alpha=0.75) +
+      geom_point(alpha=0.9) +
       geom_line() +
-      geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.5) +
+      geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.3) +
       geom_hline(data=df.nominal, aes(yintercept=Value)) +
+      geom_hline(data=df.placeholder, aes(yintercept=Value), alpha=0) +
+      ggh4x::facet_grid2(Key~k, scales="free_y", independent = "y") +
       scale_color_manual(values=color.scale) +
       scale_shape_manual(values=shape.scale) +
-      facet_grid(Key~k, scales="free") +
+      scale_alpha_manual(values=alpha.scale) +
       xlab("Column-wise magnitude") +
       ylab("") +
       theme_bw()
     if (sv == TRUE){
-      ggsave(sprintf("%s/exp_uniform_%s.pdf", fig.dir, exp), pp, device=NULL, width=5.5, height=height)}
-    else{pp}
+      ggsave(sprintf("%s/exp_uniform_%s.pdf", fig.dir, exp), pp, device=NULL, width=6.5, height=height)}
+    else{print(pp)}
   }
 }
 
 exp_list <- c("vary_k", "vary_mu")
-k_list <- 2:8
-mu_list <-  seq(0, 30, by = 3)
+k_list <- c(2,5,8)
+mu_list <-  c(0, 15, 30)
 
 results <- generate_results(plot_full)
 for (exp in exp_list) {
-  if (exp == "vary_k") {
-    l <- mu_list
+  if (exp == "vary_k"){
+    val = mu_list
+  }else{
+    val = k_list
   }
-  else {
-    l <- k_list
-  }
-  for (val in l){
-    make_plot(exp, val)
-  }
+  make_plot(results, exp, val)
 }
 
