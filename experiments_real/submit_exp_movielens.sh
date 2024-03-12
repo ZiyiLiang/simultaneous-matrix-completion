@@ -1,31 +1,31 @@
 #!/bin/bash
 
 # Parameters
-#R_LIST=$(seq 5 10)
-#SEED_LIST=$(seq 1 100)
+R_LIST=(3 5 7)
+SEED_LIST=$(seq 1 100)
 DATASET="movielens"
-R_LIST=(5)
-SEED_LIST=(1)
+#R_LIST=(5)
+#SEED_LIST=(1)
 
 # Slurm parameters
-MEMO=4G                             # Memory required (1 GB)
+MEMO=16G                             # Memory required (1 GB)
 TIME=00-02:00:00                    # Time required (2 h)
 CORE=1                              # Cores required (1)
 
 # Assemble order                                               prefix
-ORDP="sbatch --mem="$MEMO" --nodes=1 --ntasks=1 --cpus-per-task=1 --time="$TIME
+ORDP="sbatch --mem="$MEMO" --nodes=1 --ntasks=1 --cpus-per-task=1 --time="$TIME" --account=sesia_1124 --partition=main"
 
 # Create directory for log files
-LOGS="logs/exp_real_uniform"
+LOGS="logs/exp_uniform"
 mkdir -p $LOGS
 
 comp=0
 incomp=0
 
-OUT_DIR="results/exp_real_uniform_"$DATASET
+OUT_DIR="results/exp_uniform_"$DATASET
 mkdir -p $OUT_DIR
 for SEED in $SEED_LIST; do
-    for R in $R_LIST; do
+    for R in "${R_LIST[@]}"; do
         JOBN="r"$R"_seed"$SEED
         OUT_FILE=$OUT_DIR"/"$JOBN".txt"
         COMPLETE=0
