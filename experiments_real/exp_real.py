@@ -25,13 +25,15 @@ if True:
     # Parse input arguments
     print ('Number of arguments:', len(sys.argv), 'arguments.')
     print ('Argument List:', str(sys.argv))
-    if len(sys.argv) != 4:
+    if len(sys.argv) != 6:
         print("Error: incorrect number of parameters.")
         quit()
 
     r = int(sys.argv[1])
     data_name = str(sys.argv[2])
-    seed = int(sys.argv[3])
+    exp = str(sys.argv[3])
+    est = bool(sys.argv[4])
+    seed = int(sys.argv[5])
     
 # Fixed data parameters
 max_calib_queries = 2000
@@ -47,6 +49,10 @@ verbose = True
 allow_inf = False
 alpha = 0.1
 repetition = 1
+
+# define missingness pattern
+if exp == "uniform":
+    w = None
 
 
 
@@ -78,7 +84,7 @@ n1,n2 = M.shape
 ###############
 # Output file #
 ###############
-outdir = f"./results/exp_uniform_{data_name}/"
+outdir = f"./results/exp_{exp}_{data_name}/" if est else f"./results/exp_{exp}_est_{data_name}/" 
 os.makedirs(outdir, exist_ok=True)
 outfile_name = f"r{r}_seed{seed}"
 outfile = outdir + outfile_name + ".txt"
@@ -104,7 +110,7 @@ def clip_intervals(lower, upper):
     upper[upper >= uu] = uu
     return lower, upper
 
-def run_single_experiment(M, k, alpha, prop_train, max_test_queries, max_calib_queries,
+def run_single_experiment(M, k, alpha, prop_train, w_obs, max_test_queries, max_calib_queries,
                           r, random_state=0):
     res = pd.DataFrame({})
     
@@ -112,7 +118,7 @@ def run_single_experiment(M, k, alpha, prop_train, max_test_queries, max_calib_q
     #-------------------------------#
     sampler = QuerySampling(n1,n2)
     # Randomly split the observed set into test set and training set
-    mask_obs, mask_test = sampler.sample_submask(mask=mask_avail, sub_size=prop_train, random_state=random_state)
+    mask_obs, mask_test = sampler.sample_submask(mask=mask_avail, sub_size=prop_train, w=w, random_state=random_state)
     n_calib_queries = min(int(0.5 * np.sum(np.sum(mask_obs, axis=1) // k)), max_calib_queries)
 
 
@@ -150,11 +156,14 @@ def run_single_experiment(M, k, alpha, prop_train, max_test_queries, max_calib_q
         print("Done training!\n")
         sys.stdout.flush()
 
-        print("Estimating missingness on the splitted training set...")
-        w_obs=estimate_P(mask_train, prop_train, r=5)
-        del mask_train
-        print("Done estimating!\n")
-        sys.stdout.flush()
+        if est:
+            print("Estimating missingness on the splitted training set...")
+            w_obs=estimate_P(mask_train, prop_train, r=5)
+            del mask_train
+            print("Done estimating!\n")
+            sys.stdout.flush()
+        else:
+            w_obs = w
     
     
         #------Compute intervals--------# 

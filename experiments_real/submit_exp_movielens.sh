@@ -4,6 +4,8 @@
 R_LIST=(3 5 7)
 SEED_LIST=$(seq 1 100)
 DATASET="movielens"
+EXP="uniform"
+EST=0
 #R_LIST=(5)
 #SEED_LIST=(1)
 
@@ -17,12 +19,18 @@ ORDP="sbatch --mem="$MEMO" --nodes=1 --ntasks=1 --cpus-per-task=1 --time="$TIME"
 
 # Create directory for log files
 LOGS="logs/exp_uniform"
+if [ $EST -eq 0 ]; then
+  LOGS="logs/exp_"$EXP"est_"$DATASET
+  OUT_DIR="results/exp_uniform_"$DATASET
+else
+  LOGS="logs/exp_"$EXP"_"$DATASET
+  OUT_DIR="results/exp_uniform_"$DATASET
+fi
 mkdir -p $LOGS
 
 comp=0
 incomp=0
 
-OUT_DIR="results/exp_uniform_"$DATASET
 mkdir -p $OUT_DIR
 for SEED in $SEED_LIST; do
     for R in "${R_LIST[@]}"; do
@@ -38,7 +46,7 @@ for SEED in $SEED_LIST; do
         if [[ $COMPLETE -eq 0 ]]; then
         ((incomp++))
 	    # Script to be run
-        SCRIPT="exp_uniform.sh $R $DATASET $SEED"
+        SCRIPT="exp_real.sh $R $DATASET $EXP $EST $SEED"
         # Define job name
         OUTF=$LOGS"/"$JOBN".out"
         ERRF=$LOGS"/"$JOBN".err"
