@@ -184,7 +184,7 @@ def run_single_experiment(M, k, alpha, prop_train, w, max_test_queries, max_cali
                 res = pd.concat([res, evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=is_inf, method=m)])
 
         # free memory
-        del ci_method, lower, upper, is_inf
+        del ci_method, lower, upper, is_inf, mask_obs
 
     res['k'] = k     
     res['Calib_queries'] = n_calib_queries
