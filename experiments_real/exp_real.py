@@ -110,7 +110,7 @@ def clip_intervals(lower, upper):
     upper[upper >= uu] = uu
     return lower, upper
 
-def run_single_experiment(M, k, alpha, prop_train, w_obs, max_test_queries, max_calib_queries,
+def run_single_experiment(M, k, alpha, prop_train, w, max_test_queries, max_calib_queries,
                           r, random_state=0):
     res = pd.DataFrame({})
     
@@ -205,7 +205,7 @@ for i in tqdm(range(1, repetition+1), desc="Repetitions", leave=True, position=0
     
     for k in tqdm(k_list, desc="k", leave=True, position=0):
 
-        res = run_single_experiment(M, k, alpha, prop_train, max_test_queries, max_calib_queries,
+        res = run_single_experiment(M, k, alpha, prop_train,w, max_test_queries, max_calib_queries,
                             r, random_state=random_state)
         
         results = pd.concat([results, res])

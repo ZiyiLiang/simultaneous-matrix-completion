@@ -1,16 +1,17 @@
 #!/bin/bash
 
 # Parameters
-R_LIST=(3 5 7)
-SEED_LIST=$(seq 1 100)
+#R_LIST=(3 5 7)
+#SEED_LIST=$(seq 1 100)
 DATASET="movielens"
 EXP="uniform"
 EST=0
-#R_LIST=(5)
-#SEED_LIST=(1)
+#EST=1
+R_LIST=(5)
+SEED_LIST=(1)
 
 # Slurm parameters
-MEMO=16G                             # Memory required (1 GB)
+MEMO=18G                             # Memory required (1 GB)
 TIME=00-02:00:00                    # Time required (2 h)
 CORE=1                              # Cores required (1)
 
@@ -20,11 +21,11 @@ ORDP="sbatch --mem="$MEMO" --nodes=1 --ntasks=1 --cpus-per-task=1 --time="$TIME"
 # Create directory for log files
 LOGS="logs/exp_uniform"
 if [ $EST -eq 0 ]; then
-  LOGS="logs/exp_"$EXP"est_"$DATASET
-  OUT_DIR="results/exp_uniform_"$DATASET
-else
   LOGS="logs/exp_"$EXP"_"$DATASET
-  OUT_DIR="results/exp_uniform_"$DATASET
+  OUT_DIR="results/exp_"$EXP"_"$DATASET
+else
+  LOGS="logs/exp_"$EXP"_est_"$DATASET
+  OUT_DIR="results/exp_"$EXP"_est_"$DATASET
 fi
 mkdir -p $LOGS
 
