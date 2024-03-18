@@ -331,9 +331,9 @@ class SimulCI():
         self.w_obs = self._validate_w(w_obs)
         
         # Number of observations in each row
-        self.n_obs = np.sum(mask_obs, axis=1)
+        self.n_obs = np.sum(self.mask_obs, axis=1)
         # Number of missing entries in each row
-        self.n_miss = self.n2 - self.n_obs
+        self.n_miss = np.sum(self.mask_miss, axis=1)
         # Number of observations in each row after random dropping
         self.n_obs_drop = self.n_obs - self.n_obs % self.k
                 
