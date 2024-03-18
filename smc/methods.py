@@ -327,7 +327,7 @@ class SimulCI():
         self.verbose = verbose
         self.progress = progress
         self.mask_obs = np.array(mask_obs)
-        self.mask_miss = np.array(1-mask_obs) if not parent_mask else np.array(parent_mask-mask_obs)
+        self.mask_miss = np.array(1-mask_obs) if parent_mask is None else np.array(parent_mask-mask_obs)
         self.w_obs = self._validate_w(w_obs)
         
         # Number of observations in each row
