@@ -62,7 +62,7 @@ if exp == "uniform":
 base_path = "../data/"
 
 if data_name == "movielens":
-    num_columns, num_rows = None, None 
+    num_columns, num_rows = 800, 1000
     prop_train = 0.8
     max_test_queries = 200            
     ll, uu = 0, 5
