@@ -320,14 +320,14 @@ class SimulCI():
         If True, progress bars will be printed.
     """
     def __init__(self, M, Mhat, mask_obs, idxs_calib, k,
-                w_obs=None, verbose=True, progress=True):
+                w_obs=None, parent_mask=None, verbose=True, progress=True):
         self.k = int(k)
         self.Mhat = np.array(Mhat)
         self.n1, self.n2 = self.Mhat.shape[0], self.Mhat.shape[1]
         self.verbose = verbose
         self.progress = progress
         self.mask_obs = np.array(mask_obs)
-        self.mask_miss = np.array(1-mask_obs)
+        self.mask_miss = np.array(1-mask_obs) if not parent_mask else np.array(parent_mask-mask_obs)
         self.w_obs = self._validate_w(w_obs)
         
         # Number of observations in each row
@@ -406,7 +406,7 @@ class SimulCI():
             sw_diff = 0
             if row_i != row_test:
                 if self.n_miss[row_i] < self.k:
-                    sw_diff += (sr_miss[row_i] - csum_i[-1])
+                    sw_diff += sr_miss[row_i]
                 if self.n_miss[row_test] < 2*self.k:
                     sw_diff -= (sr_miss[row_test] - sw_test)
             prob_test /= (sw_prune - sw_test + csum_i[-1] + sw_diff)
@@ -417,7 +417,7 @@ class SimulCI():
                 if row_i == row_test:
                     sw_diff -= sw_test
                 if self.n_miss[row_i] < self.k:
-                    sw_diff += (sr_miss[row_i] - csum_i[-1])
+                    sw_diff += sr_miss[row_i]
                 prob_test /= (sr_prune[row_i] + csum_i[-1] - csum_i[j-1] + sw_diff)
 
             # Compute the prob of sampling the given calibration queries

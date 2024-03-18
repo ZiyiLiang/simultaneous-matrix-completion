@@ -4,11 +4,18 @@ library(tidyverse)
 library(kableExtra)
 library(ggplot2)
 
+plot_full = TRUE
+est=TRUE
+exp="movielens"
+#exp="books"
 
-#exp="movielens"
-exp="books"
+if (est){
+  idir <- sprintf("results/exp_uniform_est_%s/", exp)
+} else {
+  idir <- sprintf("results/exp_uniform_%s/", exp)
+}
+
 setwd("~/GitHub/conformal-matrix-completion/experiments_real/results_hpc/")
-idir <- sprintf("results/exp_uniform_%s/", exp)
 ifile.list <- list.files(idir)
 
 results.raw <- do.call("rbind", lapply(ifile.list, function(ifile) {
@@ -23,7 +30,6 @@ color.scale <- c( "blue", "#56b5e9", "#CC66CC" )
 shape.scale <- c(15, 4, 8, 1)
 alpha.scale <- c(1, 0.5, 0.8)
 
-plot_full = TRUE
 
 if (plot_full){
   key.values <- c("Query_coverage", "Coverage", "Size", "Inf_prop")
@@ -81,4 +87,4 @@ make_plot <- function(results, exp, xmax=2000, sv=TRUE) {
   }
 }
 
-make_plot(results, exp=exp, sv=FALSE)
+make_plot(results, exp=exp, sv=TRUE)
