@@ -560,14 +560,14 @@ class Bonf_benchmark():
     This class computes the Bonferrroni-style simultaneous confidence region
     """
     def __init__(self, M, Mhat, mask_obs, idxs_calib, k,
-                w_obs=None, verbose=True, progress=True):
+                w_obs=None, parent_mask=None, verbose=True, progress=True):
         self.k = int(k)
         self.verbose = verbose
         self.progress = progress
         
         # Apply simultaneous conformal inference method with k=1
         self.sci = SimulCI(M, Mhat, mask_obs, idxs_calib, 1,
-                           w_obs=w_obs, verbose=False, progress=self.progress)
+                           w_obs=w_obs, parent_mask=parent_mask, verbose=False, progress=self.progress)
         
     
     def get_CI(self, idxs_test, alpha, w_test=None,  allow_inf=True):
