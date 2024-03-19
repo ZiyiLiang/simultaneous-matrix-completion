@@ -5,7 +5,7 @@ library(kableExtra)
 library(ggplot2)
 
 plot_full = TRUE
-est=TRUE
+est=FALSE
 exp="movielens"
 #exp="books"
 
@@ -87,4 +87,4 @@ make_plot <- function(results, exp, xmax=2000, sv=TRUE) {
   }
 }
 
-make_plot(results, exp=exp, sv=TRUE)
+make_plot(results, exp=exp, sv=FALSE)

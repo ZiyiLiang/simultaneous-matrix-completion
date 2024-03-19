@@ -55,7 +55,6 @@ if exp == "uniform":
     w = None
 
 
-
 ###############
 #  Load data  #
 ###############
@@ -81,11 +80,15 @@ M, mask_avail, _ = load_data(base_path, data_name, replace_nan=-1,
                                      num_rows=num_rows, num_columns=num_columns, random_state=matrix_generation_seed)
 n1,n2 = M.shape
 parent_mask = None
+# determine if the test query is sampled from all missing entries
+full_miss = True
 
 ###############
 # Output file #
 ###############
-outdir = f"./results/exp_{exp}_{data_name}/" if not est else f"./results/exp_{exp}_est_{data_name}/" 
+outdir = f"./results/exp_{exp}_{data_name}/" if not est else f"./results/exp_{exp}_est_{data_name}/"
+if full_miss:
+    outdir += "fullmiss/" 
 os.makedirs(outdir, exist_ok=True)
 outfile_name = f"r{r}_seed{seed}"
 outfile = outdir + outfile_name + ".txt"
@@ -126,6 +129,8 @@ def run_single_experiment(M, k, alpha, prop_train, w, max_test_queries, max_cali
     #------Sample test queries------#
     #-------------------------------#
     n_test_queries = min(int(0.99 * np.sum(np.sum(mask_test, axis=1) // k)), max_test_queries)
+    if full_miss:
+        mask_test = np.array(1-mask_obs)
     _, idxs_test, _ = sampler.sample_train_calib(mask_test, k, calib_size=n_test_queries, random_state=random_state)  
     del mask_test
     
