@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # Parameters
-#R_LIST=(3 5 7)
+R_LIST=(3 5 7)
 SEED_LIST=$(seq 1 100)
 DATASET="movielens"
 EXP="uniform"
 EST=0
 #EST=1
-R_LIST=(7)
+#R_LIST=(7)
 #SEED_LIST=(1)
 
 # Slurm parameters

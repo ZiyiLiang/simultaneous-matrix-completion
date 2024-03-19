@@ -32,7 +32,7 @@ if True:
     r = int(sys.argv[1])
     data_name = str(sys.argv[2])
     exp = str(sys.argv[3])
-    est = bool(sys.argv[4])
+    est = int(sys.argv[4])
     seed = int(sys.argv[5])
     
 # Fixed data parameters
@@ -64,7 +64,7 @@ base_path = "../data/"
 if data_name == "movielens":
     num_columns, num_rows = 800, 1000
     prop_train = 0.8
-    max_test_queries = 200            
+    max_test_queries = 100            
     ll, uu = 0, 5
     k_list = np.arange(2,9)
 
@@ -80,11 +80,12 @@ elif data_name == "books":
 M, mask_avail, _ = load_data(base_path, data_name, replace_nan=-1, 
                                      num_rows=num_rows, num_columns=num_columns, random_state=matrix_generation_seed)
 n1,n2 = M.shape
+parent_mask = None
 
 ###############
 # Output file #
 ###############
-outdir = f"./results/exp_{exp}_{data_name}/" if est else f"./results/exp_{exp}_est_{data_name}/" 
+outdir = f"./results/exp_{exp}_{data_name}/" if not est else f"./results/exp_{exp}_est_{data_name}/" 
 os.makedirs(outdir, exist_ok=True)
 outfile_name = f"r{r}_seed{seed}"
 outfile = outdir + outfile_name + ".txt"
@@ -169,14 +170,14 @@ def run_single_experiment(M, k, alpha, prop_train, w, max_test_queries, max_cali
         #------Compute intervals--------# 
         #-------------------------------#
         if method == "conformal":
-            ci_method = SimulCI(M, Mhat, mask_obs, idxs_calib, k, w_obs=w_obs, parent_mask=mask_avail)
+            ci_method = SimulCI(M, Mhat, mask_obs, idxs_calib, k, w_obs=w_obs, parent_mask=parent_mask)
             df = ci_method.get_CI(idxs_test, alpha, allow_inf=allow_inf)
             lower, upper, is_inf= df.loc[0].lower, df.loc[0].upper, df.loc[0].is_inf
             lower, upper = clip_intervals(lower, upper)
             res = pd.concat([res, evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=is_inf, method=method)])
         else:
             a_list = [alpha, alpha * k]
-            ci_method = Bonf_benchmark(M, Mhat, mask_obs, idxs_calib, k, w_obs=w_obs, parent_mask=mask_avail)
+            ci_method = Bonf_benchmark(M, Mhat, mask_obs, idxs_calib, k, w_obs=w_obs, parent_mask=parent_mask)
             df = ci_method.get_CI(idxs_test, a_list, allow_inf=allow_inf)
             for i, m in enumerate(["Bonferroni", "Uncorrected"]):
                 lower, upper, is_inf= df.loc[i].lower, df.loc[i].upper, df.loc[i].is_inf
