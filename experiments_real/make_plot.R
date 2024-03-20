@@ -4,15 +4,15 @@ library(tidyverse)
 library(kableExtra)
 library(ggplot2)
 
-plot_full = TRUE
-est=FALSE
+plot_full = FALSE
+est=TRUE
 exp="movielens"
 #exp="books"
 
 if (est){
   idir <- sprintf("results/exp_uniform_est_%s/", exp)
 } else {
-  idir <- sprintf("results/exp_uniform_%s/", exp)
+  idir <- sprintf("results/exp_uniform_oracle_%s/", exp)
 }
 
 setwd("~/GitHub/conformal-matrix-completion/experiments_real/results_hpc/")
@@ -65,7 +65,10 @@ if (plot_full){
 make_plot <- function(results, exp, xmax=2000, sv=TRUE) {
   plot.alpha <- 0.9
   df.nominal <- tibble(Key=c("Query_coverage"), Value=plot.alpha) %>%
-    mutate(Key = factor(Key, key.values, key.labels))    
+    mutate(Key = factor(Key, key.values, key.labels))   
+  df.placeholder <- tibble(Key=c("Query_coverage"), Value=c(1, 0.58)) %>%
+    mutate(Key = factor(Key, key.values, key.labels))
+  
   pp <- results %>%
     filter(!(r %in% c(10, 15)))%>%
     mutate(r = sprintf("Guessed rank: %i", r))%>%
@@ -74,6 +77,7 @@ make_plot <- function(results, exp, xmax=2000, sv=TRUE) {
     geom_line() +
     geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.5) +
     geom_hline(data=df.nominal, aes(yintercept=Value)) +
+    geom_hline(data=df.placeholder, aes(yintercept=Value), alpha=0) +
     scale_color_manual(values=color.scale) +
     scale_shape_manual(values=shape.scale) +
     facet_grid(Key~r, scales="free") +
@@ -81,10 +85,38 @@ make_plot <- function(results, exp, xmax=2000, sv=TRUE) {
     ylab("") +
     theme_bw()
   if (sv == TRUE){
-    ggsave(sprintf("%s/exp_uniform_%s.pdf", fig.dir, exp), pp, device=NULL, width=6.5, height=height)}
+    ggsave(sprintf("%s/exp_uniform_est_%s.pdf", fig.dir, exp), pp, device=NULL, width=6.5, height=height)}
   else{
     print(pp)
   }
 }
 
-make_plot(results, exp=exp, sv=FALSE)
+make_plot_oracle <- function(results, exp, xmax=2000, sv=TRUE) {
+  plot.alpha <- 0.9
+  df.nominal <- tibble(Key=c("Query_coverage"), Value=plot.alpha) %>%
+    mutate(Key = factor(Key, key.values, key.labels))    
+  pp <- results %>%
+    mutate(r = sprintf("Rank: %i", r))%>%
+    ggplot(aes(x=k, y=Value, color=Method, shape=Method)) +
+    geom_point(alpha=0.75) +
+    geom_line() +
+    geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.5) +
+    geom_hline(data=df.nominal, aes(yintercept=Value)) +
+    scale_color_manual(values=color.scale) +
+    scale_shape_manual(values=shape.scale) +
+    ggh4x::facet_grid2(r~Key, scales="free_y", independent = "y")+
+    xlab("Query size K") +
+    ylab("") +
+    theme_bw()
+  if (sv == TRUE){
+    ggsave(sprintf("%s/exp_uniform_oracle_%s.pdf", fig.dir, exp), pp, device=NULL, width=5.7, height=1.8)}
+  else{
+    print(pp)
+  }
+}
+
+if (est == TRUE){
+  make_plot(results, exp=exp, sv=TRUE)
+} else {
+  make_plot_oracle(results, exp=exp, sv=TRUE)
+}

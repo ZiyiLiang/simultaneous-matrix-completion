@@ -76,7 +76,8 @@ make_plot <- function(results, exp, val, xmax=2000, sv=TRUE) {
       scale_alpha_manual(values=alpha.scale) +
       xlab("Delta") +
       ylab("") +
-      theme_bw()
+      theme_bw() +
+      theme(axis.text.x = element_text(angle = 90, hjust = 1))  # Rotate x-axis labels
     if (sv == TRUE){
       ggsave(sprintf("%s/exp_conditional_%s.pdf", fig.dir,exp), pp, device=NULL, width=6, height=height)}
     else{
