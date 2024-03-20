@@ -1,18 +1,20 @@
 #!/bin/bash
 
 # Parameters
-R_LIST=(3 5 7)
+#R_LIST=(3 5 7)
 SEED_LIST=$(seq 1 100)
 DATASET="movielens"
 EXP="uniform"
-EST=0
 #EST=1
-#R_LIST=(7)
+EST=0
+#FULL_MISS=1
+FULL_MISS=0
+R_LIST=(7)
 #SEED_LIST=(1)
 
 # Slurm parameters
-MEMO=16G                             # Memory required (1 GB)
-TIME=00-01:30:00                    # Time required (2 h)
+MEMO=13G                             # Memory required (1 GB)
+TIME=00-01:10:00                    # Time required (2 h)
 CORE=1                              # Cores required (1)
 
 # Assemble order                                               prefix
@@ -27,6 +29,12 @@ else
   LOGS="logs/exp_"$EXP"_est_"$DATASET
   OUT_DIR="results/exp_"$EXP"_est_"$DATASET
 fi
+
+if [ $FULL_MISS -eq 1 ]; then
+  LOGS="${LOGS}_fullmiss"
+  OUT_DIR="${OUT_DIR}_fullmiss"
+fi
+
 mkdir -p $LOGS
 
 comp=0
@@ -47,7 +55,7 @@ for SEED in $SEED_LIST; do
         if [[ $COMPLETE -eq 0 ]]; then
         ((incomp++))
 	    # Script to be run
-        SCRIPT="exp_real.sh $R $DATASET $EXP $EST $SEED"
+        SCRIPT="exp_real.sh $R $DATASET $EXP $EST $FULL_MISS $SEED"
         # Define job name
         OUTF=$LOGS"/"$JOBN".out"
         ERRF=$LOGS"/"$JOBN".err"

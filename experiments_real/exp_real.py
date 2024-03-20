@@ -25,7 +25,7 @@ if True:
     # Parse input arguments
     print ('Number of arguments:', len(sys.argv), 'arguments.')
     print ('Argument List:', str(sys.argv))
-    if len(sys.argv) != 6:
+    if len(sys.argv) != 7:
         print("Error: incorrect number of parameters.")
         quit()
 
@@ -33,7 +33,8 @@ if True:
     data_name = str(sys.argv[2])
     exp = str(sys.argv[3])
     est = int(sys.argv[4])
-    seed = int(sys.argv[5])
+    full_miss = int(sys.argv[5])
+    seed = int(sys.argv[6])
     
 # Fixed data parameters
 max_calib_queries = 2000
@@ -53,7 +54,6 @@ repetition = 1
 # define missingness pattern
 if exp == "uniform":
     w = None
-
 
 ###############
 #  Load data  #
@@ -79,16 +79,21 @@ elif data_name == "books":
 M, mask_avail, _ = load_data(base_path, data_name, replace_nan=-1, 
                                      num_rows=num_rows, num_columns=num_columns, random_state=matrix_generation_seed)
 n1,n2 = M.shape
-parent_mask = None
-# determine if the test query is sampled from all missing entries
-full_miss = True
+
+if est:
+    parent_mask = None
+else:
+    parent_mask = mask_avail
+
 
 ###############
 # Output file #
-###############
-outdir = f"./results/exp_{exp}_{data_name}/" if not est else f"./results/exp_{exp}_est_{data_name}/"
+###############i:
+outdir = f"./results/exp_{exp}_oracle_{data_name}" if not est else f"./results/exp_{exp}_est_{data_name}"
 if full_miss:
-    outdir += "fullmiss/" 
+    outdir += "_fullmiss/"
+else:
+    outdir += "/" 
 os.makedirs(outdir, exist_ok=True)
 outfile_name = f"r{r}_seed{seed}"
 outfile = outdir + outfile_name + ".txt"
