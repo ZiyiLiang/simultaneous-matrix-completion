@@ -5,7 +5,7 @@ library(kableExtra)
 library(ggplot2)
 
 plot_full = FALSE
-est=TRUE
+est=FALSE
 exp="movielens"
 #exp="books"
 
@@ -33,12 +33,12 @@ alpha.scale <- c(1, 0.5, 0.8)
 
 if (plot_full){
   key.values <- c("Query_coverage", "Coverage", "Size", "Inf_prop")
-  key.labels <- c("Query cov.", "Coverage", "Size", "Inf_prop")
+  key.labels <- c("Query cov.", "Coverage", "Size", "Inf Prop.")
   height <- 4.5
   fig.dir <- sprintf("~/GitHub/conformal-matrix-completion/results/figures/exp_uniform_%s_full/", exp)
 }else{
   key.values <- c("Query_coverage","Size")
-  key.labels <- c("Query cov.","Size")
+  key.labels <- c("Cov. (mask)","Size (mask)")
   height <- 2.5
   fig.dir <- sprintf("~/GitHub/conformal-matrix-completion/results/figures/exp_uniform_%s/", exp)
 }

@@ -21,11 +21,11 @@ color.scale <- c( "blue", "#56b5e9", "#CC66CC" )
 shape.scale <- c(15, 4, 8, 1)
 alpha.scale <- c(1, 0.5, 0.8)
 
-plot_full = FALSE
+plot_full = TRUE
 
 if (plot_full){
   key.values <- c("Query_coverage", "Coverage", "Size", "Inf_prop")
-  key.labels <- c("Query cov.", "Coverage", "Size", "Inf_prop")
+  key.labels <- c("Query cov.", "Coverage", "Size", "Inf Prop.")
   height <- 3.5
   fig.dir <- "~/GitHub/conformal-matrix-completion/results/figures/exp_conditional_full/"
 }else{
@@ -39,7 +39,7 @@ dir.create(fig.dir, showWarnings = FALSE)
 if (plot_full){
   results <- results.raw %>%
     mutate(Method = factor(Method, Method.values, Method.labels)) %>%
-    pivot_longer(cols=c("Query_coverage", "Coverage", "Size", "Inf_prop"), names_to='Key', values_to='Value') %>%
+    pivot_longer(cols=c("Query_coverage","Size", "Inf_prop"), names_to='Key', values_to='Value') %>%
     mutate(Key = factor(Key, key.values, key.labels)) %>%
     group_by(Method, k, delta, Key) %>%
     summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
@@ -74,12 +74,12 @@ make_plot <- function(results, exp, val, xmax=2000, sv=TRUE) {
       scale_color_manual(values=color.scale) +
       scale_shape_manual(values=shape.scale) +
       scale_alpha_manual(values=alpha.scale) +
-      xlab("Delta") +
+      xlab("\U03B4") +
       ylab("") +
       theme_bw() +
       theme(axis.text.x = element_text(angle = 90, hjust = 1))  # Rotate x-axis labels
     if (sv == TRUE){
-      ggsave(sprintf("%s/exp_conditional_%s.pdf", fig.dir,exp), pp, device=NULL, width=6, height=height)}
+      ggsave(sprintf("%s/exp_conditional_%s.pdf", fig.dir,exp), pp, device= cairo_pdf, width=6, height=height)}
     else{
       print(pp)
     }
@@ -87,7 +87,7 @@ make_plot <- function(results, exp, val, xmax=2000, sv=TRUE) {
   if (exp=="vary_k"){
     pp <- results %>%
       filter(delta %in% val)%>%
-      mutate(delta = paste0("proportion: ", delta))%>%
+      mutate(delta = paste0("\U03B4: ", delta))%>%
       ggplot(aes(x=k, y=Value, color=Method, shape=Method)) +
       geom_point(alpha=0.75) +
       geom_line() +
@@ -101,7 +101,7 @@ make_plot <- function(results, exp, val, xmax=2000, sv=TRUE) {
       ylab("") +
       theme_bw()
     if (sv == TRUE){
-      ggsave(sprintf("%s/exp_conditional_%s.pdf", fig.dir,exp), pp, device=NULL, width=6, height=height)}
+      ggsave(sprintf("%s/exp_conditional_%s.pdf", fig.dir,exp), pp, device = cairo_pdf, width=6, height=height)}
     else{
       print(pp)
     }

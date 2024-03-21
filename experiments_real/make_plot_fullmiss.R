@@ -26,7 +26,7 @@ alpha.scale <- c(1, 0.5, 0.8)
 
 
 key.values <- c("Size")
-key.labels <- c("Size")
+key.labels <- c("Size (full)")
 fig.dir <- sprintf("~/GitHub/conformal-matrix-completion/results/figures/exp_uniform_%s/", exp)
 
 dir.create(fig.dir, showWarnings = FALSE)
