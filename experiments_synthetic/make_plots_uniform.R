@@ -112,7 +112,6 @@ exp_list <- c("vary_k", "vary_mu")
 k_list <- c(2,5,8)
 mu_list <-  c(0, 15, 30)
 
-results <- generate_results(plot_full)
 for (exp in exp_list) {
   if (exp == "vary_k"){
     val = mu_list
