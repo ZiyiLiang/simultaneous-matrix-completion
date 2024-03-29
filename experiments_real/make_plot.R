@@ -5,6 +5,7 @@ library(kableExtra)
 library(ggplot2)
 
 plot_full = FALSE
+plot_preview = TRUE
 est=FALSE
 exp="movielens"
 #exp="books"
@@ -36,6 +37,11 @@ if (plot_full){
   key.labels <- c("Query cov.", "Coverage", "Size", "Inf Prop.")
   height <- 4.5
   fig.dir <- sprintf("~/GitHub/conformal-matrix-completion/results/figures/exp_uniform_%s_full/", exp)
+}else if(plot_preview){
+  key.values <- c("Query_coverage","Size")
+  key.labels <- c("Simultaneous coverage","Average width")
+  height <- 2.5
+  fig.dir <- sprintf("~/GitHub/conformal-matrix-completion/results/figures/exp_uniform_%s/", exp)
 }else{
   key.values <- c("Query_coverage","Size")
   key.labels <- c("Cov. (mask)","Size (mask)")
@@ -115,8 +121,34 @@ make_plot_oracle <- function(results, exp, xmax=2000, sv=TRUE) {
   }
 }
 
+make_plot_oracle_preview <- function(results, exp, xmax=2000, sv=TRUE) {
+  plot.alpha <- 0.9
+  df.nominal <- tibble(Key=c("Query_coverage"), Value=plot.alpha) %>%
+    mutate(Key = factor(Key, key.values, key.labels))    
+  pp <- results %>%
+    mutate(r = sprintf("Rank: %i", r))%>%
+    ggplot(aes(x=k, y=Value, color=Method, shape=Method)) +
+    geom_point(alpha=0.75) +
+    geom_line() +
+    geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.5) +
+    geom_hline(data=df.nominal, aes(yintercept=Value)) +
+    scale_color_manual(values=color.scale) +
+    scale_shape_manual(values=shape.scale) +
+    facet_wrap(.~Key, scales="free") +
+    xlab("Group size K") +
+    ylab("") +
+    theme_bw()
+  if (sv == TRUE){
+    ggsave(sprintf("%s/exp_uniform_oracle_preview_%s.pdf", fig.dir, exp), pp, device=NULL, width=5.7, height=1.8)}
+  else{
+    print(pp)
+  }
+}
+
 if (est == TRUE){
   make_plot(results, exp=exp, sv=TRUE)
-} else {
+} else if(plot_preview == TRUE){
+  make_plot_oracle_preview(results, exp=exp, sv=TRUE)
+}else {
   make_plot_oracle(results, exp=exp, sv=TRUE)
 }
