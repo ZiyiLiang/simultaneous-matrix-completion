@@ -24,12 +24,12 @@ plot_full = FALSE
 
 if (plot_full){
   key.values <- c("Query_coverage", "Coverage", "Size", "Inf_prop")
-  key.labels <- c("Query cov.", "Coverage", "Size", "Inf_prop")
+  key.labels <- c("Group cov.", "Coverage", "Size", "Inf_prop")
   height <- 3.5
   fig.dir <- "~/GitHub/conformal-matrix-completion/results/figures/exp_biased_obs_full/"
 }else{
   key.values <- c("Query_coverage","Size")
-  key.labels <- c("Query cov.","Size")
+  key.labels <- c("Group cov.","Size")
   height <- 2.5
   fig.dir <- "~/GitHub/conformal-matrix-completion/results/figures/exp_biased_obs/"
 }
@@ -74,7 +74,7 @@ make_plot <- function(results, exp, val, xmax=2000, sv=TRUE) {
       scale_color_manual(values=color.scale) +
       scale_shape_manual(values=shape.scale) +
       scale_alpha_manual(values=alpha.scale) +
-      xlab("Query size K") +
+      xlab("Group size K") +
       ylab("") +
       theme_bw()
     if (sv == TRUE){

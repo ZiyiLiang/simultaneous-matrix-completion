@@ -5,8 +5,8 @@ library(kableExtra)
 library(ggplot2)
 
 plot_full = FALSE
-plot_preview = TRUE
-est=FALSE
+plot_preview = FALSE
+est=TRUE
 exp="movielens"
 #exp="books"
 
@@ -34,7 +34,7 @@ alpha.scale <- c(1, 0.5, 0.8)
 
 if (plot_full){
   key.values <- c("Query_coverage", "Coverage", "Size", "Inf_prop")
-  key.labels <- c("Query cov.", "Coverage", "Size", "Inf Prop.")
+  key.labels <- c("Group cov.", "Coverage", "Size", "Inf Prop.")
   height <- 4.5
   fig.dir <- sprintf("~/GitHub/conformal-matrix-completion/results/figures/exp_uniform_%s_full/", exp)
 }else if(plot_preview){
@@ -87,7 +87,7 @@ make_plot <- function(results, exp, xmax=2000, sv=TRUE) {
     scale_color_manual(values=color.scale) +
     scale_shape_manual(values=shape.scale) +
     facet_grid(Key~r, scales="free") +
-    xlab("Query size K") +
+    xlab("Group size K") +
     ylab("") +
     theme_bw()
   if (sv == TRUE){
@@ -111,7 +111,7 @@ make_plot_oracle <- function(results, exp, xmax=2000, sv=TRUE) {
     scale_color_manual(values=color.scale) +
     scale_shape_manual(values=shape.scale) +
     ggh4x::facet_grid2(r~Key, scales="free_y", independent = "y")+
-    xlab("Query size K") +
+    xlab("Group size K") +
     ylab("") +
     theme_bw()
   if (sv == TRUE){

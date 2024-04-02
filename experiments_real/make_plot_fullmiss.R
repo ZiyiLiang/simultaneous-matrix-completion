@@ -52,7 +52,7 @@ make_plot <- function(results, exp, xmax=2000, sv=TRUE) {
     scale_color_manual(values=color.scale) +
     scale_shape_manual(values=shape.scale) +
     facet_grid(Key~r, scales="free") +
-    xlab("Query size K") +
+    xlab("Group size K") +
     ylab("") +
     theme_bw()
   if (sv == TRUE){
