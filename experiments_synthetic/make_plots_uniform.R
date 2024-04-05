@@ -19,7 +19,7 @@ results.raw <- do.call("rbind", lapply(ifile.list, function(ifile) {
 
 
 Method.values <- c("conformal", "Bonferroni", "Uncorrected")
-Method.labels <- c("Simultaneous", "Bonferroni", "Individual")
+Method.labels <- c("Simultaneous", "Bonferroni", "Unadjusted")
 
 #color.scale <- c("#566be9", "#56b5e9", "#CC79A7", "orange")
 color.scale <- c( "blue", "#56b5e9", "#CC66CC" )
@@ -30,11 +30,11 @@ plot_full = FALSE
 
 if (plot_full){
   key.values <- c("Query_coverage", "Coverage", "Size", "Inf_prop")
-  key.labels <- c("Group cov.", "Coverage", "Size", "Inf_prop")
+  key.labels <- c("Group cov.", "Coverage", "Avg. width", "Inf_prop")
   height <- 3.5
 }else{
   key.values <- c("Query_coverage","Size")
-  key.labels <- c("Group cov.","Size")
+  key.labels <- c("Group cov.","Avg. width")
   height <- 2.5
 }
 
@@ -88,7 +88,7 @@ make_plot <- function(results, exp, val, xmax=2000, sv=TRUE) {
     pp <- results %>%
       filter(k %in% val)%>%
       #filter(!(mu %in% c(3,9,15,21,27)))%>%
-      mutate(k = paste0("k: ", k))%>%
+      mutate(k = paste0("K: ", k))%>%
       ggplot(aes(x=mu, y=Value, color=Method, shape=Method)) +
       geom_point(alpha=0.9) +
       geom_line() +
@@ -99,7 +99,7 @@ make_plot <- function(results, exp, val, xmax=2000, sv=TRUE) {
       scale_color_manual(values=color.scale) +
       scale_shape_manual(values=shape.scale) +
       scale_alpha_manual(values=alpha.scale) +
-      xlab("Column-wise magnitude") +
+      xlab("Column-wise dependency") +
       ylab("") +
       theme_bw()
     if (sv == TRUE){

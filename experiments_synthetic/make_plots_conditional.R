@@ -21,16 +21,16 @@ color.scale <- c( "blue", "#56b5e9", "#CC66CC" )
 shape.scale <- c(15, 4, 8, 1)
 alpha.scale <- c(1, 0.5, 0.8)
 
-plot_full = FALSE
+plot_full = TRUE
 
 if (plot_full){
   key.values <- c("Query_coverage", "Coverage", "Size", "Inf_prop")
-  key.labels <- c("Group cov.", "Coverage", "Size", "Inf Prop.")
+  key.labels <- c("Group cov.", "Coverage", "Avg. width", "Inf prop.")
   height <- 3.5
   fig.dir <- "~/GitHub/conformal-matrix-completion/results/figures/exp_conditional_full/"
 }else{
   key.values <- c("Query_coverage","Size")
-  key.labels <- c("Group cov.","Size")
+  key.labels <- c("Group cov.","Avg. width")
   height <- 2.5
   fig.dir <-"~/GitHub/conformal-matrix-completion/results/figures/exp_conditional/"
 }
@@ -64,7 +64,7 @@ make_plot <- function(results, exp, val, xmax=2000, sv=TRUE) {
     pp <- results %>%
       filter(k %in% val)%>%
       filter(delta != 0.10)%>%
-      mutate(k = paste0("k: ", k))%>%
+      mutate(k = paste0("K: ", k))%>%
       ggplot(aes(x=delta, y=Value, color=Method, shape=Method)) +
       geom_point(alpha=0.75) +
       geom_line() +
@@ -74,7 +74,7 @@ make_plot <- function(results, exp, val, xmax=2000, sv=TRUE) {
       scale_color_manual(values=color.scale) +
       scale_shape_manual(values=shape.scale) +
       scale_alpha_manual(values=alpha.scale) +
-      xlab("\U03B4") +
+      xlab("Test group homogeneity") +
       ylab("") +
       theme_bw() +
       theme(axis.text.x = element_text(angle = 90, hjust = 1))  # Rotate x-axis labels

@@ -16,7 +16,7 @@ results.raw <- do.call("rbind", lapply(ifile.list, function(ifile) {
 }))
 
 Method.values <- c("conformal", "Bonferroni", "Uncorrected")
-Method.labels <- c("Simultaneous", "Bonferroni", "Individual")
+Method.labels <- c("Simultaneous", "Bonferroni", "Unadjusted")
 
 #color.scale <- c("#566be9", "#56b5e9", "#CC79A7", "orange")
 color.scale <- c( "blue", "#56b5e9", "#CC66CC" )
@@ -26,7 +26,7 @@ alpha.scale <- c(1, 0.5, 0.8)
 
 
 key.values <- c("Size")
-key.labels <- c("Size (full)")
+key.labels <- c("Avg. width")
 fig.dir <- sprintf("~/GitHub/conformal-matrix-completion/results/figures/exp_uniform_%s/", exp)
 
 dir.create(fig.dir, showWarnings = FALSE)
