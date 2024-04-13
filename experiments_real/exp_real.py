@@ -164,13 +164,13 @@ def run_single_experiment(M, k, alpha, prop_train, w, max_test_queries, max_cali
             Mhat, _, _ = pmf_solve(M, mask_train, k=r, max_iteration = max_iterations, verbose=verbose, random_state=random_state)
         elif solver == "svt":
             Mhat = svt_solve(M, mask_train, max_iteration = max_iterations, verbose = verbose, random_state = random_state)
+        del mask_train
         print("Done training!\n")
         sys.stdout.flush()
 
         if est:
             print("Estimating missingness on the splitted training set...")
-            w_obs=estimate_P(mask_train, prop_train, r=5)
-            del mask_train
+            w_obs=estimate_P(mask_avail, 1, r=5)
             print("Done estimating!\n")
             sys.stdout.flush()
         else:
