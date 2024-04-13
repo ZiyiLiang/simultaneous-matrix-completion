@@ -6,7 +6,7 @@ library(ggplot2)
 
 plot_full = FALSE
 plot_preview = FALSE
-est=FALSE
+est=TRUE
 exp="movielens"
 #exp="books"
 
