@@ -24,16 +24,15 @@ if True:
     # Parse input arguments
     print ('Number of arguments:', len(sys.argv), 'arguments.')
     print ('Argument List:', str(sys.argv))
-    if len(sys.argv) != 7:
+    if len(sys.argv) != 6:
         print("Error: incorrect number of parameters.")
         quit()
 
     r = int(sys.argv[1])
     data_name = str(sys.argv[2])
-    exp = str(sys.argv[3])
-    est = int(sys.argv[4])
-    full_miss = int(sys.argv[5])
-    seed = int(sys.argv[6])
+    est = int(sys.argv[3])
+    full_miss = int(sys.argv[4])
+    seed = int(sys.argv[5])
     
 # Fixed data parameters
 max_calib_queries = 2000
@@ -49,10 +48,7 @@ verbose = True
 allow_inf = False
 alpha = 0.1
 repetition = 1
-
-# define missingness pattern
-if exp == "uniform":
-    w = None
+w = None
 
 ###############
 #  Load data  #
@@ -88,7 +84,7 @@ else:
 ###############
 # Output file #
 ###############i:
-outdir = f"./results/exp_{exp}_oracle_{data_name}" if not est else f"./results/exp_{exp}_est_{data_name}"
+outdir = f"./results/oracle_{data_name}" if not est else f"./results/est_{data_name}"
 if full_miss:
     outdir += "_fullmiss/"
 else:
