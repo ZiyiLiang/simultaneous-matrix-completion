@@ -18,22 +18,34 @@ def load_data(base_path, data_name, replace_nan=-1, num_rows=None, num_columns=N
         print("Unknown dataset!")
 
     n1, n2 = data.shape
-    rng = np.random.default_rng(random_state)
+    if random_state is not None:
+        rng = np.random.default_rng(random_state)
+    else:
+        # Calculate non-missing values for each row and column
+        row_notna_counts = data.notna().sum(axis=1)
+        column_notna_counts = data.notna().sum(axis=0)
 
     if num_rows is not None:
         # Make sure the # of rows is meaningful
         num_rows = int(np.clip(num_rows, 1, n1))
-        random_row_indices = rng.choice(data.index, size=num_rows, replace=False)
+        if random_state:
+            selected_row_indices = rng.choice(data.index, size=num_rows, replace=False)
+        else:
+            selected_row_indices = row_notna_counts.nlargest(num_rows).index
     else:
-        random_row_indices = data.index
+        selected_row_indices = data.index
+
     if num_columns is not None:
         num_columns = int(np.clip(num_columns, 1, n2))
-        random_column_indices = rng.choice(data.columns, size=num_columns, replace=False)
+        if random_state:
+            selected_column_indices = rng.choice(data.columns, size=num_columns, replace=False)
+        else:
+            selected_column_indices = column_notna_counts.nlargest(num_columns).index
     else:
-        random_column_indices = data.columns
+        selected_column_indices = data.columns
     
     # Filter the Data to include only the selected rows and columns
-    subsample_data = data.loc[random_row_indices, random_column_indices]
+    subsample_data = data.loc[selected_row_indices, selected_column_indices]
     mask_obs = subsample_data.notna().values
     mask_miss = subsample_data.isna().values
     M = subsample_data.fillna(replace_nan).values

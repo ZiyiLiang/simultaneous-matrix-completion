@@ -4,7 +4,6 @@ sys.path.append('../third_party')
 
 import numpy as np   
 import pandas as pd
-import pdb
 import scipy.stats as stats
 
 from tqdm import tqdm
@@ -39,7 +38,7 @@ if True:
 # Fixed data parameters
 max_calib_queries = 2000
 matrix_generation_seed = 2024
-max_iterations = 10
+max_iterations = 30
 
 methods = ["conformal", 
            "benchmark"]
@@ -62,22 +61,22 @@ base_path = "../data/"
 
 if data_name == "movielens":
     num_columns, num_rows = 800, 1000
-    prop_train = 0.8
+    prop_train = 0.9
     max_test_queries = 100            
-    ll, uu = 0, 5
+    ll, uu = 1, 5
     k_list = np.arange(2,9)
 
 elif data_name == "books":
     num_columns, num_rows = None, 2500
     prop_train = 0.9
     max_test_queries = 100
-    ll, uu = 0, 5      
+    ll, uu = 1, 5      
     k_list = np.arange(2,5)      
 
 
 
 M, mask_avail, _ = load_data(base_path, data_name, replace_nan=-1, 
-                                     num_rows=num_rows, num_columns=num_columns, random_state=matrix_generation_seed)
+                             num_rows=num_rows, num_columns=num_columns)
 n1,n2 = M.shape
 
 if est:
