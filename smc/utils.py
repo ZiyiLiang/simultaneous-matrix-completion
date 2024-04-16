@@ -29,7 +29,6 @@ def plot_before_after_mask(M, mask, vmin=None, vmax=None, bad_color='grey', figs
     axs[1].title.set_text('Masked matrix')
     plt.colorbar(im2, ax=axs[1], fraction=0.046, pad=0.04)
     plt.show()
-    return fig
 
 
 

@@ -4,16 +4,16 @@ library(tidyverse)
 library(kableExtra)
 library(ggplot2)
 
-plot_full = FALSE
+plot_full = TRUE
 plot_preview = FALSE
 est=TRUE
 exp="movielens"
 #exp="books"
 
 if (est){
-  idir <- sprintf("results/exp_uniform_est_%s/", exp)
+  idir <- sprintf("results/est_%s/", exp)
 } else {
-  idir <- sprintf("results/exp_uniform_oracle_%s/", exp)
+  idir <- sprintf("results/oracle_%s/", exp)
 }
 
 setwd("~/GitHub/conformal-matrix-completion/experiments_real/results_hpc/")
@@ -36,17 +36,17 @@ if (plot_full){
   key.values <- c("Query_coverage", "Coverage", "Size", "Inf_prop")
   key.labels <- c("Group cov.", "Coverage", "Avg. width", "Inf Prop.")
   height <- 4.5
-  fig.dir <- sprintf("~/GitHub/conformal-matrix-completion/results/figures/exp_uniform_%s_full/", exp)
+  fig.dir <- sprintf("~/GitHub/conformal-matrix-completion/results/figures/%s_full/", exp)
 }else if(plot_preview){
   key.values <- c("Query_coverage","Size")
   key.labels <- c("Group coverage","Average width")
   height <- 2.5
-  fig.dir <- sprintf("~/GitHub/conformal-matrix-completion/results/figures/exp_uniform_%s/", exp)
+  fig.dir <- sprintf("~/GitHub/conformal-matrix-completion/results/figures/%s/", exp)
 }else{
   key.values <- c("Query_coverage","Size")
   key.labels <- c("Group cov.","Avg. width")
   height <- 2.5
-  fig.dir <- sprintf("~/GitHub/conformal-matrix-completion/results/figures/exp_uniform_%s/", exp)
+  fig.dir <- sprintf("~/GitHub/conformal-matrix-completion/results/figures/%s/", exp)
 }
 dir.create(fig.dir, showWarnings = FALSE)
 
@@ -91,7 +91,7 @@ make_plot <- function(results, exp, xmax=2000, sv=TRUE) {
     ylab("") +
     theme_bw()
   if (sv == TRUE){
-    ggsave(sprintf("%s/exp_uniform_est_%s.pdf", fig.dir, exp), pp, device=NULL, width=6.5, height=height)}
+    ggsave(sprintf("%s/est_%s.pdf", fig.dir, exp), pp, device=NULL, width=6.5, height=height)}
   else{
     print(pp)
   }
@@ -115,7 +115,7 @@ make_plot_oracle <- function(results, exp, xmax=2000, sv=TRUE) {
     ylab("") +
     theme_bw()
   if (sv == TRUE){
-    ggsave(sprintf("%s/exp_uniform_oracle_%s.pdf", fig.dir, exp), pp, device=NULL, width=5.7, height=1.8)}
+    ggsave(sprintf("%s/oracle_%s.pdf", fig.dir, exp), pp, device=NULL, width=5.7, height=1.8)}
   else{
     print(pp)
   }
@@ -139,7 +139,7 @@ make_plot_oracle_preview <- function(results, exp, xmax=2000, sv=TRUE) {
     ylab("") +
     theme_bw()
   if (sv == TRUE){
-    ggsave(sprintf("%s/exp_uniform_oracle_preview_%s.pdf", fig.dir, exp), pp, device=NULL, width=5.7, height=1.8)}
+    ggsave(sprintf("%s/oracle_preview_%s.pdf", fig.dir, exp), pp, device=NULL, width=5.7, height=1.8)}
   else{
     print(pp)
   }
