@@ -24,22 +24,20 @@ if True:
     # Parse input arguments
     print ('Number of arguments:', len(sys.argv), 'arguments.')
     print ('Argument List:', str(sys.argv))
-    if len(sys.argv) != 8:
+    if len(sys.argv) != 6:
         print("Error: incorrect number of parameters.")
         quit()
-    
-    num_rows = int(sys.argv[1])
-    num_columns = int(sys.argv[2])
-    r = int(sys.argv[3])
-    data_name = str(sys.argv[4])
-    est = int(sys.argv[5])
-    full_miss = int(sys.argv[6])
-    seed = int(sys.argv[7])
+
+    r = int(sys.argv[1])
+    data_name = str(sys.argv[2])
+    est = int(sys.argv[3])
+    full_miss = int(sys.argv[4])
+    seed = int(sys.argv[5])
     
 # Fixed data parameters
 max_calib_queries = 2000
 matrix_generation_seed = 2024
-max_iterations = 30
+max_iterations = 20
 
 methods = ["conformal", 
            "benchmark"]
@@ -58,6 +56,7 @@ w = None
 base_path = "../data/"
 
 if data_name == "movielens":
+    num_columns, num_rows = 800, 1000
     prop_train = 0.8
     max_test_queries = 100            
     ll, uu = 1, 5
@@ -73,7 +72,7 @@ elif data_name == "books":
 
 
 M, mask_avail, _ = load_data(base_path, data_name, replace_nan=-1, 
-                             num_rows=num_rows, num_columns=num_columns)
+                             num_rows=num_rows, num_columns=num_columns, random_state=matrix_generation_seed)
 n1,n2 = M.shape
 
 if est:
@@ -91,7 +90,7 @@ if full_miss:
 else:
     outdir += "/" 
 os.makedirs(outdir, exist_ok=True)
-outfile_name = f"{num_rows}by{num_columns}_r{r}_seed{seed}"
+outfile_name = f"r{r}_seed{seed}"
 outfile = outdir + outfile_name + ".txt"
 print("Output file: {:s}".format(outfile), end="\n")
 sys.stdout.flush()

@@ -14,6 +14,12 @@ def load_data(base_path, data_name, replace_nan=-1, num_rows=None, num_columns=N
     elif data_name == "books":
         data_raw = pd.read_csv(base_path+"/amazon/small_books.csv")
         data = data_raw.pivot_table(index='user_id', columns='item_id', values='rating')
+    elif data_name == "myanimelist":
+        data_raw = pd.read_csv(base_path+"/myanimelist/rating.csv")
+        
+        # replace -1 with NA since -1 indicates user watched but did not assign rating.
+        data_raw['rating'].replace(-1, pd.NA, inplace=True)
+        data = data_raw.pivot_table(index='user_id', columns='anime_id', values='rating')
     else:
         print("Unknown dataset!")
 

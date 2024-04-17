@@ -10,6 +10,7 @@ est=TRUE
 exp="movielens"
 #exp="books"
 
+
 if (est){
   idir <- sprintf("results/est_%s/", exp)
 } else {
@@ -50,20 +51,24 @@ if (plot_full){
 }
 dir.create(fig.dir, showWarnings = FALSE)
 
+nrow=600
+ncol=400
 if (plot_full){
   results <- results.raw %>%
     mutate(Method = factor(Method, Method.values, Method.labels)) %>%
     pivot_longer(cols=c("Query_coverage", "Coverage", "Size", "Inf_prop"), names_to='Key', values_to='Value') %>%
     mutate(Key = factor(Key, key.values, key.labels)) %>%
-    group_by(Method,  r,k, Key) %>%
-    summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
+    group_by(Method,  n1, n2, r,k, Key) %>%
+    summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))%>%
+    filter(n1==nrow, n2==ncol)
 }else{
   results <- results.raw %>%
     mutate(Method = factor(Method, Method.values, Method.labels)) %>%
     pivot_longer(cols=c("Query_coverage", "Size"), names_to='Key', values_to='Value') %>%
     mutate(Key = factor(Key, key.values, key.labels)) %>%
-    group_by(Method,  r,k, Key) %>%
-    summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
+    group_by(Method,  n1, n2, r,k, Key) %>%
+    summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))%>%
+    filter(n1==nrow, n2==ncol)
 }
 
 
@@ -91,7 +96,7 @@ make_plot <- function(results, exp, xmax=2000, sv=TRUE) {
     ylab("") +
     theme_bw()
   if (sv == TRUE){
-    ggsave(sprintf("%s/est_%s.pdf", fig.dir, exp), pp, device=NULL, width=6.5, height=height)}
+    ggsave(sprintf("%s/%iby%i_est_%s.pdf", fig.dir, nrow, ncol, exp), pp, device=NULL, width=5, height=height)}
   else{
     print(pp)
   }
@@ -115,7 +120,7 @@ make_plot_oracle <- function(results, exp, xmax=2000, sv=TRUE) {
     ylab("") +
     theme_bw()
   if (sv == TRUE){
-    ggsave(sprintf("%s/oracle_%s.pdf", fig.dir, exp), pp, device=NULL, width=5.7, height=1.8)}
+    ggsave(sprintf("%s/%iby%i_oracle_%s.pdf", nrow, ncol,fig.dir, exp), pp, device=NULL, width=5.7, height=1.8)}
   else{
     print(pp)
   }
@@ -145,10 +150,11 @@ make_plot_oracle_preview <- function(results, exp, xmax=2000, sv=TRUE) {
   }
 }
 
+sv=TRUE
 if (est == TRUE){
-  make_plot(results, exp=exp, sv=TRUE)
+  make_plot(results, exp=exp, sv=sv)
 } else if(plot_preview == TRUE){
-  make_plot_oracle_preview(results, exp=exp, sv=TRUE)
+  make_plot_oracle_preview(results, exp=exp, sv=sv)
 }else {
-  make_plot_oracle(results, exp=exp, sv=TRUE)
+  make_plot_oracle(results, exp=exp, sv=sv)
 }
