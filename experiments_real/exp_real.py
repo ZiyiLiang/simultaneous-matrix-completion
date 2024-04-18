@@ -37,7 +37,7 @@ if True:
 # Fixed data parameters
 max_calib_queries = 2000
 matrix_generation_seed = 2024
-max_iterations = 20
+max_iterations = 10
 
 methods = ["conformal", 
            "benchmark"]

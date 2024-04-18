@@ -12,8 +12,8 @@ FULL_MISS=0
 #SEED_LIST=(1)
 
 # Slurm parameters
-MEMO=14G                             # Memory required (1 GB)
-TIME=00-02:00:00                    # Time required (2 h)
+MEMO=13G                             # Memory required (1 GB)
+TIME=00-01:30:00                    # Time required (2 h)
 CORE=1                              # Cores required (1)
 
 # Assemble order                                               prefix
@@ -54,7 +54,7 @@ for SEED in $SEED_LIST; do
         if [[ $COMPLETE -eq 0 ]]; then
         ((incomp++))
       # Script to be run
-        SCRIPT="exp_real.sh $ROW $COL $R $DATASET $EST $FULL_MISS $SEED"
+        SCRIPT="exp_real.sh $R $DATASET $EST $FULL_MISS $SEED"
         # Define job name
         OUTF=$LOGS"/"$JOBN".out"
         ERRF=$LOGS"/"$JOBN".err"
