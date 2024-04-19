@@ -35,9 +35,9 @@ if True:
     seed = int(sys.argv[5])
     
 # Fixed data parameters
-max_calib_queries = 3000
+max_calib_queries = 2000
 # If seed is None, choose the rows and cols to minimize missingness
-matrix_generation_seed = None
+matrix_generation_seed = 2024
 max_iterations = 10
 
 methods = ["conformal", 
@@ -57,8 +57,8 @@ w = None
 base_path = "../data/"
 
 if data_name == "movielens":
-    num_columns, num_rows = 800, 1200
-    prop_train = 0.7
+    num_columns, num_rows = 800, 1000
+    prop_train = 0.8
     max_test_queries = 100            
     ll, uu = 1, 5
     k_list = np.arange(2,9)
@@ -102,6 +102,8 @@ def add_header(df):
     df["n2"] = n2
     df['alpha'] = alpha
     df['r'] = r
+    df['prop_test'] = 1-prop_train
+    df['least_missing'] = False if matrix_generation_seed else True
     return df
 
 
