@@ -5,8 +5,8 @@ library(kableExtra)
 library(ggplot2)
 
 plot_full = TRUE
-plot_preview = FALSE
-est=TRUE
+plot_preview = TRUE
+est=FALSE
 exp="movielens"
 #exp="books"
 
@@ -51,24 +51,20 @@ if (plot_full){
 }
 dir.create(fig.dir, showWarnings = FALSE)
 
-nrow=600
-ncol=400
 if (plot_full){
   results <- results.raw %>%
     mutate(Method = factor(Method, Method.values, Method.labels)) %>%
     pivot_longer(cols=c("Query_coverage", "Coverage", "Size", "Inf_prop"), names_to='Key', values_to='Value') %>%
     mutate(Key = factor(Key, key.values, key.labels)) %>%
     group_by(Method,  n1, n2, r,k, Key) %>%
-    summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))%>%
-    filter(n1==nrow, n2==ncol)
+    summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
 }else{
   results <- results.raw %>%
     mutate(Method = factor(Method, Method.values, Method.labels)) %>%
     pivot_longer(cols=c("Query_coverage", "Size"), names_to='Key', values_to='Value') %>%
     mutate(Key = factor(Key, key.values, key.labels)) %>%
     group_by(Method,  n1, n2, r,k, Key) %>%
-    summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))%>%
-    filter(n1==nrow, n2==ncol)
+    summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
 }
 
 
@@ -131,6 +127,7 @@ make_plot_oracle_preview <- function(results, exp, xmax=2000, sv=TRUE) {
   df.nominal <- tibble(Key=c("Query_coverage"), Value=plot.alpha) %>%
     mutate(Key = factor(Key, key.values, key.labels))    
   pp <- results %>%
+    filter(r==3) %>%
     mutate(r = sprintf("Rank: %i", r))%>%
     ggplot(aes(x=k, y=Value, color=Method, shape=Method)) +
     geom_point(alpha=0.75) +
@@ -142,6 +139,7 @@ make_plot_oracle_preview <- function(results, exp, xmax=2000, sv=TRUE) {
     facet_wrap(.~Key, scales="free") +
     xlab("Group size K") +
     ylab("") +
+    ggtitle("r=3")+
     theme_bw()
   if (sv == TRUE){
     ggsave(sprintf("%s/oracle_preview_%s.pdf", fig.dir, exp), pp, device=NULL, width=5.7, height=1.8)}
@@ -150,7 +148,7 @@ make_plot_oracle_preview <- function(results, exp, xmax=2000, sv=TRUE) {
   }
 }
 
-sv=TRUE
+sv=FALSE
 if (est == TRUE){
   make_plot(results, exp=exp, sv=sv)
 } else if(plot_preview == TRUE){

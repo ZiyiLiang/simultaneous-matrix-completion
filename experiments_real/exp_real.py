@@ -36,7 +36,8 @@ if True:
     
 # Fixed data parameters
 max_calib_queries = 3000
-matrix_generation_seed = 2024
+# If seed is None, choose the rows and cols to minimize missingness
+matrix_generation_seed = None
 max_iterations = 10
 
 methods = ["conformal", 
@@ -56,7 +57,7 @@ w = None
 base_path = "../data/"
 
 if data_name == "movielens":
-    num_columns, num_rows = 800, 1000
+    num_columns, num_rows = 800, 1200
     prop_train = 0.7
     max_test_queries = 100            
     ll, uu = 1, 5

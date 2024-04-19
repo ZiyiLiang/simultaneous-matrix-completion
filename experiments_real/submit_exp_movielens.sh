@@ -2,7 +2,7 @@
 
 # Parameters
 R_LIST=(3 7)
-SEED_LIST=$(seq 1 70)
+SEED_LIST=$(seq 1 100)
 DATASET="movielens"
 #EST=1
 EST=0
@@ -12,8 +12,8 @@ FULL_MISS=0
 #SEED_LIST=(1)
 
 # Slurm parameters
-MEMO=13G                             # Memory required (1 GB)
-TIME=00-01:30:00                    # Time required (2 h)
+MEMO=20G                             # Memory required (1 GB)
+TIME=00-02:30:00                    # Time required (2 h)
 CORE=1                              # Cores required (1)
 
 # Assemble order                                               prefix
