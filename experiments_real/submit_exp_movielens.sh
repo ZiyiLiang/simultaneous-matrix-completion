@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Parameters
-R_LIST=(3 5 7)
-SEED_LIST=$(seq 1 100)
+R_LIST=(3 7)
+SEED_LIST=$(seq 1 70)
 DATASET="movielens"
 #EST=1
 EST=0

@@ -35,7 +35,7 @@ if True:
     seed = int(sys.argv[5])
     
 # Fixed data parameters
-max_calib_queries = 2000
+max_calib_queries = 3000
 matrix_generation_seed = 2024
 max_iterations = 10
 
@@ -57,7 +57,7 @@ base_path = "../data/"
 
 if data_name == "movielens":
     num_columns, num_rows = 800, 1000
-    prop_train = 0.8
+    prop_train = 0.7
     max_test_queries = 100            
     ll, uu = 1, 5
     k_list = np.arange(2,9)
