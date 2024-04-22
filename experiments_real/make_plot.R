@@ -4,11 +4,10 @@ library(tidyverse)
 library(kableExtra)
 library(ggplot2)
 
-plot_full = TRUE
+plot_full = FALSE
 plot_preview = TRUE
 est=FALSE
 exp="movielens"
-#exp="books"
 
 
 if (est){
@@ -92,7 +91,7 @@ make_plot <- function(results, exp, xmax=2000, sv=TRUE) {
     ylab("") +
     theme_bw()
   if (sv == TRUE){
-    ggsave(sprintf("%s/%iby%i_est_%s.pdf", fig.dir, nrow, ncol, exp), pp, device=NULL, width=5, height=height)}
+    ggsave(sprintf("%s/est_%s.pdf", fig.dir, exp), pp, device=NULL, width=6.5, height=height)}
   else{
     print(pp)
   }
@@ -127,7 +126,7 @@ make_plot_oracle_preview <- function(results, exp, xmax=2000, sv=TRUE) {
   df.nominal <- tibble(Key=c("Query_coverage"), Value=plot.alpha) %>%
     mutate(Key = factor(Key, key.values, key.labels))    
   pp <- results %>%
-    filter(r==3) %>%
+    filter(r==7) %>%
     mutate(r = sprintf("Rank: %i", r))%>%
     ggplot(aes(x=k, y=Value, color=Method, shape=Method)) +
     geom_point(alpha=0.75) +
@@ -139,7 +138,6 @@ make_plot_oracle_preview <- function(results, exp, xmax=2000, sv=TRUE) {
     facet_wrap(.~Key, scales="free") +
     xlab("Group size K") +
     ylab("") +
-    ggtitle("r=3")+
     theme_bw()
   if (sv == TRUE){
     ggsave(sprintf("%s/oracle_preview_%s.pdf", fig.dir, exp), pp, device=NULL, width=5.7, height=1.8)}
@@ -148,7 +146,7 @@ make_plot_oracle_preview <- function(results, exp, xmax=2000, sv=TRUE) {
   }
 }
 
-sv=FALSE
+sv=TRUE
 if (est == TRUE){
   make_plot(results, exp=exp, sv=sv)
 } else if(plot_preview == TRUE){

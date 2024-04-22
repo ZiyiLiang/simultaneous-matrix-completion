@@ -5,9 +5,8 @@ library(kableExtra)
 library(ggplot2)
 
 exp="movielens"
-#exp="books"
 
-idir <- sprintf("results/exp_uniform_est_%s_fullmiss/", exp)
+idir <- sprintf("results/est_%s_fullmiss/", exp)
 setwd("~/GitHub/conformal-matrix-completion/experiments_real/results_hpc/")
 ifile.list <- list.files(idir)
 
@@ -27,7 +26,7 @@ alpha.scale <- c(1, 0.5, 0.8)
 
 key.values <- c("Size")
 key.labels <- c("Avg. width")
-fig.dir <- sprintf("~/GitHub/conformal-matrix-completion/results/figures/exp_uniform_%s/", exp)
+fig.dir <- sprintf("~/GitHub/conformal-matrix-completion/results/figures/%s/", exp)
 
 dir.create(fig.dir, showWarnings = FALSE)
 
@@ -37,6 +36,8 @@ results <- results.raw %>%
   mutate(Key = factor(Key, key.values, key.labels)) %>%
   group_by(Method,  r,k, Key) %>%
   summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
+# %>%
+#   filter(Method != "Unadjusted")
 
 
 
@@ -56,7 +57,7 @@ make_plot <- function(results, exp, xmax=2000, sv=TRUE) {
     ylab("") +
     theme_bw()
   if (sv == TRUE){
-    ggsave(sprintf("%s/exp_uniform_%s_fullmiss.pdf", fig.dir, exp), pp, device=NULL, width=6.5, height=1.6)}
+    ggsave(sprintf("%s/%s_fullmiss.pdf", fig.dir, exp), pp, device=NULL, width=6.5, height=1.6)}
   else{
     print(pp)
   }
