@@ -2,8 +2,8 @@
 Applications to Group Recommender Systems
 
 This software repository provides a software implementation of the methods described in the following paper:
->"Structured Conformal Inference for Matrix Completion with Applications to Group Recommender Systems"
->Ziyi Liang, Tianmin Xie, Xin Tong, Matteo Sesia
+>"Structured Conformal Inference for Matrix Completion with Applications to Group Recommender Systems"\
+>Ziyi Liang, Tianmin Xie, Xin Tong, Matteo Sesia\
 >arXiv preprint <https://arxiv.org/pdf/2404.17561>
 
 
