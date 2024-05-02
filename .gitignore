@@ -143,8 +143,11 @@ dmypy.json
 /setup.sh
 
 # R saves
-.RData
-.Rhistory
+/.RData
+/.Rhistory
+
+# Archuved files
+/archived
 
 # Datasets
 /data
