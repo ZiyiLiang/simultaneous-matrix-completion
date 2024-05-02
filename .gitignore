@@ -147,7 +147,7 @@ dmypy.json
 .Rhistory
 
 # Archuved files
-/archived
+archived/
 
 # Datasets
 /data
