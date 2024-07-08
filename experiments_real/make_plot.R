@@ -5,8 +5,9 @@ library(kableExtra)
 library(ggplot2)
 
 plot_full = FALSE
-plot_preview = TRUE
-est=FALSE
+plot_preview = FALSE
+plot_presentation = TRUE
+est=TRUE
 exp="movielens"
 
 
@@ -16,7 +17,7 @@ if (est){
   idir <- sprintf("results/oracle_%s/", exp)
 }
 
-setwd("~/GitHub/conformal-matrix-completion/experiments_real/results_hpc/")
+setwd("C:/Users/liang/Documents/GitHub/conformal-matrix-completion/experiments_real/results_hpc/")
 ifile.list <- list.files(idir)
 
 results.raw <- do.call("rbind", lapply(ifile.list, function(ifile) {
@@ -24,7 +25,7 @@ results.raw <- do.call("rbind", lapply(ifile.list, function(ifile) {
 }))
 
 Method.values <- c("conformal", "Bonferroni", "Uncorrected")
-Method.labels <- c("Simultaneous", "Bonferroni", "Unadjusted")
+Method.labels <- c("Simultaneous", "Bonferroni", "Unadjusted    ")
 
 #color.scale <- c("#566be9", "#56b5e9", "#CC79A7", "orange")
 color.scale <- c( "blue", "#56b5e9", "#CC66CC" )
@@ -36,17 +37,22 @@ if (plot_full){
   key.values <- c("Query_coverage", "Coverage", "Size", "Inf_prop")
   key.labels <- c("Group cov.", "Coverage", "Avg. width", "Inf Prop.")
   height <- 4.5
-  fig.dir <- sprintf("~/GitHub/conformal-matrix-completion/results/figures/%s_full/", exp)
+  fig.dir <- sprintf("C:/Users/liang/Documents/GitHub/conformal-matrix-completion/results/figures/%s_full/", exp)
 }else if(plot_preview){
   key.values <- c("Query_coverage","Size")
   key.labels <- c("Group coverage","Average width")
   height <- 2.5
-  fig.dir <- sprintf("~/GitHub/conformal-matrix-completion/results/figures/%s/", exp)
+  fig.dir <- sprintf("C:/Users/liang/Documents/GitHub/conformal-matrix-completion/results/figures/%s/", exp)
+}else if(plot_presentation){
+  key.values <- c("Query_coverage","Size")
+  key.labels <- c("Group coverage","Average width")
+  height <- 2.5
+  fig.dir <- sprintf("C:/Users/liang/Documents/GitHub/conformal-matrix-completion/results/figures/presentations/%s/", exp)
 }else{
   key.values <- c("Query_coverage","Size")
   key.labels <- c("Group cov.","Avg. width")
   height <- 2.5
-  fig.dir <- sprintf("~/GitHub/conformal-matrix-completion/results/figures/%s/", exp)
+  fig.dir <- sprintf("C:/Users/liang/Documents/GitHub/conformal-matrix-completion/results/figures/%s/", exp)
 }
 dir.create(fig.dir, showWarnings = FALSE)
 
@@ -146,9 +152,46 @@ make_plot_oracle_preview <- function(results, exp, xmax=2000, sv=TRUE) {
   }
 }
 
+## Make nice plots for paper
+make_plot_presentation <- function(results, exp, xmax=2000, sv=TRUE) {
+  plot.alpha <- 0.9
+  df.nominal <- tibble(Key=c("Query_coverage"), Value=plot.alpha) %>%
+    mutate(Key = factor(Key, key.values, key.labels))   
+  df.placeholder <- tibble(Key=c("Query_coverage"), Value=c(1, 0.58)) %>%
+    bind_rows(tibble(Key=c("Size"), Value=c(3.1, 4.0)))%>%
+    mutate(Key = factor(Key, key.values, key.labels))
+  
+  for (i in 3:1){ 
+    pp <- results %>%
+      filter(r==5) %>%
+      filter(Method %in% Method.labels[i:3])%>%
+      ggplot(aes(x=k, y=Value, color=Method, shape=Method)) +
+      geom_point(alpha=0.75) +
+      geom_line() +
+      geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.5) +
+      geom_hline(data=df.nominal, aes(yintercept=Value)) +
+      geom_hline(data=df.placeholder, aes(yintercept=Value), alpha=0) +
+      scale_color_manual(values=color.scale[i:3]) +
+      scale_shape_manual(values=shape.scale[i:3]) +
+      facet_wrap(.~Key, scales="free") +
+      xlab("Group size K") +
+      ylab("") +
+      theme_bw()
+    if (sv == TRUE){
+      ggsave(sprintf("%s/est_%s_%i.pdf", fig.dir, exp, 4-i), pp, device=NULL, width=5.7, height=1.8)}
+    else{
+      print(pp)
+    }
+  }
+}
+
 sv=TRUE
 if (est == TRUE){
-  make_plot(results, exp=exp, sv=sv)
+  if(plot_presentation == TRUE){
+    make_plot_presentation(results, exp=exp, sv=sv)}
+  else{
+    make_plot(results, exp=exp, sv=sv)
+  }
 } else if(plot_preview == TRUE){
   make_plot_oracle_preview(results, exp=exp, sv=sv)
 }else {
