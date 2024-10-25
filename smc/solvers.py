@@ -13,7 +13,7 @@ def nnm_solve(M,
               mask, 
               verbose=True, 
               eps=10**-6, 
-              max_iteration = 500,
+              max_iteration = 200,
               random_state=0):
     """ 
     Matrix completion solved by nuclear norm minimizaion
@@ -59,8 +59,9 @@ def svt_solve(M,
               mask,
               tau = None,
               delta = None,
-              eps = 10**-6,
-              max_iteration = 500,
+              eps = 1e-6,
+              max_error = 1e6,
+              max_iteration = 200,
               algorithm = 'propack',
               verbose = True,
               random_state = 0
@@ -119,6 +120,13 @@ def svt_solve(M,
             if verbose: print("Stopping criteria met, training terminated.")
             sys.stdout.flush()
             break
+        
+        # Stop if reconstruction error is too high or becomes NaN/Inf
+        if recon_error > max_error or np.isnan(recon_error) or np.isinf(recon_error):
+            if verbose:
+                print(f"Error too large or invalid at iteration {i + 1}, stopping early.")
+            sys.stdout.flush()
+            break
 
     return X
 
@@ -127,7 +135,7 @@ def pmf_solve(M,
               mask,
               k,
               mu = 1e-2,
-              eps = 10**-6,
+              eps = 1e-6,
               max_iteration = 200,
               verbose = True,
               random_state = 0

@@ -163,7 +163,10 @@ def run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_cali
             ci_method = SimulCI(M, Mhat, mask_obs, idxs_calib, k)
             df = ci_method.get_CI(idxs_test, alpha, allow_inf=allow_inf)
             lower, upper, is_inf= df.loc[0].lower, df.loc[0].upper, df.loc[0].is_inf
-            tmp_res = evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=is_inf, method=method)
+            tmp_res = evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=is_inf, method=method) 
+            tmp_res['Normalized_residual'] = nres
+            tmp_res['Solver_runtime'] = tok-tik 
+            res = pd.concat([res, tmp_res])
         else:
             a_list = [alpha, alpha * k]
             ci_method = Bonf_benchmark(M, Mhat, mask_obs, idxs_calib, k)
@@ -171,13 +174,13 @@ def run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_cali
             for i, m in enumerate(["Bonferroni", "Uncorrected"]):
                 lower, upper, is_inf= df.loc[i].lower, df.loc[i].upper, df.loc[i].is_inf
                 tmp_res = evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=is_inf, method=m)
+                tmp_res['Normalized_residual'] = nres
+                tmp_res['Solver_runtime'] = tok-tik 
+                res = pd.concat([res, tmp_res])
 
-        tmp_res['Solver'] = solver
-        tmp_res['Normalized_residual'] = nres
-        tmp_res['Solver_runtime'] = tok-tik 
-        res = pd.concat([res, tmp_res])
 
     res['k'] = k     
+    res['Solver'] = solver
     res['Calib_queries'] = n_calib_queries
     res['Train_entries'] = np.sum(mask_train)
     res['Test_queries'] = n_test_queries
