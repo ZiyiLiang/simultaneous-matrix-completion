@@ -8,7 +8,7 @@ SEED_LIST=(1)
 
 # Slurm parameters
 MEMO=1G                             # Memory required (1 GB)
-TIME=00-01:30:00                    # Time required (2 h)
+TIME=00-01:00:00                    # Time required (2 h)
 CORE=1                              # Cores required (1)
 
 # Assemble order                                               prefix

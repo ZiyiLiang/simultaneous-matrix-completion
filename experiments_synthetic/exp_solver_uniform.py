@@ -152,7 +152,7 @@ def run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_cali
 
         tok=time()
         print(f"run time for {solver} is {tok-tik}.")
-        nres = compute_error(M, Mhat, np.ones_like(M)-mask_train)
+        mae, rmse, relative_error = compute_error(M, Mhat, np.ones_like(M)-mask_train)
         print(f"Done training with {solver}! Normalized residual: {nres}\n")
         sys.stdout.flush()
     
@@ -164,7 +164,9 @@ def run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_cali
             df = ci_method.get_CI(idxs_test, alpha, allow_inf=allow_inf)
             lower, upper, is_inf= df.loc[0].lower, df.loc[0].upper, df.loc[0].is_inf
             tmp_res = evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=is_inf, method=method) 
-            tmp_res['Normalized_residual'] = nres
+            tmp_res['MAE'] = mae
+            tmp_res['RMSE'] = rmse
+            tmp_res['Frobenius_error'] = relative_error
             tmp_res['Solver_runtime'] = tok-tik 
             res = pd.concat([res, tmp_res])
         else:
@@ -174,7 +176,9 @@ def run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_cali
             for i, m in enumerate(["Bonferroni", "Uncorrected"]):
                 lower, upper, is_inf= df.loc[i].lower, df.loc[i].upper, df.loc[i].is_inf
                 tmp_res = evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=is_inf, method=m)
-                tmp_res['Normalized_residual'] = nres
+                tmp_res['MAE'] = mae
+                tmp_res['RMSE'] = rmse
+                tmp_res['Frobenius_error'] = relative_error
                 tmp_res['Solver_runtime'] = tok-tik 
                 res = pd.concat([res, tmp_res])
 
