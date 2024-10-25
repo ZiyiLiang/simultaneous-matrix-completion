@@ -25,7 +25,7 @@ if True:
         print("Error: incorrect number of parameters.")
         quit()
 
-    k = int(sys.argv[1])
+    solver = int(sys.argv[1])
     mu = int(sys.argv[2])
     seed = int(sys.argv[3])
 
@@ -34,12 +34,6 @@ if True:
 max_test_queries = 100            
 max_calib_queries = 1000
 matrix_generation_seed = 2024    # Data matrix is fixed 
-
-solvers = [
-    "pmf", 
-    "nnm", 
-    "svt"
-]
 
 model = "RFM"
 
@@ -64,7 +58,7 @@ repetition = 2
 ###############
 outdir = "./results/exp_solver_uniform/"
 os.makedirs(outdir, exist_ok=True)
-outfile_name = "k" + str(k) + "_mu" + str(mu) + "_seed" + str(seed)
+outfile_name = str(solver) + "_mu" + str(mu) + "_seed" + str(seed)
 outfile = outdir + outfile_name + ".txt"
 print("Output file: {:s}".format(outfile), end="\n")
 sys.stdout.flush()
@@ -130,11 +124,15 @@ def run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_cali
                             mu=mu, alpha=alpha, normalize=False)
 
 
-    for solver in solvers:
+     for method in methods:
         #------Split train calib--------#
         #-------------------------------#
-        mask_train, idxs_calib, _ = sampler.sample_train_calib(mask_obs, k, 
-                                    calib_size=n_calib_queries, random_state=random_state)
+        if method == "conformal":
+            mask_train, idxs_calib, _ = sampler.sample_train_calib(mask_obs, k, 
+                                        calib_size=n_calib_queries, random_state=random_state)
+        else: 
+            mask_train, idxs_calib, _ = sampler.sample_train_calib(mask_obs, 1, 
+                                    calib_size=int(n_calib_queries * k), random_state=random_state)
 
         #--------Model Training---------#
         #-------------------------------#
@@ -157,13 +155,22 @@ def run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_cali
     
         #------Compute intervals--------# 
         #-------------------------------#
-        ci_method = SimulCI(M, Mhat, mask_obs, idxs_calib, k)
-        df = ci_method.get_CI(idxs_test, alpha, allow_inf=allow_inf)
-        lower, upper, is_inf= df.loc[0].lower, df.loc[0].upper, df.loc[0].is_inf
-        tmp_res = evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=is_inf, method="conformal")
-        tmp_res['solver'] = solver
-        tmp_res['normalized_residual'] = nres
-        tmp_res['solver_runtime'] = tok-tik 
+        if method == "conformal":
+            ci_method = SimulCI(M, Mhat, mask_obs, idxs_calib, k)
+            df = ci_method.get_CI(idxs_test, alpha, allow_inf=allow_inf)
+            lower, upper, is_inf= df.loc[0].lower, df.loc[0].upper, df.loc[0].is_inf
+            tmp_res = evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=is_inf, method=method)
+        else:
+            a_list = [alpha, alpha * k]
+            ci_method = Bonf_benchmark(M, Mhat, mask_obs, idxs_calib, k)
+            df = ci_method.get_CI(idxs_test, a_list, allow_inf=allow_inf)
+            for i, m in enumerate(["Bonferroni", "Uncorrected"]):
+                lower, upper, is_inf= df.loc[i].lower, df.loc[i].upper, df.loc[i].is_inf
+                tmp_res = evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=is_inf, method=m)
+
+        tmp_res['Solver'] = solver
+        tmp_res['Normalized_residual'] = nres
+        tmp_res['Solver_runtime'] = tok-tik 
         res = pd.concat([res, tmp_res])
 
     res['k'] = k     
@@ -183,10 +190,12 @@ results = pd.DataFrame({})
 for i in tqdm(range(1, repetition+1), desc="Repetitions", leave=True, position=0):
     random_state = repetition * (seed-1) + i
     
-    res = run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_calib_queries,
-                        r, gamma_n=gamma_n, gamma_m=gamma_m, mu=mu, random_state=random_state)
-    
-    results = pd.concat([results, res])
+    for k in tqdm(k_list, desc="k", leave=True, position=0):
+
+        res = run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_calib_queries,
+                            r, gamma_n=gamma_n, gamma_m=gamma_m, mu=mu, random_state=random_state)
+        
+        results = pd.concat([results, res])
 
 add_header(results)
 

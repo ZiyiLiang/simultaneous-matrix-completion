@@ -2,14 +2,13 @@
 
 # Parameters
 MU_LIST=(15)
-#K_LIST=$(seq 1 8)
 #SEED_LIST=$(seq 1 50)
-K_LIST=(2)
-SEED_LIST=(0)
+SOLVER_LIST=("pmf" "svt" "nnm")
+SEED_LIST=(1)
 
 # Slurm parameters
 MEMO=1G                             # Memory required (1 GB)
-TIME=00-00:30:00                    # Time required (2 h)
+TIME=00-01:30:00                    # Time required (2 h)
 CORE=1                              # Cores required (1)
 
 # Assemble order                                               prefix
@@ -26,8 +25,8 @@ OUT_DIR="results/exp_solver_uniform"
 mkdir -p $OUT_DIR
 for SEED in $SEED_LIST; do
     for MU in $MU_LIST; do
-        for K in $K_LIST; do
-            JOBN="k"$K"_mu"$MU"_seed"$SEED
+        for SOLVER in $K_LIST; do
+            JOBN=$SOLVER"_mu"$MU"_seed"$SEED
             OUT_FILE=$OUT_DIR"/"$JOBN".txt"
             COMPLETE=0
             #ls $OUT_FILE
@@ -39,7 +38,7 @@ for SEED in $SEED_LIST; do
             if [[ $COMPLETE -eq 0 ]]; then
             ((incomp++))
             # Script to be run
-            SCRIPT="exp_solver_uniform.sh $K $MU $SEED"
+            SCRIPT="exp_solver_uniform.sh $SOLVER $MU $SEED"
             # Define job name
             OUTF=$LOGS"/"$JOBN".out"
             ERRF=$LOGS"/"$JOBN".err"
