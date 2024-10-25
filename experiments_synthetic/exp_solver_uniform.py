@@ -153,7 +153,7 @@ def run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_cali
         tok=time()
         print(f"run time for {solver} is {tok-tik}.")
         mae, rmse, relative_error = compute_error(M, Mhat, np.ones_like(M)-mask_train)
-        print(f"Done training with {solver}! Normalized residual: {nres}\n")
+        print(f"Done training with {solver}! Frobenius error: {relative_error}\n")
         sys.stdout.flush()
     
     
