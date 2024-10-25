@@ -25,7 +25,7 @@ OUT_DIR="results/exp_solver_uniform"
 mkdir -p $OUT_DIR
 for SEED in $SEED_LIST; do
     for MU in $MU_LIST; do
-        for SOLVER in $K_LIST; do
+        for SOLVER in "${SOLVER_LIST[@]}"; do
             JOBN=$SOLVER"_mu"$MU"_seed"$SEED
             OUT_FILE=$OUT_DIR"/"$JOBN".txt"
             COMPLETE=0

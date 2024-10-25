@@ -25,7 +25,7 @@ if True:
         print("Error: incorrect number of parameters.")
         quit()
 
-    solver = int(sys.argv[1])
+    solver = str(sys.argv[1])
     mu = int(sys.argv[2])
     seed = int(sys.argv[3])
 
@@ -34,6 +34,9 @@ if True:
 max_test_queries = 100            
 max_calib_queries = 1000
 matrix_generation_seed = 2024    # Data matrix is fixed 
+
+methods = ["conformal", 
+           "benchmark"]
 
 model = "RFM"
 
@@ -49,6 +52,7 @@ allow_inf = False
 alpha = 0.1
 
 r=5
+k_list = np.arange(2,9)
 repetition = 2
 
 
@@ -124,7 +128,7 @@ def run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_cali
                             mu=mu, alpha=alpha, normalize=False)
 
 
-     for method in methods:
+    for method in methods:
         #------Split train calib--------#
         #-------------------------------#
         if method == "conformal":
