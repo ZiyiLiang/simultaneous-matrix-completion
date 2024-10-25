@@ -9,7 +9,12 @@ from sklearn.metrics import mean_squared_error
 
 
 
-def nnm_solve(M, mask, verbose=True, eps=10**-6, random_state=0):
+def nnm_solve(M, 
+              mask, 
+              verbose=True, 
+              eps=10**-6, 
+              max_iteration = 500,
+              random_state=0):
     """ 
     Matrix completion solved by nuclear norm minimizaion
 
@@ -29,7 +34,7 @@ def nnm_solve(M, mask, verbose=True, eps=10**-6, random_state=0):
     objective = cp.Minimize(cp.norm(X, 'nuc'))
     constraints = [cp.abs(cp.multiply(mask, M-X)) <= eps]
     problem = cp.Problem(objective, constraints)
-    problem.solve(solver = cp.SDPA, verbose=verbose)
+    problem.solve(solver = cp.SCS, verbose=verbose, max_iters=max_iteration)
 
     return X.value
 
@@ -54,8 +59,8 @@ def svt_solve(M,
               mask,
               tau = None,
               delta = None,
-              eps = 10**-4,
-              max_iteration = 1000,
+              eps = 10**-6,
+              max_iteration = 500,
               algorithm = 'propack',
               verbose = True,
               random_state = 0

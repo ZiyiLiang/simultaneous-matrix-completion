@@ -79,3 +79,13 @@ def evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=None, method=None):
         results["Method"] = [method]
     return results
 
+
+
+def compute_error(M, Mhat, mask):
+    pred = np.multiply(Mhat, mask)
+    truth = np.multiply(M, mask)
+    residual = np.abs(pred-truth)
+    n = np.sum(mask)
+    normalized_residual = np.sum(residual)/n
+
+    return normalized_residual
