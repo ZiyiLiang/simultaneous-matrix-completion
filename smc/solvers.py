@@ -92,10 +92,12 @@ def svt_solve(M,
     """
     np.random.seed(random_state)
     
-    tau = 5 * (np.sum(M.shape)) / 2 if not tau else tau
-    delta = 1.2 * (np.prod(M.shape)) / np.sum(np.sum(mask))
+    tau = 5 * np.sum(M.shape) / 2 if not tau else tau
+    delta = 1.2 * np.prod(M.shape) / np.sum(mask)
     k = 0    # number of principle components to be calculated
     Y = np.zeros_like(M)
+    best_error = np.Inf
+    best_X = Y
     
     for i in range(max_iteration):
         k += 1
@@ -107,11 +109,14 @@ def svt_solve(M,
         shrink_S = np.maximum(S - tau, 0)
         k = np.count_nonzero(shrink_S)
         X = U @ np.diag(shrink_S) @ VT
-        
+
         Y += delta * mask * (M - X)
         
         recon_error = np.linalg.norm(mask * (M - X)) / np.linalg.norm(mask * M)
-        
+        if recon_error < best_error:
+            best_error = recon_error
+            best_X = X
+
         # print progress message regularly.
         if verbose and i % 10 == 0:  
             print("Iteration: %i; Rel error: %.4f" % (i + 1, recon_error))
@@ -126,7 +131,7 @@ def svt_solve(M,
             if verbose:
                 print(f"Error too large or invalid at iteration {i + 1}, stopping early.")
             sys.stdout.flush()
-            break
+            return best_X
 
     return X
 

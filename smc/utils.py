@@ -82,10 +82,24 @@ def evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=None, method=None):
 
 
 def compute_error(M, Mhat, mask):
+    # Predicted and true values based on mask
     pred = np.multiply(Mhat, mask)
     truth = np.multiply(M, mask)
-    residual = np.abs(pred-truth)
-    n = np.sum(mask)
-    normalized_residual = np.sum(residual)/n
+    
+    # Residuals
+    residual = np.abs(pred - truth)
+    squared_residual = (pred - truth) ** 2
 
-    return normalized_residual
+    # Number of observed entries
+    n = np.sum(mask)
+
+    # Mean Absolute Error (MAE)
+    mae = np.sum(residual) / n
+
+    # Root Mean Squared Error (RMSE)
+    rmse = np.sqrt(np.sum(squared_residual) / n)
+
+    # Relative Frobenius Norm Error
+    frobenius_error = np.linalg.norm(pred - truth, 'fro') / np.linalg.norm(truth, 'fro')
+
+    return mae, rmse, frobenius_error
