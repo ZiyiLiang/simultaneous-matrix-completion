@@ -1,14 +1,16 @@
 #!/bin/bash
 
 # Parameters
-MU_LIST=(15)
-#SEED_LIST=$(seq 1 50)
-SOLVER_LIST=("pmf" "svt" "nnm")
-SEED_LIST=(1)
+MU_LIST=(0)
+#MU_LIST=(15)
+SEED_LIST=$(seq 1 100)
+#SOLVER_LIST=("pmf" "svt" "nnm")
+SOLVER_LIST=("svt" "nnm")
+#SEED_LIST=(1)
 
 # Slurm parameters
 MEMO=1G                             # Memory required (1 GB)
-TIME=00-01:00:00                    # Time required (2 h)
+TIME=00-00:30:00                    # Time required (2 h)
 CORE=1                              # Cores required (1)
 
 # Assemble order                                               prefix
