@@ -24,24 +24,24 @@ if True:
     # Parse input arguments
     print ('Number of arguments:', len(sys.argv), 'arguments.')
     print ('Argument List:', str(sys.argv))
-    if len(sys.argv) != 5:
+    if len(sys.argv) != 6:
         print("Error: incorrect number of parameters.")
         quit()
 
-    data_name = str(sys.argv[1])
-    est = int(sys.argv[2])
-    full_miss = int(sys.argv[3])
-    seed = int(sys.argv[4])
+    solver = str(sys.argv[1])
+    data_name = str(sys.argv[2])
+    est = int(sys.argv[3])
+    full_miss = int(sys.argv[4])
+    seed = int(sys.argv[5])
     
 # Fixed data parameters
 max_calib_queries = 2000
 # If seed is None, choose the rows and cols to minimize missingness
 matrix_generation_seed = 2024
-max_iterations = 10
+max_iterations = 50
 
 methods = ["conformal", 
            "benchmark"]
-solver = "svt"
 r=None
 
 # Other parameters
@@ -85,7 +85,7 @@ else:
 ###############
 # Output file #
 ###############i:
-outdir = f"./results/oracle_{data_name}_svt" if not est else f"./results/est_{data_name}_svt"
+outdir = f"./results/oracle_{data_name}_{solver}" if not est else f"./results/est_{data_name}_{solver}"
 if full_miss:
     outdir += "_fullmiss/"
 else:
@@ -158,14 +158,21 @@ def run_single_experiment(M, k, alpha, prop_train, w, max_test_queries, max_cali
         #-------------------------------#
         print("Running matrix completion algorithm on the splitted training set...")
         sys.stdout.flush()
+        tik = time()
         if solver == "pmf":
             Mhat, _, _ = pmf_solve(M, mask_train, k=r, max_iteration = max_iterations, verbose=verbose, random_state=random_state)
         elif solver == "svt":
             Mhat = svt_solve(M, mask_train, max_iteration = max_iterations, verbose = verbose, random_state = random_state)
-        del mask_train
-        print("Done training!\n")
+        elif solver == "nnm":
+            Mhat = nnm_solve(M, mask_train, max_iteration = max_iterations, verbose=verbose, random_state=random_state)
+            
+        tok=time()
+        print(f"run time for {solver} is {tok-tik}.")
+        mae, rmse, relative_error = compute_error(M, Mhat, np.ones_like(M)-mask_train)
+        print(f"Done training with {solver}! Frobenius error: {relative_error}\n")
         sys.stdout.flush()
-
+        del mask_train
+        
         if est:
             print("Estimating missingness on the splitted training set...")
             w_obs=estimate_P(mask_avail, 1, r=5)
@@ -182,7 +189,12 @@ def run_single_experiment(M, k, alpha, prop_train, w, max_test_queries, max_cali
             df = ci_method.get_CI(idxs_test, alpha, allow_inf=allow_inf)
             lower, upper, is_inf= df.loc[0].lower, df.loc[0].upper, df.loc[0].is_inf
             lower, upper = clip_intervals(lower, upper)
-            res = pd.concat([res, evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=is_inf, method=method)])
+            tmp_res = evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=is_inf, method=method) 
+            tmp_res['MAE'] = mae
+            tmp_res['RMSE'] = rmse
+            tmp_res['Frobenius_error'] = relative_error
+            tmp_res['Solver_runtime'] = tok-tik 
+            res = pd.concat([res, tmp_res])
         else:
             a_list = [alpha, alpha * k]
             ci_method = Bonf_benchmark(M, Mhat, mask_obs, idxs_calib, k, w_obs=w_obs, parent_mask=parent_mask)
@@ -190,12 +202,18 @@ def run_single_experiment(M, k, alpha, prop_train, w, max_test_queries, max_cali
             for i, m in enumerate(["Bonferroni", "Uncorrected"]):
                 lower, upper, is_inf= df.loc[i].lower, df.loc[i].upper, df.loc[i].is_inf
                 lower, upper = clip_intervals(lower, upper)
-                res = pd.concat([res, evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=is_inf, method=m)])
+                tmp_res = evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=is_inf, method=method) 
+                tmp_res['MAE'] = mae
+                tmp_res['RMSE'] = rmse
+                tmp_res['Frobenius_error'] = relative_error
+                tmp_res['Solver_runtime'] = tok-tik 
+                res = pd.concat([res, tmp_res])
 
         # free memory
         del ci_method, lower, upper, is_inf
 
-    res['k'] = k     
+    res['k'] = k    
+    res['Solver'] = solver 
     res['Calib_queries'] = n_calib_queries
     res['Train_entries'] = n_train
     res['Test_queries'] = n_test_queries
