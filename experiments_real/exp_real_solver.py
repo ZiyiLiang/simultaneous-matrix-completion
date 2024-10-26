@@ -5,6 +5,7 @@ sys.path.append('../third_party')
 import numpy as np   
 import pandas as pd
 import scipy.stats as stats
+from time import time
 
 from tqdm import tqdm
 from utils import *     # contains some useful helper functions 
@@ -38,7 +39,7 @@ if True:
 max_calib_queries = 2000
 # If seed is None, choose the rows and cols to minimize missingness
 matrix_generation_seed = 2024
-max_iterations = 50
+max_iterations = 10
 
 methods = ["conformal", 
            "benchmark"]
@@ -61,7 +62,8 @@ if data_name == "movielens":
     prop_train = 0.8
     max_test_queries = 100            
     ll, uu = 1, 5
-    k_list = np.arange(2,3)
+    k_list = np.arange(2,9)
+    #k_list=[2,5,8]
 
 elif data_name == "books":
     num_columns, num_rows = None, 2500
@@ -202,7 +204,7 @@ def run_single_experiment(M, k, alpha, prop_train, w, max_test_queries, max_cali
             for i, m in enumerate(["Bonferroni", "Uncorrected"]):
                 lower, upper, is_inf= df.loc[i].lower, df.loc[i].upper, df.loc[i].is_inf
                 lower, upper = clip_intervals(lower, upper)
-                tmp_res = evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=is_inf, method=method) 
+                tmp_res = evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=is_inf, method=m) 
                 tmp_res['MAE'] = mae
                 tmp_res['RMSE'] = rmse
                 tmp_res['Frobenius_error'] = relative_error

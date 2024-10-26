@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Parameters
-SEED_LIST=$(seq 1 20)
+SEED_LIST=$(seq 1 50)
 DATASET="movielens"
 SOLVER_LIST=("nnm")
 EST=1
@@ -12,8 +12,8 @@ FULL_MISS=1
 #SEED_LIST=(1)
 
 # Slurm parameters
-MEMO=14G                             # Memory required (1 GB)
-TIME=00-02:00:00                    # Time required (2 h)
+MEMO=13G                             # Memory required (1 GB)
+TIME=00-01:30:00                    # Time required (2 h)
 CORE=1                              # Cores required (1)
 
 # Assemble order                                               prefix
