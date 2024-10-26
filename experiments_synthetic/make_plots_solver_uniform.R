@@ -3,6 +3,7 @@ options(width=160)
 library(tidyverse)
 library(kableExtra)
 library(ggplot2)
+library(dplyr)
 
 
 setwd("C:/Users/liang/Documents/GitHub/conformal-matrix-completion/experiments_synthetic/results_hpc")
@@ -38,15 +39,17 @@ if (plot_full){
   height <- 2.5
 }
 
+results_filtered <- results.raw %>% filter(mu==15)
+  
 if (plot_full){
-  results <- results.raw %>%
+  results <- results_filtered %>%
     mutate(Method = factor(Method, Method.values, Method.labels)) %>%
     pivot_longer(cols=c("Query_coverage", "Coverage", "Size", "Inf_prop"), names_to='Key', values_to='Value') %>%
     mutate(Key = factor(Key, key.values, key.labels)) %>%
     group_by(Method, Solver, k, Key) %>%
     summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
 }else{
-  results <- results.raw %>%
+  results <- results_filtered%>%
     mutate(Method = factor(Method, Method.values, Method.labels)) %>%
     pivot_longer(cols=c("Query_coverage", "Size"), names_to='Key', values_to='Value') %>%
     mutate(Key = factor(Key, key.values, key.labels)) %>%
@@ -55,12 +58,38 @@ if (plot_full){
   
 }
 
-runtime <- results.raw %>%
+runtime <- results_filtered %>%
     group_by(Solver) %>%
     summarise(
       mean_runtime = mean(Solver_runtime, na.rm = TRUE),
       se_runtime = sd(Solver_runtime, na.rm = TRUE) / sqrt(n())
       )
+
+frob_error <- results_filtered %>%
+  group_by(Solver) %>%
+  summarise(
+    mean_frob = mean(Frobenius_error, na.rm = TRUE),
+    se_frob = sd(Frobenius_error, na.rm = TRUE) / sqrt(n())
+  )
+
+frob <- results_filtered%>% 
+  select("Solver", "Frobenius_error")
+
+# Plot histograms of Frobenius error for each Solver
+ggplot(frob, aes(x = Frobenius_error, fill = Solver)) +
+  geom_histogram(bins = 30, alpha = 0.7, position = "dodge") +
+  facet_wrap(~ Solver, scales = "free") +
+  labs(title = "Histogram of Frobenius Error by Solver",
+       x = "Frobenius Error",
+       y = "Frequency") +
+  theme_minimal() +
+  theme(legend.position = "none")  # Hide legend since facet wrap shows solver
+
+frob_counts <- frob %>%
+  group_by(Solver) %>%
+  summarise(count_frob_gte_1 = sum(Frobenius_error >= 1))
+
+print(frob_counts)
 
 ## Make nice plots for paper
 make_plot <- function(results, solvers, xmax=2000, sv=TRUE) {
@@ -95,5 +124,5 @@ make_plot <- function(results, solvers, xmax=2000, sv=TRUE) {
 
 
 sv <- FALSE
-solver_list <- c("pmf","nnm")
+solver_list <- c("pmf","nnm", "svt")
 make_plot(results, solver_list)

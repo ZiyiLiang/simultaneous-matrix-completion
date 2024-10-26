@@ -81,11 +81,11 @@ def add_header(df):
 # Generate Data #
 #################
 if model == "RFM":
-    mm = RandomFactorizationModel(n1 ,n2, r)
+    mm = RandomFactorizationModel(n1 ,n2, 5)     # Fix rank to be 5
 elif model == "ROM":
-    mm = RandomOrthogonalModel(n1 ,n2, r)
+    mm = RandomOrthogonalModel(n1 ,n2, 5)
 else:
-    mm = RandomFactorizationModel(n1 ,n2, r)
+    mm = RandomFactorizationModel(n1 ,n2, 5)
 
 if verbose:
     print('Fixing the ground truth matrix generated from the {} model.\n'.format(model))
