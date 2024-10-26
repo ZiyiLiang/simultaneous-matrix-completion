@@ -11,7 +11,7 @@ FULL_MISS=1
 SEED_LIST=(1)
 
 # Slurm parameters
-MEMO=13G                             # Memory required (1 GB)
+MEMO=14G                             # Memory required (1 GB)
 TIME=00-01:30:00                    # Time required (2 h)
 CORE=1                              # Cores required (1)
 

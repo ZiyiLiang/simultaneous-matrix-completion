@@ -28,10 +28,10 @@ if True:
         print("Error: incorrect number of parameters.")
         quit()
 
-    data_name = str(sys.argv[2])
-    est = int(sys.argv[3])
-    full_miss = int(sys.argv[4])
-    seed = int(sys.argv[5])
+    data_name = str(sys.argv[1])
+    est = int(sys.argv[2])
+    full_miss = int(sys.argv[3])
+    seed = int(sys.argv[4])
     
 # Fixed data parameters
 max_calib_queries = 2000
@@ -61,7 +61,7 @@ if data_name == "movielens":
     prop_train = 0.8
     max_test_queries = 100            
     ll, uu = 1, 5
-    k_list = np.arange(2,9)
+    k_list = np.arange(2,3)
 
 elif data_name == "books":
     num_columns, num_rows = None, 2500
