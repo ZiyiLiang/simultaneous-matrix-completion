@@ -40,7 +40,6 @@ r = 8
 methods = ["conformal", 
            "benchmark"]
 model = "RFM"
-solver = "pmf"
 prop_obs = 0.3
 
 

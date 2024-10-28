@@ -2,11 +2,11 @@
 
 # Parameters
 
-SCALE_LIST=(1)
-#SCALE_LIST=$(seq 0.6 0.05 1.0)
+#SCALE_LIST=(1)
+SCALE_LIST=$(seq 0.6 0.05 1.0)
 #SEED_LIST=$(seq 201 300)
-SEED_LIST=(1)
-#SEED_LIST=$(seq 1 100)
+#SEED_LIST=(1)
+SEED_LIST=$(seq 1 50)
 SOLVER_LIST=("svt" "nnm")
 
 # Slurm parameters
