@@ -26,7 +26,7 @@ alpha.scale <- c(1, 0.5, 0.8)
 
 key.values <- c("Size")
 key.labels <- c("Avg. width")
-fig.dir <- sprintf("~/GitHub/conformal-matrix-completion/results/figures/%s/", exp)
+fig.dir <- sprintf("C:/Users/liang/Documents/GitHub/conformal-matrix-completion/results/figures/%s/", exp)
 
 dir.create(fig.dir, showWarnings = FALSE)
 
@@ -44,7 +44,7 @@ results <- results.raw %>%
 ## Make nice plots for paper
 make_plot <- function(results, exp, xmax=2000, sv=TRUE) {
   pp <- results %>%
-    filter(!(r %in% c(10, 15)))%>%
+    filter(Method!="Unadjusted")%>%
     mutate(r = sprintf("Guessed rank: %i", r))%>%
     ggplot(aes(x=k, y=Value, color=Method, shape=Method)) +
     geom_point(alpha=0.75) +
