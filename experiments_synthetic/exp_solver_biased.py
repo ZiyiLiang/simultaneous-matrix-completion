@@ -48,7 +48,7 @@ verbose = True
 allow_inf = False
 alpha = 0.1
 
-k_list = np.arange(2,9)
+k_list = [2,5,8]
 repetition = 1
 
 
