@@ -3,10 +3,10 @@
 # Parameters
 N1=200
 N2=200
-R_LIST=(15 20 25 30)
-#MU_LIST=$(seq 0 3 30)
+R_LIST=(30)
+MU_LIST=$(seq 0 3 30)
 SEED_LIST=$(seq 1 100)
-MU_LIST=(15)
+#MU_LIST=(15)
 #SEED_LIST=(0)
 
 # Slurm parameters
@@ -27,9 +27,9 @@ incomp=0
 OUT_DIR="results/exp_uniform"
 mkdir -p $OUT_DIR
 for SEED in $SEED_LIST; do
-    for SCALE in $SCALE_LIST; do
+    for MU in $MU_LIST; do
         for R in "${R_LIST[@]}"; do
-            JOBN="r"$R"_scale"$SCALE"_seed"$SEED
+            JOBN=$N1"by"$N2"_r"$R"_mu"$MU"_seed"$SEED
             OUT_FILE=$OUT_DIR"/"$JOBN".txt"
             COMPLETE=0
             #ls $OUT_FILE
