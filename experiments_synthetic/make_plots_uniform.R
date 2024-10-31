@@ -5,7 +5,7 @@ library(kableExtra)
 library(ggplot2)
 
 
-setwd("~/GitHub/conformal-matrix-completion/experiments_synthetic/results_hpc")
+setwd("C:/Users/liang/Documents/GitHub/conformal-matrix-completion/experiments_synthetic/results_hpc")
 idir <- "results/exp_uniform/"
 ifile.list <- list.files(idir)
 
@@ -43,16 +43,15 @@ if (plot_full){
     mutate(Method = factor(Method, Method.values, Method.labels)) %>%
     pivot_longer(cols=c("Query_coverage", "Coverage", "Size", "Inf_prop"), names_to='Key', values_to='Value') %>%
     mutate(Key = factor(Key, key.values, key.labels)) %>%
-    group_by(Method, gamma_n, gamma_m, mu,k, Key) %>%
+    group_by(Method, gamma_n, gamma_m, mu,k, Key,r) %>%
     summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
 }else{
   results <- results.raw %>%
     mutate(Method = factor(Method, Method.values, Method.labels)) %>%
     pivot_longer(cols=c("Query_coverage", "Size"), names_to='Key', values_to='Value') %>%
     mutate(Key = factor(Key, key.values, key.labels)) %>%
-    group_by(Method, gamma_n, gamma_m, mu,k, Key) %>%
+    group_by(Method, gamma_n, gamma_m, mu,k, Key,r) %>%
     summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
-  
 }
 
 ## Make nice plots for paper
@@ -121,3 +120,19 @@ for (exp in exp_list) {
   make_plot(results, exp, val)
 }
 
+pp <- results %>%
+  filter(mu == 15)%>%
+  mutate(mu = paste0("\U03BC: ", mu))%>%
+  ggplot(aes(x=k, y=Value, color=Method, shape=Method)) +
+  geom_point(alpha=0.9) +
+  geom_line() +
+  geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.3) +
+  geom_hline(data=df.nominal, aes(yintercept=Value)) +
+  geom_hline(data=df.placeholder, aes(yintercept=Value), alpha=0) +
+  ggh4x::facet_grid2(Key~r, scales="free_y", independent = "y") +
+  scale_color_manual(values=color.scale) +
+  scale_shape_manual(values=shape.scale) +
+  scale_alpha_manual(values=alpha.scale) +
+  xlab("Group size K") +
+  ylab("") +
+  theme_bw()

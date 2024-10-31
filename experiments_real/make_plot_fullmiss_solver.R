@@ -36,8 +36,6 @@ results <- results.raw %>%
   mutate(Key = factor(Key, key.values, key.labels)) %>%
   group_by(Method,  r,k, Key) %>%
   summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
-# %>%
-#   filter(Method != "Unadjusted")
 
 
 
@@ -45,19 +43,17 @@ results <- results.raw %>%
 make_plot <- function(results, exp, xmax=2000, sv=TRUE) {
   pp <- results %>%
     filter(Method!="Unadjusted")%>%
-    mutate(r = sprintf("Guessed rank: %i", r))%>%
     ggplot(aes(x=k, y=Value, color=Method, shape=Method)) +
     geom_point(alpha=0.75) +
     geom_line() +
     geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.5) +
     scale_color_manual(values=color.scale) +
     scale_shape_manual(values=shape.scale) +
-    facet_grid(Key~r, scales="free") +
     xlab("Group size K") +
     ylab("") +
     theme_bw()
   if (sv == TRUE){
-    ggsave(sprintf("%s/%s_fullmiss.pdf", fig.dir, exp), pp, device=NULL, width=6.5, height=1.6)}
+    ggsave(sprintf("%s/%s_nnm_fullmiss.pdf", fig.dir, exp), pp, device=NULL, width=3.8, height=1.6)}
   else{
     print(pp)
   }
