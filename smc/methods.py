@@ -384,7 +384,8 @@ class SimulCI():
     
 
     def _weight_single(self, idx_test, row_test, w_test, 
-                       sr_prune, sw_prune, sr_miss, delta, scale):
+                       sr_prune, sw_prune, sr_miss, delta, scale,
+                       store_weights = False):
         weights = np.ones(self.n_calib_queries + 1)
 
         # Sum of test sampling weights for the test query
@@ -441,6 +442,10 @@ class SimulCI():
             weights[i] = prob_test * prob_cal * prob_obs
         
         weights /= np.sum(weights)
+
+        if store_weights:
+            self.weights_list.append(weights)
+            
         return weights[:-1]
     
 
@@ -486,7 +491,7 @@ class SimulCI():
         return df
     
 
-    def get_CI(self, idxs_test, alpha, w_test=None, allow_inf=True):
+    def get_CI(self, idxs_test, alpha, w_test=None, allow_inf=True, store_weights=False):
         """
         Compute the confidence intervals for all test queries at any confidence levels
 
@@ -501,6 +506,10 @@ class SimulCI():
             shape of the input matrix. Default is uniform weights.
         allow_inf: bool
             If True, the output intervals might be (-np.inf, np.inf).
+        store_weights: bool
+            If True, the quantile inflation weights for the test points are stored in the class
+            object. Default is False, only toggle on if one needs to access / analyze the weights
+            directly. 
 
         Returns
         -------
@@ -517,6 +526,9 @@ class SimulCI():
         
         df = self._initialize_df(a_list=a_list, n = n_test_queries * self.k)
         
+        if store_weights:
+            self.weights_list = []
+
         if self.verbose:
             print("Computing conformal prediction intervals for {} test queries...".format(n_test_queries))
             sys.stdout.flush()
@@ -529,7 +541,8 @@ class SimulCI():
             idx_test = (idxs_test[0][self.k*i : self.k*(i+1)], idxs_test[1][self.k*i : self.k*(i+1)])
             row_test = idx_test[0][0]
 
-            weights = self._weight_single(idx_test, row_test, w_test, sr_prune, sw_prune, sr_miss, delta, scale)
+            weights = self._weight_single(idx_test, row_test, w_test, sr_prune, sw_prune, sr_miss, delta, scale, store_weights)
+
             cweights = np.cumsum(weights[self.calib_order])
             est = np.array(self.Mhat[idx_test])
 
