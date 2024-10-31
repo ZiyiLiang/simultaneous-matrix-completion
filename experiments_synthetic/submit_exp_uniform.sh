@@ -3,15 +3,15 @@
 # Parameters
 N1=200
 N2=200
-R_LIST=(1 2 3 4 6 8 10)
+R_LIST=(15 20 25 30)
 #MU_LIST=$(seq 0 3 30)
-SEED_LIST=$(seq 1 50)
-MU_LIST=(30)
+SEED_LIST=$(seq 1 100)
+MU_LIST=(15)
 #SEED_LIST=(0)
 
 # Slurm parameters
 MEMO=1G                             # Memory required (1 GB)
-TIME=00-01:00:00                    # Time required (2 h)
+TIME=00-00:40:00                    # Time required (2 h)
 CORE=1                              # Cores required (1)
 
 # Assemble order                                               prefix
