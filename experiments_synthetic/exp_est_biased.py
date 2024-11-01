@@ -162,7 +162,7 @@ def run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_cali
     # Evaluate the estimation gap
     weights_list = ci_method.weights_list
     est_weights_list = ci_est.weights_list
-    est_gaps =[0.5*np.mean(np.abs(weights_list[i]-est_weights_list[i])) for i in range(len(weights_list))]
+    est_gaps =[0.5*np.sum(np.abs(weights_list[i]-est_weights_list[i])) for i in range(len(weights_list))]
     avg_gap = np.mean(est_gaps)
 
 

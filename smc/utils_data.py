@@ -7,17 +7,19 @@ import pdb
 
 
 
-class Load_MovieLens_Info():
+class Load_MovieLens():
     """ 
     This class loads Movielens dataset and additional information regarding users and movies
     such as demographic information and movie genres etc. If one only needs the rating matrix,
-    use the function load_data to avoid additional memory usage. 
+    use the function load_data below (not the function within this class) to avoid additional memory usage. 
     """
     def __init__(self, data_path):
         self.data_path = data_path
+        self.userID = None
+        self.movieID = None
     
     def load_data(self, replace_nan=-1, num_rows=None, num_columns=None, random_state=None):
-        data_raw = pd.read_csv(data_path+"/u.data", sep='\t', names=['userid', 'movieid', 'rating', 'timestamp'])
+        data_raw = pd.read_csv(self.data_path+"/u.data", sep='\t', names=['userid', 'movieid', 'rating', 'timestamp'])
         data = data_raw.pivot(index='movieid', columns='userid', values='rating')
 
         n1, n2 = data.shape
@@ -59,7 +61,61 @@ class Load_MovieLens_Info():
 
         return M, mask_obs, mask_miss
     
+
     def load_demographics(self):
+        if self.userID is None:
+            print("Error: Run load_data first to specify the user group.")
+            return None
+
+        try:
+            user_data = pd.read_csv(
+                self.data_path + "/u.user",
+                sep='|',
+                names=['userid', 'age', 'gender', 'occupation', 'zip_code']
+            )
+            # Filter for only selected user IDs in self.userID
+            filtered_user_data = user_data[user_data['userid'].isin(self.userID)]
+            return filtered_user_data
+    
+        except FileNotFoundError:
+            print("Error: u.user file not found in the specified data path.")
+            return None
+
+
+    def load_movie_info(self, genre_only=True):
+        if self.movieID is None:
+            print("Error: Run load_data first to specify the movie group.")
+            return None
+
+        try:
+            # Define column names based on the structure of u.item
+            column_names = [
+                'movieid', 'title', 'release_date', 'video_release_date', 'IMDb_URL',
+                'unknown', 'Action', 'Adventure', 'Animation', "Children's", 'Comedy',
+                'Crime', 'Documentary', 'Drama', 'Fantasy', 'Film-Noir', 'Horror',
+                'Musical', 'Mystery', 'Romance', 'Sci-Fi', 'Thriller', 'War', 'Western'
+            ]
+            
+            # Load the data
+            movie_data = pd.read_csv(
+                self.data_path + "/u.item",
+                sep='|', encoding="ISO-8859-1", names=column_names, usecols=range(24)
+            )
+            
+            # Filter for selected movie IDs only
+            filtered_movie_data = movie_data[movie_data['movieid'].isin(self.movieID)]
+            
+            if genre_only:
+                # Select only genre columns if genre_only is True
+                genre_columns = column_names[5:]  # Genres start from the 6th column
+                filtered_movie_data = filtered_movie_data[['movieid'] + genre_columns]     
+            return filtered_movie_data
+
+        except FileNotFoundError:
+            print("Error: u.item file not found in the specified data path.")
+            return None
+
+
         
 
 def load_data(base_path, data_name, replace_nan=-1, num_rows=None, num_columns=None, random_state=None):

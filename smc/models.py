@@ -134,3 +134,48 @@ class SamplingBias():
         w = np.arange(1, self.m*self.n+1)**scale/(self.m*self.n)
         w = w.reshape(self.shape)
         return w/np.sum(w) if self.std else w
+
+
+
+class Movielens_weights():
+    def __init__(self, demo, genre, normalize=True):
+        self.demo = demo
+        self.genre = genre
+
+        self.m = len(genre)
+        self.n = len(demo)
+        self.shape = (self.m, self.n)
+        self.std = normalize
+
+    def demo_weights(self, var="age", **kwargs):
+        # Initialize weights for users (rows)
+        user_weights = np.ones(self.n)
+        
+        if var == "age":
+            # Get age data and apply weighting based on scale
+            scale = kwargs.get("scale", 1)  # Default scale to 1 if not provided
+            ages = self.demo['age'].values
+            
+            # Compute weights as an inverse exponential function of age
+            user_weights = np.exp(-scale * (ages / np.max(ages)))  # normalize age
+
+        elif var == "female":
+            # Assign weight 1 to females and 0 to males
+            user_weights = np.where(self.demo['gender'] == 'F', 1, 0)
+            
+        elif var == "male":
+            # Assign weight 1 to males and 0 to females
+            user_weights = np.where(self.demo['gender'] == 'M', 1, 0)
+        
+        else:
+            raise ValueError("Unsupported variable for weighting. Use 'age', 'female', or 'male'.")
+        
+        # Create the full weight matrix by repeating user weights for each column (movie)
+        weight_matrix = np.tile(user_weights, (self.m, 1))  # Shape: (m, n)
+
+        # Optionally normalize weights
+        if self.std:
+            weight_matrix = weight_matrix / np.sum(weight_matrix)
+        
+        return weight_matrix
+        

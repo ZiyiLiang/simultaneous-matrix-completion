@@ -87,7 +87,7 @@ make_plot <- function(results, exp, val, xmax=2000, sv=TRUE) {
   else{
     pp <- results %>%
       filter(k %in% val)%>%
-      #filter(!(mu %in% c(3,9,15,21,27)))%>%
+      filter(mu %in% seq(6,30,3))%>%
       mutate(k = paste0("K: ", k))%>%
       ggplot(aes(x=mu, y=Value, color=Method, shape=Method)) +
       geom_point(alpha=0.9) +
@@ -110,13 +110,13 @@ make_plot <- function(results, exp, val, xmax=2000, sv=TRUE) {
 
 exp_list <- c("vary_k", "vary_mu")
 k_list <- c(2,5,8)
-mu_list <-  c(6,15, 30)
+mu_list <-  c(9,15, 30)
 
 for (exp in exp_list) {
   if (exp == "vary_k"){
-    val = mu_list
+    val <- mu_list
   }else{
-    val = k_list
+    val <- k_list
   }
   make_plot(results, exp, val)
 }
