@@ -5,7 +5,7 @@ N1=200
 N2=200
 R_LIST=(30)
 MU_LIST=$(seq 0 3 30)
-SEED_LIST=$(seq 1 100)
+SEED_LIST=$(seq 101 150)
 #MU_LIST=(15)
 #SEED_LIST=(0)
 
