@@ -5,7 +5,7 @@
 SCALE_LIST=(1)
 #SCALE_LIST=$(seq 0.6 0.05 1.0)
 SEED_LIST=(1)
-#SEED_LIST=$(seq 1 100)
+#SEED_LIST=$(seq 1 10)
 R_LIST=(1)
 #R_LIST=(1 3 5 7)
 
