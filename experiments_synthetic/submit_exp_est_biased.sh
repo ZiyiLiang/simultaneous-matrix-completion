@@ -2,12 +2,12 @@
 
 # Parameters
 
-SCALE_LIST=(1)
-#SCALE_LIST=$(seq 0.6 0.05 1.0)
-SEED_LIST=(1)
-#SEED_LIST=$(seq 1 10)
-R_LIST=(1)
-#R_LIST=(1 3 5 7)
+#SCALE_LIST=(1)
+SCALE_LIST=$(seq 0.6 0.05 1.0)
+#SEED_LIST=(1)
+SEED_LIST=$(seq 1 10)
+#R_LIST=(1)
+R_LIST=(1 3 5 7)
 
 
 # Slurm parameters
@@ -31,7 +31,7 @@ mkdir -p $OUT_DIR
 for SEED in $SEED_LIST; do
     for SCALE in $SCALE_LIST; do
         for R in "${R_LIST[@]}"; do
-            JOBN="r_est"$R"_scale"$SCALE"_seed"$SEED
+            JOBN="r"$R"_scale"$SCALE"_seed"$SEED
             OUT_FILE=$OUT_DIR"/"$JOBN".txt"
             COMPLETE=0
             #ls $OUT_FILE

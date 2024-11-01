@@ -3,10 +3,10 @@
 # Parameters
 
 MU_LIST=(15)
-SEED_LIST=(1)
-#SEED_LIST=$(seq 1 20)
-R_LIST=(1)
-#R_LIST=(1 3 5 7)
+#SEED_LIST=(1)
+SEED_LIST=$(seq 1 10)
+#R_LIST=(1)
+R_LIST=(1 3 5 7)
 
 
 # Slurm parameters
@@ -30,7 +30,7 @@ mkdir -p $OUT_DIR
 for SEED in $SEED_LIST; do
     for MU in "${MU_LIST[@]}"; do
         for R in "${R_LIST[@]}"; do
-            JOBN="r_est"$R"_mu"$MU"_seed"$SEED
+            JOBN="r"$R"_mu"$MU"_seed"$SEED
             OUT_FILE=$OUT_DIR"/"$JOBN".txt"
             COMPLETE=0
             #ls $OUT_FILE

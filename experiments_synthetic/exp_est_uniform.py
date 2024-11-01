@@ -39,7 +39,7 @@ matrix_generation_seed = 2024    # Data matrix is fixed
 
 model = "RFM"
 solver = "pmf"
-r_solver = 8
+r_solver = 30
 
 n1 = n2 = 200
 noise_model = "step"
@@ -53,7 +53,7 @@ allow_inf = False
 alpha = 0.1
 
 k_list = np.arange(2,9)
-repetition = 5
+repetition = 10
 
 
 
