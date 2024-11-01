@@ -2,16 +2,15 @@
 
 # Parameters
 
-SCALE_LIST=(1)
-#SCALE_LIST=$(seq 0.6 0.05 1.0)
+MU_LIST=(15)
 SEED_LIST=(1)
-#SEED_LIST=$(seq 1 100)
+#SEED_LIST=$(seq 1 20)
 R_LIST=(1)
 #R_LIST=(1 3 5 7)
 
 
 # Slurm parameters
-MEMO=2G                             # Memory required (1 GB)
+MEMO=1G                             # Memory required (1 GB)
 TIME=00-00:45:00                    # Time required (2 h)
 #TIME=00-00:30:00
 CORE=1                              # Cores required (1)
@@ -20,18 +19,18 @@ CORE=1                              # Cores required (1)
 ORDP="sbatch --mem="$MEMO" --nodes=1 --ntasks=1 --cpus-per-task=1 --time="$TIME" --account=sesia_1124 --partition=main"
 
 # Create directory for log files
-LOGS="logs/exp_est_biased"
+LOGS="logs/exp_est_uniform"
 mkdir -p $LOGS
 
 comp=0
 incomp=0
 
-OUT_DIR="results/exp_est_biased"
+OUT_DIR="results/exp_est_uniform"
 mkdir -p $OUT_DIR
 for SEED in $SEED_LIST; do
-    for SCALE in $SCALE_LIST; do
+    for MU in "${MU_LIST[@]}"; do
         for R in "${R_LIST[@]}"; do
-            JOBN="r_est"$R"_scale"$SCALE"_seed"$SEED
+            JOBN="r_est"$R"_mu"$MU"_seed"$SEED
             OUT_FILE=$OUT_DIR"/"$JOBN".txt"
             COMPLETE=0
             #ls $OUT_FILE
@@ -43,7 +42,7 @@ for SEED in $SEED_LIST; do
             if [[ $COMPLETE -eq 0 ]]; then
             ((incomp++))
             # Script to be run
-            SCRIPT="exp_est_biased.sh $R $SCALE $SEED"
+            SCRIPT="exp_est_uniform.sh $R $MU $SEED"
             # Define job name
             OUTF=$LOGS"/"$JOBN".out"
             ERRF=$LOGS"/"$JOBN".err"
