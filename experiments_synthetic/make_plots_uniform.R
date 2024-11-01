@@ -10,7 +10,7 @@ idir <- "results/exp_uniform/"
 ifile.list <- list.files(idir)
 
 # Output directory
-fig.dir <- "~/GitHub/conformal-matrix-completion/results/figures/exp_uniform"
+fig.dir <- "C:/Users/liang/Documents/GitHub/conformal-matrix-completion/results/figures/exp_uniform"
 dir.create(fig.dir, showWarnings = FALSE)
 
 results.raw <- do.call("rbind", lapply(ifile.list, function(ifile) {
@@ -64,9 +64,9 @@ make_plot <- function(results, exp, val, xmax=2000, sv=TRUE) {
 #   
   if (exp=="vary_k"){
     pp <- results %>%
-      #filter(mu %in% val)%>%
-      filter(mu %in% mu_list)%>%
-      mutate(mu = paste0("\U03BC: ", mu))%>%
+      filter(mu %in% val)%>%
+      mutate(mu = paste0("\U03BC: ", mu)) %>%
+      mutate(mu = factor(mu, levels = paste0("\U03BC: ", val))) %>%
       ggplot(aes(x=k, y=Value, color=Method, shape=Method)) +
       geom_point(alpha=0.9) +
       geom_line() +
@@ -110,7 +110,7 @@ make_plot <- function(results, exp, val, xmax=2000, sv=TRUE) {
 
 exp_list <- c("vary_k", "vary_mu")
 k_list <- c(2,5,8)
-mu_list <-  c(6, 15, 30)
+mu_list <-  c(6,15, 30)
 
 for (exp in exp_list) {
   if (exp == "vary_k"){
@@ -120,21 +120,3 @@ for (exp in exp_list) {
   }
   make_plot(results, exp, val)
 }
-
-pp <- results %>%
-  filter(mu == 9)%>%
-  filter(r%in%c(20,25,30))%>%
-  mutate(mu = paste0("\U03BC: ", mu))%>%
-  ggplot(aes(x=k, y=Value, color=Method, shape=Method)) +
-  geom_point(alpha=0.9) +
-  geom_line() +
-  geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.3) +
-  geom_hline(data=df.nominal, aes(yintercept=Value)) +
-  geom_hline(data=df.placeholder, aes(yintercept=Value), alpha=0) +
-  ggh4x::facet_grid2(Key~r, scales="free_y", independent = "y") +
-  scale_color_manual(values=color.scale) +
-  scale_shape_manual(values=shape.scale) +
-  scale_alpha_manual(values=alpha.scale) +
-  xlab("Group size K") +
-  ylab("") +
-  theme_bw()

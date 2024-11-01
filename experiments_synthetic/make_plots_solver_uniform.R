@@ -99,7 +99,7 @@ make_plot <- function(results, solvers, xmax=2000, sv=TRUE) {
     mutate(Key = factor(Key, key.values, key.labels))
   
   pp <- results %>%
-    mutate(Solver = recode(Solver, "pmf" = "als"))%>%
+    filter(Solver %in% solvers)%>%
     ggplot(aes(x=k, y=Value, color=Method, shape=Method)) +
     geom_point(alpha=0.9) +
     geom_line() +
@@ -114,14 +114,11 @@ make_plot <- function(results, solvers, xmax=2000, sv=TRUE) {
     ylab("") +
     theme_bw()
   if (sv == TRUE){
-    ggsave(sprintf("%s/exp_solver_uniform.pdf", fig.dir), pp, device=NULL, width=6.5, height=height)
+    ggsave(sprintf("%s/exp_solver_uniform.pdf", fig.dir), pp, device=NULL, width=5.4, height=height)
   }else{
     print(pp)
   }
 }
 
-
-
-sv <- FALSE
-solver_list <- c("pmf","nnm", "svt")
+solver_list <- c("nnm", "svt")
 make_plot(results, solver_list)
