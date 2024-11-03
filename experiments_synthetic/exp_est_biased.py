@@ -42,7 +42,7 @@ solver = "pmf"
 r_solver = 8
 prop_obs = 0.3
 
-logistic = True
+logistic = False
 const=5
 
 
@@ -52,7 +52,7 @@ allow_inf = False
 alpha = 0.1
 
 k_list = [2,5,8]
-repetition = 10
+repetition = 5
 
 
 

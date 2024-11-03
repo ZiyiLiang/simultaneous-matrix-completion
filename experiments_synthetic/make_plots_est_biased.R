@@ -38,7 +38,9 @@ if (plot_full){
   height <- 2.5
 }
 
-results_filtered <- results.raw %>% filter(k==5)
+results_filtered <- results.raw 
+                    %>% filter(k==5)
+                    %>% filter(scale %in% c(0,2,4,6))
 
 if (plot_full){
   results <- results_filtered %>%
@@ -87,4 +89,4 @@ make_plot <- function(results, val, xmax=2000, sv=TRUE) {
   }
 }
 
-val <-c(1,10,20)
+val <-c(5,10,20,30)
