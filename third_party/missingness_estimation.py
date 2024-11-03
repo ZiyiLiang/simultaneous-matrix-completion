@@ -1,4 +1,5 @@
 import numpy as np
+import pdb
 import sys
 
 # The following functions are adapted from third party sources: 
@@ -375,12 +376,12 @@ def projectNuclear(B,d1,d2,radius,alpha):
     return B_proj.reshape((d1*d2,))
 
 
-def estimate_P(S_train, q=0.8, r=5):
+def estimate_P(S_train, q=0.8, r=5, const=1):
     d1, d2 = S_train.shape
     yy = 2*(S_train-0.5).ravel()
     x_init = np.zeros(d1*d2)
     idx = range(d1*d2)
-    const = 1.0
+    const=const
     k_l=r
     radius  = const * np.sqrt(d1*d2*k_l)
     f_loc = lambda x: f_(x,q)

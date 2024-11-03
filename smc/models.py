@@ -1,4 +1,5 @@
 import numpy as np   
+import pdb
 import scipy.stats as stats
 from scipy.stats import ortho_group
 
@@ -130,9 +131,16 @@ class SamplingBias():
         w = np.ones(self.shape)
         return w/np.sum(w) if self.std else w
 
-    def inc_weights(self, scale=1):
-        w = np.arange(1, self.m*self.n+1)**scale/(self.m*self.n)
+    def inc_weights(self, scale=1, logistic=False):
+        if logistic:
+            w = np.arange(1.0, self.m*self.n+1)*scale/(self.m*self.n)
+        else:
+            w = np.arange(1.0, self.m*self.n+1)**scale/(self.m*self.n)
         w = w.reshape(self.shape)
+
+        if logistic:
+            w -= np.mean(w)
+            return 1 / (1 + np.exp(-w))
         return w/np.sum(w) if self.std else w
 
 

@@ -42,6 +42,9 @@ solver = "pmf"
 r_solver = 8
 prop_obs = 0.3
 
+logistic = True
+const=5
+
 
 # Other parameters
 verbose = True
@@ -105,7 +108,7 @@ def run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_cali
     #-------------------------------#
     n1, n2 = M_true.shape
     bm = SamplingBias(n1,n2)
-    w_obs = bm.inc_weights(scale = scale)
+    w_obs = bm.inc_weights(scale = scale,logistic=logistic)
 
     #-------Generate masks----------#
     #-------------------------------#
@@ -114,7 +117,7 @@ def run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_cali
     n_calib_queries = min(int(0.5 * np.sum(np.sum(mask_obs, axis=1) // k)), max_calib_queries)
 
     print(f"Estimating missingness with guessed rank {r}...")
-    w_obs_est = estimate_P(mask_obs, 1, r=r)
+    w_obs_est = estimate_P(mask_obs, 1, r=r, const=const)
     print("Done estimating!\n")
     sys.stdout.flush()
 

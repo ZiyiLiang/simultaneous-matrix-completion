@@ -39,7 +39,6 @@ if (plot_full){
 }
 
 results_filtered <- results.raw %>% filter(k==5)
-results_filtered$avg_gap <- results_filtered$avg_gap * (results_filtered$Calib_queries + 1)
 
 if (plot_full){
   results <- results_filtered %>%
@@ -71,7 +70,7 @@ make_plot <- function(results, val, xmax=2000, sv=TRUE) {
     ggplot(aes(x=scale, y=Value, color=Method, shape=Method)) +
     geom_point(alpha=0.9) +
     geom_line() +
-    geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.1) +
+    geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.05) +
     geom_hline(data=df.nominal, aes(yintercept=Value)) +
     geom_hline(data=df.placeholder, aes(yintercept=Value), alpha=0) +
     ggh4x::facet_grid2(Key~r_est, scales="free_y", independent = "y") +
@@ -88,4 +87,4 @@ make_plot <- function(results, val, xmax=2000, sv=TRUE) {
   }
 }
 
-val <-c(3,5,7)
+val <-c(1,10,20)
