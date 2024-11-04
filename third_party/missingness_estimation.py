@@ -354,8 +354,20 @@ def auto_grad(x, funObj, options):
 def f_(x,q):
     return q/(1+np.exp(-x))
 
+# def fprime(x,q):
+#     return q*np.exp(x)/(1+np.exp(x))**2
+
+# def logObjectiveGeneral(x,y,idx,f,fprime):
+#     F = -np.sum(np.log(y[idx]*f(x[idx]) - (y[idx]-1)/2))
+#     G = np.zeros(len(x))
+#     v = (f(x[idx])+(y[idx]-1)/2)
+#     w = -fprime(x[idx])
+#     G[idx] = w/v
+
+#     return F, G
+
 def fprime(x,q):
-    return q*np.exp(x)/(1+np.exp(x))**2
+    return q*np.exp(-x)/(1+np.exp(-x))**2
 
 def logObjectiveGeneral(x,y,idx,f,fprime):
     F = -np.sum(np.log(y[idx]*f(x[idx]) - (y[idx]-1)/2))
@@ -365,6 +377,7 @@ def logObjectiveGeneral(x,y,idx,f,fprime):
     G[idx] = w/v
 
     return F, G
+
 
 def projectNuclear(B,d1,d2,radius,alpha):
     U,S,Vh = np.linalg.svd(B.reshape((d1,d2)), full_matrices=False)
