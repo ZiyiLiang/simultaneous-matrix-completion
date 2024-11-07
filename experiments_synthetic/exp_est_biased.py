@@ -62,7 +62,7 @@ repetition = 5
 ###############
 outdir = "./results/exp_est_biased/"
 os.makedirs(outdir, exist_ok=True)
-outfile_name = f"r{r}_scale{scale:.2f}_seed{seed}"
+outfile_name = f"r{r}_const{const}_scale{scale:.2f}_seed{seed}"
 outfile = outdir + outfile_name + ".txt"
 print("Output file: {:s}".format(outfile), end="\n")
 sys.stdout.flush()
@@ -73,6 +73,7 @@ def add_header(df):
     df["n2"] = n2
     df['alpha'] = alpha
     df['r_est'] = r
+    df['const'] = const
     df['r_solver'] = r_solver
     df['scale'] = scale
     return df

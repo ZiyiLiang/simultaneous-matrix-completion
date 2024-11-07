@@ -33,7 +33,7 @@ mkdir -p $OUT_DIR
 for SEED in $SEED_LIST; do
     for SCALE in $SCALE_LIST; do
         for R in "${R_LIST[@]}"; do
-            JOBN="r"$R"_scale"$SCALE"_seed"$SEED
+            JOBN="r"$R"_const"$CONST"_scale"$SCALE"_seed"$SEED
             OUT_FILE=$OUT_DIR"/"$JOBN".txt"
             COMPLETE=0
             #ls $OUT_FILE

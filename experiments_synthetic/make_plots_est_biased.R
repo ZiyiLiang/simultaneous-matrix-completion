@@ -41,7 +41,7 @@ if (plot_full){
 
 results_filtered <- results.raw %>%
                     filter(k==5)%>%
-                    filter(scale %in% c(0,2,4,6))
+                    filter(scale %in% c(0,2,4,6, 8, 10))
 #results_filtered <- results.raw
 
 if (plot_full){
