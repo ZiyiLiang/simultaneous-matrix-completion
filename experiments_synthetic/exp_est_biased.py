@@ -22,7 +22,7 @@ if True:
     # Parse input arguments
     print ('Number of arguments:', len(sys.argv), 'arguments.')
     print ('Argument List:', str(sys.argv))
-    if len(sys.argv) != 4:
+    if len(sys.argv) != 5:
         print("Error: incorrect number of parameters.")
         quit()
 

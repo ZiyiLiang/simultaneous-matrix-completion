@@ -2,20 +2,20 @@
 
 # Parameters
 
-#SCALE_LIST=(1)
-SCALE_LIST=$(seq 0.6 0.05 1.0)
+SCALE_LIST=$(seq 0.8 0.05 1.0)
+#SCALE_LIST=$(seq 0.6 0.05 1.0)
 #SCALE_LIST=$(seq 0 2 10)
-CONST_LIST=(10 20 30 50 70)
+CONST_LIST=(10 30 50 70)
 #SEED_LIST=(1)
-SEED_LIST=$(seq 1 10)
+SEED_LIST=$(seq 1 5)
 #R_LIST=(1)
 R_LIST=(2 5 10)
 
 
 # Slurm parameters
 MEMO=2G                             # Memory required (1 GB)
-TIME=00-00:30:00                    # Time required (2 h)
-#TIME=00-00:30:00
+#TIME=00-01:00:00                    # Time required (2 h)
+TIME=00-00:30:00
 CORE=1                              # Cores required (1)
 
 # Assemble order                                               prefix
