@@ -5,10 +5,11 @@
 #SCALE_LIST=(1)
 SCALE_LIST=$(seq 0.6 0.05 1.0)
 #SCALE_LIST=$(seq 0 2 10)
+CONST_LIST=c(10 20 30 50 70)
 #SEED_LIST=(1)
 SEED_LIST=$(seq 1 10)
 #R_LIST=(1)
-R_LIST=(5 10 20)
+R_LIST=(2 5 10)
 
 
 # Slurm parameters
@@ -44,7 +45,7 @@ for SEED in $SEED_LIST; do
             if [[ $COMPLETE -eq 0 ]]; then
             ((incomp++))
             # Script to be run
-            SCRIPT="exp_est_biased.sh $R $SCALE $SEED"
+            SCRIPT="exp_est_biased.sh $R $CONST $SCALE $SEED"
             # Define job name
             OUTF=$LOGS"/"$JOBN".out"
             ERRF=$LOGS"/"$JOBN".err"

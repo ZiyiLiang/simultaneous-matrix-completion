@@ -27,8 +27,9 @@ if True:
         quit()
 
     r = int(sys.argv[1])
-    scale = float(sys.argv[2])
-    seed = int(sys.argv[3])
+    const = int(sys.argv[2])
+    scale = float(sys.argv[3])
+    seed = int(sys.argv[4])
     
 # Fixed data parameters
 max_test_queries = 100            
@@ -43,7 +44,7 @@ r_solver = 8
 prop_obs = 0.3
 
 logistic = False
-const=5
+const=const
 
 
 # Other parameters

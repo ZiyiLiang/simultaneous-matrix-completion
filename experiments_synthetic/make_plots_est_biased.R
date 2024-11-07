@@ -8,6 +8,7 @@ library(dplyr)
 
 setwd("C:/Users/liang/Documents/GitHub/conformal-matrix-completion/experiments_synthetic/results_hpc")
 idir <- "results/exp_est_biased/"
+#idir <- "results/exp_est_biased_400by400_prob0.3/"
 ifile.list <- list.files(idir)
 
 # Output directory
@@ -38,9 +39,10 @@ if (plot_full){
   height <- 2.5
 }
 
-results_filtered <- results.raw %>% 
-                    filter(k==5)%>% 
+results_filtered <- results.raw %>%
+                    filter(k==5)%>%
                     filter(scale %in% c(0,2,4,6))
+#results_filtered <- results.raw
 
 if (plot_full){
   results <- results_filtered %>%
@@ -79,7 +81,7 @@ make_plot <- function(results, val, xmax=2000, sv=TRUE) {
     scale_color_manual(values=color.scale) +
     scale_shape_manual(values=shape.scale) +
     scale_alpha_manual(values=alpha.scale) +
-    xlab("Group size K") +
+    xlab("Scale") +
     ylab("") +
     theme_bw()
   if (sv == TRUE){
@@ -89,4 +91,5 @@ make_plot <- function(results, val, xmax=2000, sv=TRUE) {
   }
 }
 
-val <-c(5,10,20,30)
+#val <-c(5,10,20,30)
+val <-c(1,3,5,7)
