@@ -5,11 +5,11 @@
 SCALE_LIST=$(seq 0.8 0.05 1.0)
 #SCALE_LIST=$(seq 0.6 0.05 1.0)
 #SCALE_LIST=$(seq 0 2 10)
-CONST_LIST=(10 30 50 70)
+CONST_LIST=(10 20 30)
 #SEED_LIST=(1)
-SEED_LIST=$(seq 1 5)
+SEED_LIST=$(seq 1 30)
 #R_LIST=(1)
-R_LIST=(2 5 10)
+R_LIST=(3 5 7)
 
 
 # Slurm parameters

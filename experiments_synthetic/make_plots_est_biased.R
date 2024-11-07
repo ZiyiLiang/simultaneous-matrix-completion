@@ -49,7 +49,7 @@ if (plot_full){
     mutate(Method = factor(Method, Method.values, Method.labels)) %>%
     pivot_longer(cols=c("Query_coverage", "Coverage", "Size", "avg_gap","Inf_prop"), names_to='Key', values_to='Value') %>%
     mutate(Key = factor(Key, key.values, key.labels)) %>%
-    group_by(Method, r_est, scale, Key) %>%
+    group_by(Method, r_est, const, scale, Key) %>%
     summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
 }else{
   results <- results_filtered%>%
@@ -57,7 +57,7 @@ if (plot_full){
     pivot_longer(cols=c("Query_coverage", "Size", "avg_gap"), names_to='Key', values_to='Value') %>%
     #pivot_longer(cols=c("Query_coverage", "Size"), names_to='Key', values_to='Value') %>%
     mutate(Key = factor(Key, key.values, key.labels)) %>%
-    group_by(Method, r_est, scale, Key) %>%
+    group_by(Method,const, r_est, scale, Key) %>%
     summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
 }
 
@@ -93,3 +93,28 @@ make_plot <- function(results, val, xmax=2000, sv=TRUE) {
 
 #val <-c(5,10,20,30)
 val <-c(1,3,5,7)
+val<-unique(results_filtered$r_est)
+
+
+plot.alpha <- 0.9
+df.nominal <- tibble(Key=c("Query_coverage"), Value=plot.alpha) %>%
+  mutate(Key = factor(Key, key.values, key.labels))    
+df.placeholder <- tibble(Key=c("Query_coverage"), Value=c(1, 0.7)) %>%
+  mutate(Key = factor(Key, key.values, key.labels))
+
+pp <- results %>%
+  filter(const== 30)%>%
+  ggplot(aes(x=scale, y=Value, color=Method, shape=Method)) +
+  geom_point(alpha=0.9) +
+  geom_line() +
+  geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.05) +
+  geom_hline(data=df.nominal, aes(yintercept=Value)) +
+  geom_hline(data=df.placeholder, aes(yintercept=Value), alpha=0) +
+  ggh4x::facet_grid2(Key~r_est, scales="free_y", independent = "y") +
+  scale_color_manual(values=color.scale) +
+  scale_shape_manual(values=shape.scale) +
+  scale_alpha_manual(values=alpha.scale) +
+  xlab("Scale") +
+  ylab("") +
+  theme_bw()
+pp
