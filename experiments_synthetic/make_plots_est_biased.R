@@ -7,7 +7,8 @@ library(dplyr)
 
 
 setwd("C:/Users/liang/Documents/GitHub/conformal-matrix-completion/experiments_synthetic/results_hpc")
-idir <- "results/exp_est_biased/"
+idir <- "results/exp_est_biased_logistic_vary_r/"
+#idir <- "results/exp_est_biased/"
 #idir <- "results/exp_est_biased_400by400_prob0.3/"
 ifile.list <- list.files(idir)
 
@@ -49,7 +50,7 @@ if (plot_full){
     mutate(Method = factor(Method, Method.values, Method.labels)) %>%
     pivot_longer(cols=c("Query_coverage", "Coverage", "Size", "avg_gap","Inf_prop"), names_to='Key', values_to='Value') %>%
     mutate(Key = factor(Key, key.values, key.labels)) %>%
-    group_by(Method, r_est, const, scale, Key) %>%
+    group_by(Method, k, r_est, scale, Key) %>%
     summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
 }else{
   results <- results_filtered%>%
@@ -57,7 +58,24 @@ if (plot_full){
     pivot_longer(cols=c("Query_coverage", "Size", "avg_gap"), names_to='Key', values_to='Value') %>%
     #pivot_longer(cols=c("Query_coverage", "Size"), names_to='Key', values_to='Value') %>%
     mutate(Key = factor(Key, key.values, key.labels)) %>%
-    group_by(Method,const, r_est, scale, Key) %>%
+    group_by(Method, k, r_est, scale, Key) %>%
+    summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
+}
+
+if (plot_full){
+  results <- results_filtered %>%
+    mutate(Method = factor(Method, Method.values, Method.labels)) %>%
+    pivot_longer(cols=c("Query_coverage", "Coverage", "Size", "avg_gap","Inf_prop"), names_to='Key', values_to='Value') %>%
+    mutate(Key = factor(Key, key.values, key.labels)) %>%
+    group_by(Method, k, r_est, const, scale, Key) %>%
+    summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
+}else{
+  results <- results_filtered%>%
+    mutate(Method = factor(Method, Method.values, Method.labels)) %>%
+    pivot_longer(cols=c("Query_coverage", "Size", "avg_gap"), names_to='Key', values_to='Value') %>%
+    #pivot_longer(cols=c("Query_coverage", "Size"), names_to='Key', values_to='Value') %>%
+    mutate(Key = factor(Key, key.values, key.labels)) %>%
+    group_by(Method,const, k, r_est, scale, Key) %>%
     summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
 }
 
@@ -103,11 +121,13 @@ df.placeholder <- tibble(Key=c("Query_coverage"), Value=c(1, 0.7)) %>%
   mutate(Key = factor(Key, key.values, key.labels))
 
 pp <- results %>%
-  filter(const== 30)%>%
+#  filter(const== 20)%>%
+  filter(r_est!=30)%>%
+  filter(scale %in% c(0, 2, 4,6,8))%>%
   ggplot(aes(x=scale, y=Value, color=Method, shape=Method)) +
   geom_point(alpha=0.9) +
   geom_line() +
-  geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.05) +
+  geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.01) +
   geom_hline(data=df.nominal, aes(yintercept=Value)) +
   geom_hline(data=df.placeholder, aes(yintercept=Value), alpha=0) +
   ggh4x::facet_grid2(Key~r_est, scales="free_y", independent = "y") +
@@ -118,3 +138,5 @@ pp <- results %>%
   ylab("") +
   theme_bw()
 pp
+
+ggsave(sprintf("%s/exp_est_biased_logistic.pdf", fig.dir), pp, device=NULL, width=6.5, height=3.5)
