@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib as mpl 
 import matplotlib.pyplot as plt
 import pandas as pd
+import pdb
 
 
 def plot_before_after_mask(M, mask, vmin=None, vmax=None, bad_color='grey', figsize=(12,5)):
@@ -56,7 +57,8 @@ def error_heatmap(M, Mhat, mask, vmin=None, vmax=None, cmap=None, bad_color='whi
 
 
 
-def evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=None, method=None):
+def evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=None, 
+                 metric='mean', method=None):
     """ This function evaluates the coverage over test queries
     """
     val = M[idxs_test]
@@ -64,14 +66,27 @@ def evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=None, method=None):
     
     covered = np.array((lower <= val) & (upper >= val))
     query_covered = [np.prod(covered[k*i:k*(i+1)]) for i in range(n_test_queries)]
-    
     query_coverage = np.mean(query_covered)
     coverage = np.mean(covered)
-    size = np.mean(upper - lower)
+    sizes = upper - lower
+    if metric == 'mean':
+        size = np.mean(sizes)
+    elif metric == 'median':
+        size = np.median(sizes)
+    elif metric == 'no_inf':
+        if is_inf is None:
+            print('Must provide inf locations for the no_inf metric.')
+        else:
+            query_no_inf = [not np.any(is_inf[k*i:k*(i+1)]) for i in range(n_test_queries)]
+            idxs_no_inf = [element for element in query_no_inf for _ in range(int(k))]
+        size = np.mean(sizes[idxs_no_inf])
+    else:
+        print(f'Unknown evaluation metric {metric}')
     results = pd.DataFrame({})
     results["Query_coverage"] = [query_coverage]
     results["Coverage"] = [coverage]
     results["Size"] = [size]
+    results["metric"] = [metric]
     if type(is_inf) != type(None):
         query_is_inf = [np.any(is_inf[k*i:k*(i+1)]) for i in range(n_test_queries)]
         results["Inf_prop"] = [np.mean(query_is_inf)]

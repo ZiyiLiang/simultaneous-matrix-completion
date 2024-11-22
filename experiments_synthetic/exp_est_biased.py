@@ -156,13 +156,13 @@ def run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_cali
     ci_method = SimulCI(M, Mhat, mask_obs, idxs_calib, k, w_obs=w_obs)
     df = ci_method.get_CI(idxs_test, alpha, allow_inf=allow_inf, store_weights=True)
     lower, upper, is_inf= df.loc[0].lower, df.loc[0].upper, df.loc[0].is_inf
-    res = pd.concat([res, evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=is_inf, method="conformal")])
+    res = pd.concat([res, evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=is_inf, metric='median', method="conformal")])
 
     # Evaluate the CI and quantile inflation weights using estimated obs sampling weights
     ci_est = SimulCI(M, Mhat, mask_obs, idxs_calib, k, w_obs=w_obs_est)
     df = ci_est.get_CI(idxs_test, alpha, allow_inf=allow_inf, store_weights=True)
     lower, upper, is_inf= df.loc[0].lower, df.loc[0].upper, df.loc[0].is_inf
-    res = pd.concat([res, evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=is_inf, method="est")])
+    res = pd.concat([res, evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=is_inf, metric='median', method="est")])
 
     # Evaluate the estimation gap
     weights_list = ci_method.weights_list
