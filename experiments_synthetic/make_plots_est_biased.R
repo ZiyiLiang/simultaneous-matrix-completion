@@ -7,8 +7,8 @@ library(dplyr)
 
 
 setwd("C:/Users/liang/Documents/GitHub/conformal-matrix-completion/experiments_synthetic/results_hpc")
-idir <- "results/exp_est_biased_logistic_vary_r/"
-#idir <- "results/exp_est_biased/"
+#idir <- "results/exp_est_biased_logistic_vary_r/"
+idir <- "results/exp_est_biased/"
 #idir <- "results/exp_est_biased_400by400_prob0.3/"
 ifile.list <- list.files(idir)
 
@@ -76,7 +76,7 @@ if (plot_full){
     #pivot_longer(cols=c("Query_coverage", "Size"), names_to='Key', values_to='Value') %>%
     mutate(Key = factor(Key, key.values, key.labels)) %>%
     group_by(Method,const, k, r_est, scale, Key) %>%
-    summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
+    summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=median(Value, na.rm=T))
 }
 
 ## Make nice plots for paper
@@ -103,7 +103,7 @@ make_plot <- function(results, val, xmax=2000, sv=TRUE) {
     ylab("") +
     theme_bw()
   if (sv == TRUE){
-    ggsave(sprintf("%s/exp_solver_uniform.pdf", fig.dir), pp, device=NULL, width=5.4, height=height)
+    ggsave(sprintf("%s/exp_est_biased.pdf", fig.dir), pp, device=NULL, width=5.4, height=height)
   }else{
     print(pp)
   }
@@ -122,8 +122,8 @@ df.placeholder <- tibble(Key=c("Query_coverage"), Value=c(1, 0.7)) %>%
 
 pp <- results %>%
 #  filter(const== 20)%>%
-  filter(r_est!=30)%>%
-  filter(scale %in% c(0, 2, 4,6,8))%>%
+#  filter(r_est!=30)%>%
+#  filter(scale %in% c(0, 2, 4,6,8))%>%
   ggplot(aes(x=scale, y=Value, color=Method, shape=Method)) +
   geom_point(alpha=0.9) +
   geom_line() +
