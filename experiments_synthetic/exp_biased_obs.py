@@ -102,8 +102,8 @@ def run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_cali
     #--------Observation bias-------#
     #-------------------------------#
     n1, n2 = M_true.shape
-    bm = SamplingBias(n1,n2)
-    w_obs = bm.inc_weights(scale = scale)
+    bm = SamplingBias(n1,n2, normalize=False)
+    w_obs = bm.block_weights(ratio=alpha, scale=scale, random_state=random_state)
 
     
     #-------Generate masks----------#

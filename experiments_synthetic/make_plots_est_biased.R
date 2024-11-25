@@ -40,7 +40,7 @@ if (plot_full){
 
 results_filtered <- results.raw %>%
                     filter(k==5)%>%
-                    filter(scale %in% c(0,2,4,6, 8, 10))
+                    filter(prop_obs==0.3)
 #results_filtered <- results.raw
 
 if (plot_full){
@@ -74,7 +74,12 @@ if (plot_full){
     #pivot_longer(cols=c("Query_coverage", "Size"), names_to='Key', values_to='Value') %>%
     mutate(Key = factor(Key, key.values, key.labels)) %>%
     group_by(Method,const, k, r_est, scale, Key) %>%
-    summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=median(Value, na.rm=T))
+    summarise(
+      num = n(),
+      Value= median(Value, na.rm = TRUE),
+      MAD = mad(Value, na.rm = TRUE),
+      Value.se = 1.253 * MAD / sqrt(n())
+    )
 }
 
 ## Make nice plots for paper
