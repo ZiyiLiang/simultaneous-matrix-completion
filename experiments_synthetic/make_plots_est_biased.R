@@ -7,9 +7,7 @@ library(dplyr)
 
 
 setwd("C:/Users/liang/Documents/GitHub/conformal-matrix-completion/experiments_synthetic/results_hpc")
-#idir <- "results/exp_est_biased_logistic_vary_r/"
 idir <- "results/exp_est_biased/"
-#idir <- "results/exp_est_biased_400by400_prob0.3/"
 ifile.list <- list.files(idir)
 
 # Output directory

@@ -190,6 +190,8 @@ for i in tqdm(range(1, repetition+1), desc="Repetitions", leave=True, position=0
                             r, scale=scale, random_state=random_state)
         
         results = pd.concat([results, res])
+        
+add_header(results)
 
 
 
