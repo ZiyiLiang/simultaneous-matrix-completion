@@ -190,3 +190,12 @@ for i in tqdm(range(1, repetition+1), desc="Repetitions", leave=True, position=0
                             r, scale=scale, random_state=random_state)
         
         results = pd.concat([results, res])
+
+
+
+#####################
+#    Save Results   #
+#####################
+results.to_csv(outfile, index=False)
+print("\nResults written to {:s}\n".format(outfile))
+sys.stdout.flush()
