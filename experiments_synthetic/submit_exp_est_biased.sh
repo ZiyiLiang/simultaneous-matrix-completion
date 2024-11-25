@@ -13,7 +13,7 @@ PROP_LIST=(0.2)
 
 
 # Slurm parameters
-MEMO=1.5G                             # Memory required (1 GB)
+MEMO=2G                             # Memory required (1 GB)
 #TIME=00-01:00:00                    # Time required (2 h)
 TIME=00-00:30:00
 CORE=1                              # Cores required (1)
