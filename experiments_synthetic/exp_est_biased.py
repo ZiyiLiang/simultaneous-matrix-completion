@@ -27,34 +27,30 @@ if True:
         quit()
 
     r = int(sys.argv[1])
-    const = int(sys.argv[2])
+    prop = float(sys.argv[2])
     scale = float(sys.argv[3])
     seed = int(sys.argv[4])
-    
+
 # Fixed data parameters
 max_test_queries = 100            
 max_calib_queries = 2000
 matrix_generation_seed = 2024    # Data matrix is fixed 
 
-n1 = n2 = 400
+n1 = n2 = 300
 
 model = "RFM"
 solver = "pmf"
 r_solver = 8
-prop_obs = 0.3
-
-logistic = False
-const=const
-
+prop_obs = prop
 
 # Other parameters
 verbose = True
 allow_inf = False
 alpha = 0.1
+const=1
 
 k_list = [2,5,8]
 repetition = 5
-
 
 
 ###############
@@ -62,7 +58,7 @@ repetition = 5
 ###############
 outdir = "./results/exp_est_biased/"
 os.makedirs(outdir, exist_ok=True)
-outfile_name = f"r{r}_const{const}_scale{scale:.2f}_seed{seed}"
+outfile_name = f"r{r}_prop_obs{prop}_scale{scale:.2f}_seed{seed}"
 outfile = outdir + outfile_name + ".txt"
 print("Output file: {:s}".format(outfile), end="\n")
 sys.stdout.flush()
@@ -76,6 +72,7 @@ def add_header(df):
     df['const'] = const
     df['r_solver'] = r_solver
     df['scale'] = scale
+    df['prop_obs'] = prop_obs
     return df
 
 
@@ -102,15 +99,15 @@ U, V, M = mm.sample_noiseless(matrix_generation_seed)
 # Define Experiment #
 #####################
 def run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_calib_queries,
-                          r,scale, random_state=0):
+                          r, scale, random_state=0):
     res = pd.DataFrame({})
 
 
     #--------Observation bias-------#
     #-------------------------------#
     n1, n2 = M_true.shape
-    bm = SamplingBias(n1,n2)
-    w_obs = bm.inc_weights(scale = scale,logistic=logistic)
+    bm = SamplingBias(n1,n2, normalize=False)
+    w_obs = bm.block_weights(ratio=alpha, scale=scale, random_state=random_state)
 
     #-------Generate masks----------#
     #-------------------------------#
@@ -148,21 +145,20 @@ def run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_cali
     print("Done training!\n")
     sys.stdout.flush()
 
-
+    
     #------Compute intervals--------# 
     #-------------------------------#
-
     # Evaluate the CI and quantile inflation weights using oracle obs sampling weights
     ci_method = SimulCI(M, Mhat, mask_obs, idxs_calib, k, w_obs=w_obs)
     df = ci_method.get_CI(idxs_test, alpha, allow_inf=allow_inf, store_weights=True)
     lower, upper, is_inf= df.loc[0].lower, df.loc[0].upper, df.loc[0].is_inf
-    res = pd.concat([res, evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=is_inf, metric='median', method="conformal")])
-
+    res = pd.concat([res, evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=is_inf, metric='mean',method="conformal")])
+    
     # Evaluate the CI and quantile inflation weights using estimated obs sampling weights
     ci_est = SimulCI(M, Mhat, mask_obs, idxs_calib, k, w_obs=w_obs_est)
     df = ci_est.get_CI(idxs_test, alpha, allow_inf=allow_inf, store_weights=True)
     lower, upper, is_inf= df.loc[0].lower, df.loc[0].upper, df.loc[0].is_inf
-    res = pd.concat([res, evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=is_inf, metric='median', method="est")])
+    res = pd.concat([res, evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=is_inf, metric='mean',method="est")])
 
     # Evaluate the estimation gap
     weights_list = ci_method.weights_list
@@ -188,21 +184,9 @@ results = pd.DataFrame({})
 
 for i in tqdm(range(1, repetition+1), desc="Repetitions", leave=True, position=0):
     random_state = repetition * (seed-1) + i
-    
     for k in tqdm(k_list, desc="k", leave=True, position=0):
 
         res = run_single_experiment(M, k, alpha, prop_obs, max_test_queries, max_calib_queries,
                             r, scale=scale, random_state=random_state)
         
         results = pd.concat([results, res])
-
-add_header(results)
-
-
-
-#####################
-#    Save Results   #
-#####################
-results.to_csv(outfile, index=False)
-print("\nResults written to {:s}\n".format(outfile))
-sys.stdout.flush()

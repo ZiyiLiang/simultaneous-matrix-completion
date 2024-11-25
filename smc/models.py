@@ -142,7 +142,14 @@ class SamplingBias():
             w -= np.mean(w)
             return 1 / (1 + np.exp(-w))
         return w/np.sum(w) if self.std else w
-
+    
+    def block_weights(self, ratio, scale, random_state=0):
+        rng = np.random.default_rng(random_state)
+        w = np.ones(self.shape)
+        is_large = rng.binomial(1,ratio,self.m)
+        idxs = np.where(is_large==1)[0]
+        w[idxs,] = np.repeat(scale, self.n)
+        return w/np.sum(w) if self.std else w
 
 
 class Movielens_weights():

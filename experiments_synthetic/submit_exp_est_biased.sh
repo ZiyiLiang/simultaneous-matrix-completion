@@ -2,18 +2,18 @@
 
 # Parameters
 
-#SCALE_LIST=$(seq 0.8 0.05 1.0)
-SCALE_LIST=$(seq 0.6 0.05 1.0)
-#SCALE_LIST=$(seq 0 2 10)
-CONST_LIST=(20)
-#SEED_LIST=(1)
-SEED_LIST=$(seq 1 40)
-#R_LIST=(1)
-R_LIST=(3 5 7)
+#SCALE_LIST=$(seq 0.2 0.2 1.0)
+SCALE_LIST=(0.2)
+SEED_LIST=(1)
+#SEED_LIST=$(seq 1 20)
+R_LIST=(1)
+#R_LIST=(3 5 7)
+#PROP_LIST=(0.2 0.3)
+PROP_LIST=(0.2)
 
 
 # Slurm parameters
-MEMO=2G                             # Memory required (1 GB)
+MEMO=1.5G                             # Memory required (1 GB)
 #TIME=00-01:00:00                    # Time required (2 h)
 TIME=00-00:30:00
 CORE=1                              # Cores required (1)
@@ -31,10 +31,10 @@ incomp=0
 OUT_DIR="results/exp_est_biased"
 mkdir -p $OUT_DIR
 for SEED in $SEED_LIST; do
-    for CONST in "${CONST_LIST[@]}"; do
+    for PROP in "${PROP_LIST_LIST[@]}"; do
         for SCALE in $SCALE_LIST; do
             for R in "${R_LIST[@]}"; do
-                JOBN="r"$R"_const"$CONST"_scale"$SCALE"_seed"$SEED
+                JOBN="r"$R"_prop_obs"$PROP"_scale"$SCALE"_seed"$SEED
                 OUT_FILE=$OUT_DIR"/"$JOBN".txt"
                 COMPLETE=0
                 #ls $OUT_FILE
@@ -46,7 +46,7 @@ for SEED in $SEED_LIST; do
                 if [[ $COMPLETE -eq 0 ]]; then
                 ((incomp++))
                 # Script to be run
-                SCRIPT="exp_est_biased.sh $R $CONST $SCALE $SEED"
+                SCRIPT="exp_est_biased.sh $R $PROP $SCALE $SEED"
                 # Define job name
                 OUTF=$LOGS"/"$JOBN".out"
                 ERRF=$LOGS"/"$JOBN".err"
