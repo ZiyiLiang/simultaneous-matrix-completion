@@ -2,14 +2,14 @@
 
 # Parameters
 
-#SCALE_LIST=$(seq 0.2 0.2 1.0)
-SCALE_LIST=(0.2)
-SEED_LIST=(1)
-#SEED_LIST=$(seq 1 20)
-R_LIST=(1)
-#R_LIST=(3 5 7)
+SCALE_LIST=$(seq 0.20 0.20 1.00)
+#SCALE_LIST=(0.2)
+#SEED_LIST=(1)
+SEED_LIST=$(seq 20 60)
+#R_LIST=(1)
+R_LIST=(3 5 7)
 #PROP_LIST=(0.2 0.3)
-PROP_LIST=(0.2)
+PROP_LIST=(0.3)
 
 
 # Slurm parameters
@@ -31,7 +31,7 @@ incomp=0
 OUT_DIR="results/exp_est_biased"
 mkdir -p $OUT_DIR
 for SEED in $SEED_LIST; do
-    for PROP in "${PROP_LIST_LIST[@]}"; do
+    for PROP in "${PROP_LIST[@]}"; do
         for SCALE in $SCALE_LIST; do
             for R in "${R_LIST[@]}"; do
                 JOBN="r"$R"_prop_obs"$PROP"_scale"$SCALE"_seed"$SEED
