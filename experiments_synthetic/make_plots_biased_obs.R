@@ -4,7 +4,7 @@ library(tidyverse)
 library(kableExtra)
 library(ggplot2)
 
-setwd("~/GitHub/conformal-matrix-completion/experiments_synthetic/results_hpc")
+setwd("C:/Users/liang/Documents/GitHub/conformal-matrix-completion/experiments_synthetic/results_hpc")
 idir <- "results/exp_biased_obs/"
 ifile.list <- list.files(idir)
 
@@ -26,12 +26,12 @@ if (plot_full){
   key.values <- c("Query_coverage", "Coverage", "Size", "Inf_prop")
   key.labels <- c("Group cov.", "Coverage", "Avg. width", "Inf_prop")
   height <- 3.5
-  fig.dir <- "~/GitHub/conformal-matrix-completion/results/figures/exp_biased_obs_full/"
+  fig.dir <- "C:/Users/liang/Documents/GitHub/conformal-matrix-completion/results/figures/exp_biased_obs_full/"
 }else{
   key.values <- c("Query_coverage","Size")
   key.labels <- c("Group cov.","Avg. width")
   height <- 2.5
-  fig.dir <- "~/GitHub/conformal-matrix-completion/results/figures/exp_biased_obs/"
+  fig.dir <- "C:/Users/liang/Documents/GitHub/conformal-matrix-completion/results/figures/exp_biased_obs/"
 }
 dir.create(fig.dir, showWarnings = FALSE)
 
@@ -48,7 +48,7 @@ if (plot_full){
     pivot_longer(cols=c("Query_coverage", "Size"), names_to='Key', values_to='Value') %>%
     mutate(Key = factor(Key, key.values, key.labels)) %>%
     group_by(Method,  scale,k, Key) %>%
-    summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
+    summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=median(Value, na.rm=T))
 }
 
 
@@ -111,7 +111,7 @@ make_plot <- function(results, exp, val, xmax=2000, sv=TRUE) {
 
 exp_list <- c("vary_k", "vary_scale")
 k_list <- c(2,5,8)
-scale_list <-  c(0.6, 0.8, 1)
+scale_list <-  seq(0.2, 1, 0.2)
 
 for (exp in exp_list) {
   if (exp == "vary_k"){

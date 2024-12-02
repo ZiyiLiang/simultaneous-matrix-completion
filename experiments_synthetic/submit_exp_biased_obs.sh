@@ -3,10 +3,10 @@
 # Parameters
 N1=300
 N2=300
-R=8
-SCALE_LIST=$(seq 0.2 0.2 1.0)
-SEED_LIST=$(seq 100 200)
-#SCALE_LIST=(0.2)
+SD_LIST=$(seq 2 1 5)
+#SCALE_LIST=$(seq 0.2 0.2 1.0)
+SEED_LIST=$(seq 1 100)
+SCALE_LIST=$(seq 0.2 0.8 1.0)
 #SEED_LIST=(1)
 
 # Slurm parameters
@@ -28,29 +28,31 @@ OUT_DIR="results/exp_biased_obs"
 mkdir -p $OUT_DIR
 for SEED in $SEED_LIST; do
     for SCALE in $SCALE_LIST; do
-        JOBN=$N1"by"$N2"_r"$R"_scale"$SCALE"_seed"$SEED
-        OUT_FILE=$OUT_DIR"/"$JOBN".txt"
-        COMPLETE=0
-        #ls $OUT_FILE
-        if [[ -f $OUT_FILE ]]; then
-        COMPLETE=1
-        ((comp++))
-        fi
+        for SD in $SD_LIST; do
+            JOBN=$N1"by"$N2"_sd"$SD"_scale"$SCALE"_seed"$SEED
+            OUT_FILE=$OUT_DIR"/"$JOBN".txt"
+            COMPLETE=0
+            #ls $OUT_FILE
+            if [[ -f $OUT_FILE ]]; then
+            COMPLETE=1
+            ((comp++))
+            fi
 
-        if [[ $COMPLETE -eq 0 ]]; then
-        ((incomp++))
-	    # Script to be run
-        SCRIPT="exp_biased_obs.sh $N1 $N2 $R $SCALE $SEED"
-        # Define job name
-        OUTF=$LOGS"/"$JOBN".out"
-        ERRF=$LOGS"/"$JOBN".err"
-        # Assemble slurm order for this job
-        ORD=$ORDP" -J "$JOBN" -o "$OUTF" -e "$ERRF" "$SCRIPT
-        # Print order
-        echo $ORD
-        # Submit order
-        $ORD
-        fi
+            if [[ $COMPLETE -eq 0 ]]; then
+            ((incomp++))
+            # Script to be run
+            SCRIPT="exp_biased_obs.sh $N1 $N2 $SD $SCALE $SEED"
+            # Define job name
+            OUTF=$LOGS"/"$JOBN".out"
+            ERRF=$LOGS"/"$JOBN".err"
+            # Assemble slurm order for this job
+            ORD=$ORDP" -J "$JOBN" -o "$OUTF" -e "$ERRF" "$SCRIPT
+            # Print order
+            echo $ORD
+            # Submit order
+            $ORD
+            fi
+        done
     done
 done
 

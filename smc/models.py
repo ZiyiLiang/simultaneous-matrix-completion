@@ -10,14 +10,14 @@ class RandomFactorizationModel():
         self.n = n
         self.r = r   # matrix rank
     
-    def sample_noiseless(self, random_state=0):
+    def sample_noiseless(self, mu=0, sigma=1, random_state=0):
         """
         Generate noiseless target matrix by sampling factor matrices from 
         standard normal distribution
         """
         np.random.seed(random_state)
-        U = np.random.randn(self.m, self.r)
-        V = np.random.randn(self.n, self.r)
+        U = mu + sigma * np.random.randn(self.m, self.r)
+        V = mu + sigma * np.random.randn(self.n, self.r)
         M = U @ V.T
         return U, V, M
 
