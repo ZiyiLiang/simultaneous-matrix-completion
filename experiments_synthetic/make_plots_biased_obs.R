@@ -44,13 +44,19 @@ if (plot_full){
     summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
 }else{
   results <- results.raw %>%
+    filter(sd==2) %>%
     mutate(Method = factor(Method, Method.values, Method.labels)) %>%
     pivot_longer(cols=c("Query_coverage", "Size"), names_to='Key', values_to='Value') %>%
     mutate(Key = factor(Key, key.values, key.labels)) %>%
     group_by(Method,  scale,k, Key) %>%
-    summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=median(Value, na.rm=T))
+    summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
 }
-
+results <- results.raw %>%
+  mutate(Method = factor(Method, Method.values, Method.labels)) %>%
+  pivot_longer(cols=c("Query_coverage", "Size"), names_to='Key', values_to='Value') %>%
+  mutate(Key = factor(Key, key.values, key.labels)) %>%
+  group_by(Method,  scale,k, Key, sd) %>%
+  summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
 
 ## Make nice plots for paper
 make_plot <- function(results, exp, val, xmax=2000, sv=TRUE) {
@@ -111,7 +117,7 @@ make_plot <- function(results, exp, val, xmax=2000, sv=TRUE) {
 
 exp_list <- c("vary_k", "vary_scale")
 k_list <- c(2,5,8)
-scale_list <-  seq(0.2, 1, 0.2)
+scale_list <-  seq(0.2, 1, 0.8)
 
 for (exp in exp_list) {
   if (exp == "vary_k"){
@@ -122,3 +128,37 @@ for (exp in exp_list) {
   make_plot(results, exp, val)
 }
 
+results_filtered <- results.raw %>%
+  filter(sd==3)
+
+results <- results.raw %>%
+  mutate(Method = factor(Method, Method.values, Method.labels)) %>%
+  pivot_longer(cols=c("Query_coverage", "Size"), names_to='Key', values_to='Value') %>%
+  mutate(Key = factor(Key, key.values, key.labels)) %>%
+  group_by(Method,  scale,k, Key, sd) %>%
+  summarise(
+    num = n(),
+    Value= median(Value, na.rm = TRUE),
+    MAD = mad(Value, na.rm = TRUE),
+    Value.se = 1.253 * MAD / sqrt(n())
+  )
+
+
+pp <- results %>%
+  filter(scale == 0.2)%>%
+  mutate(scale = paste0("s: ", scale))%>%
+  ggplot(aes(x=k, y=Value, color=Method, shape=Method)) +
+  geom_point(alpha=0.9) +
+  geom_line() +
+  geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.3) +
+  geom_hline(data=df.nominal, aes(yintercept=Value)) +
+  geom_hline(data=df.placeholder, aes(yintercept=Value), alpha=0) +
+  ggh4x::facet_grid2(Key~sd, scales="free_y", independent = "y") +
+  scale_color_manual(values=color.scale) +
+  scale_shape_manual(values=shape.scale) +
+  scale_alpha_manual(values=alpha.scale) +
+  xlab("Group size K") +
+  ylab("") +
+  theme_bw()
+
+pp
