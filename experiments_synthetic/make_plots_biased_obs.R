@@ -44,19 +44,12 @@ if (plot_full){
     summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
 }else{
   results <- results.raw %>%
-    filter(sd==2) %>%
     mutate(Method = factor(Method, Method.values, Method.labels)) %>%
     pivot_longer(cols=c("Query_coverage", "Size"), names_to='Key', values_to='Value') %>%
     mutate(Key = factor(Key, key.values, key.labels)) %>%
     group_by(Method,  scale,k, Key) %>%
     summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
 }
-results <- results.raw %>%
-  mutate(Method = factor(Method, Method.values, Method.labels)) %>%
-  pivot_longer(cols=c("Query_coverage", "Size"), names_to='Key', values_to='Value') %>%
-  mutate(Key = factor(Key, key.values, key.labels)) %>%
-  group_by(Method,  scale,k, Key, sd) %>%
-  summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
 
 ## Make nice plots for paper
 make_plot <- function(results, exp, val, xmax=2000, sv=TRUE) {
@@ -128,24 +121,20 @@ for (exp in exp_list) {
   make_plot(results, exp, val)
 }
 
-results_filtered <- results.raw %>%
-  filter(sd==3)
-
 results <- results.raw %>%
   mutate(Method = factor(Method, Method.values, Method.labels)) %>%
   pivot_longer(cols=c("Query_coverage", "Size"), names_to='Key', values_to='Value') %>%
   mutate(Key = factor(Key, key.values, key.labels)) %>%
   group_by(Method,  scale,k, Key, sd) %>%
-  summarise(
-    num = n(),
-    Value= median(Value, na.rm = TRUE),
-    MAD = mad(Value, na.rm = TRUE),
-    Value.se = 1.253 * MAD / sqrt(n())
-  )
+  summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
 
-
+plot.alpha <- 0.9
+df.nominal <- tibble(Key=c("Query_coverage"), Value=plot.alpha) %>%
+  mutate(Key = factor(Key, key.values, key.labels))
+df.placeholder <- tibble(Key=c("Query_coverage"), Value=c(1, 0.7)) %>%
+  mutate(Key = factor(Key, key.values, key.labels))
 pp <- results %>%
-  filter(scale == 0.2)%>%
+  filter(scale == 1)%>%
   mutate(scale = paste0("s: ", scale))%>%
   ggplot(aes(x=k, y=Value, color=Method, shape=Method)) +
   geom_point(alpha=0.9) +

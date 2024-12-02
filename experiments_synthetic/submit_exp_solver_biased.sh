@@ -2,10 +2,10 @@
 
 # Parameters
 
-SCALE_LIST=$(seq 0.2 0.8 1.0)
+SCALE_LIST=$(seq 0.05 0.05 0.20)
 #SCALE_LIST=$(seq 0.6 0.05 1.0)
 #SEED_LIST=(1)
-SEED_LIST=$(seq 1 100)
+SEED_LIST=$(seq 1 50)
 #SOLVER_LIST=("nnm")  # runtime for nnm is longer, set to 1h
 SOLVER_LIST=("svt")   # runtime for svt is shorter, set to 30min
 
@@ -13,7 +13,7 @@ SOLVER_LIST=("svt")   # runtime for svt is shorter, set to 30min
 # Slurm parameters
 MEMO=2G                             # Memory required (1 GB)
 #TIME=00-01:30:00                    # Time required (2 h)
-TIME=00-00:30:00
+TIME=00-01:00:00
 CORE=1                              # Cores required (1)
 
 # Assemble order                                               prefix

@@ -36,6 +36,7 @@ matrix_generation_seed = 2024    # Data matrix is fixed
 
 n1 = n2 = 300
 r = 8
+sd = 0.5
 
 methods = ["conformal", 
            "benchmark"]
@@ -71,6 +72,7 @@ def add_header(df):
     df['r_true'] = 8
     df['r_guess'] = r
     df['scale'] = scale
+    df['sd'] = sd
     return df
 
 
@@ -89,7 +91,7 @@ if verbose:
     print('Fixing the ground truth matrix generated from the {} model.\n'.format(model))
     sys.stdout.flush()
 
-U, V, M = mm.sample_noiseless(matrix_generation_seed)
+_, _, _, M = mm.sample_noisy(sigma=sd, random_state = matrix_generation_seed)
 
 
 
