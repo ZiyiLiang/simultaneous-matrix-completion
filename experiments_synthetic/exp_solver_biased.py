@@ -27,7 +27,8 @@ if True:
 
     solver = str(sys.argv[1])
     scale = float(sys.argv[2])
-    seed = int(sys.argv[3])
+    sd = float(sys.argv[3])
+    seed = int(sys.argv[4])
     
 # Fixed data parameters
 max_test_queries = 100            
@@ -36,7 +37,6 @@ matrix_generation_seed = 2024    # Data matrix is fixed
 
 n1 = n2 = 300
 r = 8
-sd = 0.5
 
 methods = ["conformal", 
            "benchmark"]
@@ -59,7 +59,7 @@ repetition = 1
 ###############
 outdir = "./results/exp_solver_biased/"
 os.makedirs(outdir, exist_ok=True)
-outfile_name = f"{solver}_scale{scale:.2f}_seed{seed}"
+outfile_name = f"{solver}_scale{scale:.2f}_sd{sd:.1f}_seed{seed}"
 outfile = outdir + outfile_name + ".txt"
 print("Output file: {:s}".format(outfile), end="\n")
 sys.stdout.flush()

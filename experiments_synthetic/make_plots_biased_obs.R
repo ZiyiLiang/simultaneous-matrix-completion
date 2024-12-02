@@ -20,7 +20,7 @@ color.scale <- c( "blue", "#56b5e9", "#CC66CC" )
 shape.scale <- c(15, 4, 8, 1)
 alpha.scale <- c(1, 0.5, 0.8)
 
-plot_full = FALSE
+plot_full = TRUE
 
 if (plot_full){
   key.values <- c("Query_coverage", "Coverage", "Size", "Inf_prop")
@@ -134,7 +134,7 @@ df.nominal <- tibble(Key=c("Query_coverage"), Value=plot.alpha) %>%
 df.placeholder <- tibble(Key=c("Query_coverage"), Value=c(1, 0.7)) %>%
   mutate(Key = factor(Key, key.values, key.labels))
 pp <- results %>%
-  filter(scale == 1)%>%
+  filter(scale == 0.2)%>%
   mutate(scale = paste0("s: ", scale))%>%
   ggplot(aes(x=k, y=Value, color=Method, shape=Method)) +
   geom_point(alpha=0.9) +

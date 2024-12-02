@@ -54,7 +54,7 @@ if (plot_full){
 }
 
 
-results_filtered <- results.raw %>% filter(k==5)
+results_filtered <- results %>% filter(k==5)
 
 runtime <- results_filtered %>%
   group_by(Solver) %>%
@@ -98,7 +98,6 @@ make_plot <- function(results, xmax=2000, sv=TRUE) {
     mutate(Key = factor(Key, key.values, key.labels))
 
   pp <- results %>%
-    filter(k == 5)%>%
     mutate(k = paste0("K: ", k))%>%
     ggplot(aes(x=scale, y=Value, color=Method, shape=Method)) +
     geom_point(alpha=0.75) +
@@ -106,7 +105,7 @@ make_plot <- function(results, xmax=2000, sv=TRUE) {
     geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.03) +
     geom_hline(data=df.nominal, aes(yintercept=Value)) +
     geom_hline(data=df.placeholder, aes(yintercept=Value), alpha=0) +
-    ggh4x::facet_grid2(Key~Solver, scales="free_y", independent = "y") +
+    ggh4x::facet_grid2(Key~k, scales="free_y", independent = "y") +
     scale_color_manual(values=color.scale) +
     scale_shape_manual(values=shape.scale) +
     scale_alpha_manual(values=alpha.scale) +
@@ -116,9 +115,9 @@ make_plot <- function(results, xmax=2000, sv=TRUE) {
   if (sv == TRUE){
     ggsave(sprintf("%s/exp_biased_obs_%s.pdf", fig.dir, exp), pp, device=NULL, width=5.4, height=height)}
   else{
-    pp
+    print(pp)
   }
 }
 
-make_plot(results, sv=TRUE)
+make_plot(results, sv=FALSE)
 

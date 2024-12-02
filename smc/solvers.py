@@ -119,12 +119,12 @@ def svt_solve(M,
 
         # print progress message regularly.
         if verbose and i % 10 == 0:  
-            print("Iteration: %i; Rel error: %.4f" % (i + 1, recon_error))
+            print("Iteration: %i; Rel error: %.4f; Rank: %i" % (i + 1, recon_error, k))
             sys.stdout.flush()
         if recon_error < eps:
-            if verbose: print("Stopping criteria met, training terminated.")
+            if verbose: print(f"Stopping criteria met, training terminated. Estimated rank k is {k}")
             sys.stdout.flush()
-            break
+            return X
         
         # Stop if reconstruction error is too high or becomes NaN/Inf
         if recon_error > max_error or np.isnan(recon_error) or np.isinf(recon_error):
@@ -133,7 +133,9 @@ def svt_solve(M,
             sys.stdout.flush()
             return best_X
 
-    return X
+    #return X
+    # return the best iteration in case of nonconvergence
+    return best_X   
 
 
 def pmf_solve(M,
