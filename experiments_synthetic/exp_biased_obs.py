@@ -80,7 +80,7 @@ def add_header(df):
 #################
 if model == "RFM":
     #mm = RandomFactorizationModel(n1 ,n2, r)
-    mm = RandomFactorizationModel(n1 ,n2, r, sigma=sd)
+    mm = RandomFactorizationModel(n1 ,n2, r)
 elif model == "ROM":
     mm = RandomOrthogonalModel(n1 ,n2, r)
 else:
@@ -90,7 +90,7 @@ if verbose:
     print('Fixing the ground truth matrix generated from the {} model.\n'.format(model))
     sys.stdout.flush()
 
-U, V, M = mm.sample_noiseless(matrix_generation_seed)
+U, V, M = mm.sample_noiseless(sigma=sd, random_state = matrix_generation_seed)
 
 
 
