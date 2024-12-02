@@ -26,7 +26,7 @@ if True:
 
     n1 = int(sys.argv[1])
     n2 = int(sys.argv[2])
-    sd = int(sys.argv[3])
+    sd = float(sys.argv[3])
     scale = float(sys.argv[4])
     seed = int(sys.argv[5])
     
@@ -58,7 +58,7 @@ repetition = 1
 ###############
 outdir = "./results/exp_biased_obs/"
 os.makedirs(outdir, exist_ok=True)
-outfile_name = f"{n1}by{n2}_sd{sd}_scale{scale:.2f}_seed{seed}"
+outfile_name = f"{n1}by{n2}_sd{sd:.1f}_scale{scale:.1f}_seed{seed}"
 outfile = outdir + outfile_name + ".txt"
 print("Output file: {:s}".format(outfile), end="\n")
 sys.stdout.flush()
