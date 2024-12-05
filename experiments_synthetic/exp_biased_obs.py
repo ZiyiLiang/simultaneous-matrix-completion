@@ -26,7 +26,7 @@ if True:
 
     n1 = int(sys.argv[1])
     n2 = int(sys.argv[2])
-    r = float(sys.argv[3])
+    r = int(sys.argv[3])
     scale = float(sys.argv[4])
     seed = int(sys.argv[5])
     
