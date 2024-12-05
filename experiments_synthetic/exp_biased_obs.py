@@ -26,7 +26,7 @@ if True:
 
     n1 = int(sys.argv[1])
     n2 = int(sys.argv[2])
-    sd = float(sys.argv[3])
+    r = float(sys.argv[3])
     scale = float(sys.argv[4])
     seed = int(sys.argv[5])
     
@@ -37,7 +37,7 @@ matrix_generation_seed = 2024    # Data matrix is fixed
 
 methods = ["conformal", 
            "benchmark"]
-r = 8
+r_true = 8
 model = "RFM"
 solver = "pmf"
 prop_obs = 0.3
@@ -58,7 +58,7 @@ repetition = 1
 ###############
 outdir = "./results/exp_biased_obs/"
 os.makedirs(outdir, exist_ok=True)
-outfile_name = f"{n1}by{n2}_sd{sd:.1f}_scale{scale:.1f}_seed{seed}"
+outfile_name = f"{n1}by{n2}_r{r}_scale{scale:.1f}_seed{seed}"
 outfile = outdir + outfile_name + ".txt"
 print("Output file: {:s}".format(outfile), end="\n")
 sys.stdout.flush()
@@ -68,7 +68,8 @@ def add_header(df):
     df["n1"] = n1
     df["n2"] = n2
     df['alpha'] = alpha
-    df['r'] = r
+    df['r_solver'] = r
+    df['r_true'] = r_true
     df['scale'] = scale
     df['sd'] = sd
     return df
@@ -80,11 +81,11 @@ def add_header(df):
 #################
 if model == "RFM":
     #mm = RandomFactorizationModel(n1 ,n2, r)
-    mm = RandomFactorizationModel(n1 ,n2, r)
+    mm = RandomFactorizationModel(n1 ,n2, r_true)
 elif model == "ROM":
-    mm = RandomOrthogonalModel(n1 ,n2, r)
+    mm = RandomOrthogonalModel(n1 ,n2, r_true)
 else:
-    mm = RandomFactorizationModel(n1 ,n2, r)
+    mm = RandomFactorizationModel(n1 ,n2, r_true)
 
 if verbose:
     print('Fixing the ground truth matrix generated from the {} model.\n'.format(model))

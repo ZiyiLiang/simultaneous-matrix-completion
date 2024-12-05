@@ -3,10 +3,10 @@
 # Parameters
 N1=300
 N2=300
-SD_LIST=$(seq 0.5 0.5 1.0)
+R_LIST=(8 15 20 30)
 #SCALE_LIST=$(seq 0.2 0.2 1.0)
 SEED_LIST=$(seq 1 100)
-SCALE_LIST=$(seq 0.2 0.8 1.0)
+SCALE_LIST=$(seq 0.1 0.1 0.3)
 #SEED_LIST=(1)
 
 # Slurm parameters
@@ -28,8 +28,8 @@ OUT_DIR="results/exp_biased_obs"
 mkdir -p $OUT_DIR
 for SEED in $SEED_LIST; do
     for SCALE in $SCALE_LIST; do
-        for SD in $SD_LIST; do
-            JOBN=$N1"by"$N2"_sd"$SD"_scale"$SCALE"_seed"$SEED
+        for R in "${R_LIST[@]}"; do
+            JOBN=$N1"by"$N2"_r"$R"_scale"$SCALE"_seed"$SEED
             OUT_FILE=$OUT_DIR"/"$JOBN".txt"
             COMPLETE=0
             #ls $OUT_FILE
@@ -41,7 +41,7 @@ for SEED in $SEED_LIST; do
             if [[ $COMPLETE -eq 0 ]]; then
             ((incomp++))
             # Script to be run
-            SCRIPT="exp_biased_obs.sh $N1 $N2 $SD $SCALE $SEED"
+            SCRIPT="exp_biased_obs.sh $N1 $N2 $R $SCALE $SEED"
             # Define job name
             OUTF=$LOGS"/"$JOBN".out"
             ERRF=$LOGS"/"$JOBN".err"

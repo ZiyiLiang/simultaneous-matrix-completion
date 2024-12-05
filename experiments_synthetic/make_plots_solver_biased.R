@@ -42,19 +42,19 @@ if (plot_full){
     mutate(Method = factor(Method, Method.values, Method.labels)) %>%
     pivot_longer(cols=c("Query_coverage", "Coverage", "Size", "Inf_prop"), names_to='Key', values_to='Value') %>%
     mutate(Key = factor(Key, key.values, key.labels)) %>%
-    group_by(Method, Solver, scale,k, Key) %>%
+    group_by(Method, Solver, scale,k, Key,sd) %>%
     summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
 }else{
   results <- results.raw %>%
     mutate(Method = factor(Method, Method.values, Method.labels)) %>%
     pivot_longer(cols=c("Query_coverage", "Size"), names_to='Key', values_to='Value') %>%
     mutate(Key = factor(Key, key.values, key.labels)) %>%
-    group_by(Method, Solver, scale,k, Key) %>%
+    group_by(Method, Solver, scale,k, Key,sd) %>%
     summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
 }
 
 
-results_filtered <- results %>% filter(k==5)
+results_filtered <- results %>% filter(k==5, sd==0.1)
 
 runtime <- results_filtered %>%
   group_by(Solver) %>%
@@ -105,7 +105,7 @@ make_plot <- function(results, xmax=2000, sv=TRUE) {
     geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.03) +
     geom_hline(data=df.nominal, aes(yintercept=Value)) +
     geom_hline(data=df.placeholder, aes(yintercept=Value), alpha=0) +
-    ggh4x::facet_grid2(Key~k, scales="free_y", independent = "y") +
+    ggh4x::facet_grid2(Key~Solver, scales="free_y", independent = "y") +
     scale_color_manual(values=color.scale) +
     scale_shape_manual(values=shape.scale) +
     scale_alpha_manual(values=alpha.scale) +
@@ -119,5 +119,5 @@ make_plot <- function(results, xmax=2000, sv=TRUE) {
   }
 }
 
-make_plot(results, sv=FALSE)
+make_plot(results_filtered, sv=FALSE)
 

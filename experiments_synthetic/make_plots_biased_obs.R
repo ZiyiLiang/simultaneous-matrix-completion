@@ -20,8 +20,8 @@ color.scale <- c( "blue", "#56b5e9", "#CC66CC" )
 shape.scale <- c(15, 4, 8, 1)
 alpha.scale <- c(1, 0.5, 0.8)
 
-plot_full = TRUE
-
+plot_full = FALSE
+  
 if (plot_full){
   key.values <- c("Query_coverage", "Coverage", "Size", "Inf_prop")
   key.labels <- c("Group cov.", "Coverage", "Avg. width", "Inf_prop")
@@ -128,6 +128,18 @@ results <- results.raw %>%
   group_by(Method,  scale,k, Key, sd) %>%
   summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
 
+results <- results.raw %>%
+  mutate(Method = factor(Method, Method.values, Method.labels)) %>%
+  pivot_longer(cols=c("Query_coverage", "Size"), names_to='Key', values_to='Value') %>%
+  mutate(Key = factor(Key, key.values, key.labels)) %>%
+  group_by(Method,  scale,k, Key, sd) %>%
+  summarise(
+    num = n(),
+    Value= median(Value, na.rm = TRUE),
+    MAD = mad(Value, na.rm = TRUE),
+    Value.se = 1.253 * MAD / sqrt(n())
+  )
+
 plot.alpha <- 0.9
 df.nominal <- tibble(Key=c("Query_coverage"), Value=plot.alpha) %>%
   mutate(Key = factor(Key, key.values, key.labels))
@@ -143,6 +155,51 @@ pp <- results %>%
   geom_hline(data=df.nominal, aes(yintercept=Value)) +
   geom_hline(data=df.placeholder, aes(yintercept=Value), alpha=0) +
   ggh4x::facet_grid2(Key~sd, scales="free_y", independent = "y") +
+  scale_color_manual(values=color.scale) +
+  scale_shape_manual(values=shape.scale) +
+  scale_alpha_manual(values=alpha.scale) +
+  xlab("Group size K") +
+  ylab("") +
+  theme_bw()
+
+pp
+
+#------------------------------------------------------------------------------
+
+results <- results.raw %>%
+  mutate(Method = factor(Method, Method.values, Method.labels)) %>%
+  pivot_longer(cols=c("Query_coverage", "Size"), names_to='Key', values_to='Value') %>%
+  mutate(Key = factor(Key, key.values, key.labels)) %>%
+  group_by(Method,  scale,k, Key) %>%
+  summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
+
+results <- results.raw %>%
+  mutate(Method = factor(Method, Method.values, Method.labels)) %>%
+  pivot_longer(cols=c("Query_coverage", "Size"), names_to='Key', values_to='Value') %>%
+  mutate(Key = factor(Key, key.values, key.labels)) %>%
+  group_by(Method,  scale,k, Key) %>%
+  summarise(
+    num = n(),
+    Value= median(Value, na.rm = TRUE),
+    MAD = mad(Value, na.rm = TRUE),
+    Value.se = 1.253 * MAD / sqrt(n())
+  )
+
+plot.alpha <- 0.9
+df.nominal <- tibble(Key=c("Query_coverage"), Value=plot.alpha) %>%
+  mutate(Key = factor(Key, key.values, key.labels))
+df.placeholder <- tibble(Key=c("Query_coverage"), Value=c(1, 0.7)) %>%
+  mutate(Key = factor(Key, key.values, key.labels))
+pp <- results %>%
+  #filter(scale == 0.2)%>%
+  mutate(scale = paste0("s: ", scale))%>%
+  ggplot(aes(x=k, y=Value, color=Method, shape=Method)) +
+  geom_point(alpha=0.9) +
+  geom_line() +
+  geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.3) +
+  geom_hline(data=df.nominal, aes(yintercept=Value)) +
+  geom_hline(data=df.placeholder, aes(yintercept=Value), alpha=0) +
+  ggh4x::facet_grid2(Key~scale, scales="free_y", independent = "y") +
   scale_color_manual(values=color.scale) +
   scale_shape_manual(values=shape.scale) +
   scale_alpha_manual(values=alpha.scale) +
