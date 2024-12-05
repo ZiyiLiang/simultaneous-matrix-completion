@@ -41,6 +41,7 @@ r_true = 8
 model = "RFM"
 solver = "pmf"
 prop_obs = 0.3
+sd = 0.1
 
 
 # Other parameters
