@@ -3,7 +3,7 @@
 # Parameters
 N1=300
 N2=300
-R_LIST=(8 15 20 30)
+R_LIST=(8)
 #SCALE_LIST=$(seq 0.2 0.2 1.0)
 SEED_LIST=$(seq 1 50)
 SCALE_LIST=$(seq 0.1 0.1 0.3)

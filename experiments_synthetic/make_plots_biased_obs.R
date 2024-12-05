@@ -125,7 +125,7 @@ results <- results.raw %>%
   mutate(Method = factor(Method, Method.values, Method.labels)) %>%
   pivot_longer(cols=c("Query_coverage", "Size"), names_to='Key', values_to='Value') %>%
   mutate(Key = factor(Key, key.values, key.labels)) %>%
-  group_by(Method,  scale,k, Key, sd) %>%
+  group_by(Method,  scale,k, Key, r_solver) %>%
   summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
 
 results <- results.raw %>%
@@ -146,7 +146,7 @@ df.nominal <- tibble(Key=c("Query_coverage"), Value=plot.alpha) %>%
 df.placeholder <- tibble(Key=c("Query_coverage"), Value=c(1, 0.7)) %>%
   mutate(Key = factor(Key, key.values, key.labels))
 pp <- results %>%
-  filter(scale == 0.2)%>%
+  filter(scale == 0.1)%>%
   mutate(scale = paste0("s: ", scale))%>%
   ggplot(aes(x=k, y=Value, color=Method, shape=Method)) +
   geom_point(alpha=0.9) +
@@ -154,7 +154,7 @@ pp <- results %>%
   geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.3) +
   geom_hline(data=df.nominal, aes(yintercept=Value)) +
   geom_hline(data=df.placeholder, aes(yintercept=Value), alpha=0) +
-  ggh4x::facet_grid2(Key~sd, scales="free_y", independent = "y") +
+  ggh4x::facet_grid2(Key~r_solver, scales="free_y", independent = "y") +
   scale_color_manual(values=color.scale) +
   scale_shape_manual(values=shape.scale) +
   scale_alpha_manual(values=alpha.scale) +
@@ -164,6 +164,28 @@ pp <- results %>%
 
 pp
 
+plot.alpha <- 0.9
+df.nominal <- tibble(Key=c("Query_coverage"), Value=plot.alpha) %>%
+  mutate(Key = factor(Key, key.values, key.labels))
+df.placeholder <- tibble(Key=c("Query_coverage"), Value=c(1, 0.7)) %>%
+  mutate(Key = factor(Key, key.values, key.labels))
+pp <- results %>%
+  filter(r_solver == 8, k%in%c(2,5,8))%>%
+  ggplot(aes(x=scale, y=Value, color=Method, shape=Method)) +
+  geom_point(alpha=0.9) +
+  geom_line() +
+  geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.03) +
+  geom_hline(data=df.nominal, aes(yintercept=Value)) +
+  geom_hline(data=df.placeholder, aes(yintercept=Value), alpha=0) +
+  ggh4x::facet_grid2(Key~k, scales="free_y", independent = "y") +
+  scale_color_manual(values=color.scale) +
+  scale_shape_manual(values=shape.scale) +
+  scale_alpha_manual(values=alpha.scale) +
+  xlab("Scale") +
+  ylab("") +
+  theme_bw()
+
+pp
 #------------------------------------------------------------------------------
 
 results <- results.raw %>%
