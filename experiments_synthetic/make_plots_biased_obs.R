@@ -146,7 +146,7 @@ df.nominal <- tibble(Key=c("Query_coverage"), Value=plot.alpha) %>%
 df.placeholder <- tibble(Key=c("Query_coverage"), Value=c(1, 0.7)) %>%
   mutate(Key = factor(Key, key.values, key.labels))
 pp <- results %>%
-  filter(scale == 0.1)%>%
+  filter(scale == 0.2)%>%
   mutate(scale = paste0("s: ", scale))%>%
   ggplot(aes(x=k, y=Value, color=Method, shape=Method)) +
   geom_point(alpha=0.9) +

@@ -47,7 +47,9 @@ prop_obs = prop
 verbose = True
 allow_inf = False
 alpha = 0.1
-const=1
+const=5
+ratio = alpha/2
+sd = 0.1
 
 k_list = [2,5,8]
 repetition = 5
@@ -91,7 +93,7 @@ if verbose:
     print('Fixing the ground truth matrix generated from the {} model.\n'.format(model))
     sys.stdout.flush()
 
-U, V, M = mm.sample_noiseless(matrix_generation_seed)
+_, _, _, M = mm.sample_noisy(sigma=sd, random_state = matrix_generation_seed)
 
 
 
@@ -107,7 +109,7 @@ def run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_cali
     #-------------------------------#
     n1, n2 = M_true.shape
     bm = SamplingBias(n1,n2, normalize=False)
-    w_obs = bm.block_weights(ratio=alpha, scale=scale, random_state=random_state)
+    w_obs = bm.block_weights(ratio=ratio, scale=scale, random_state=random_state)
 
     #-------Generate masks----------#
     #-------------------------------#

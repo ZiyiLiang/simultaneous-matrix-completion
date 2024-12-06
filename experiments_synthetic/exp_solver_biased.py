@@ -48,6 +48,7 @@ prop_obs = 0.3
 verbose = True
 allow_inf = False
 alpha = 0.1
+ratio = alpha/2
 
 k_list = [2,5,8]
 repetition = 1
@@ -107,7 +108,7 @@ def run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_cali
     #-------------------------------#
     n1, n2 = M_true.shape
     bm = SamplingBias(n1,n2, normalize=False)
-    w_obs = bm.block_weights(ratio=alpha, scale=scale, random_state=random_state)
+    w_obs = bm.block_weights(ratio=ratio, scale=scale, random_state=random_state)
 
     
     #-------Generate masks----------#
