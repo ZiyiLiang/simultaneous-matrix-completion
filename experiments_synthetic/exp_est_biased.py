@@ -47,7 +47,7 @@ prop_obs = prop
 verbose = True
 allow_inf = False
 alpha = 0.1
-const=5
+const= 10
 ratio = alpha/2
 sd = 0.1
 
