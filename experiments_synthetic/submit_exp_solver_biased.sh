@@ -2,13 +2,13 @@
 
 # Parameters
 
-SCALE_LIST=$(seq 0.10 0.1 0.20)
+SCALE_LIST=$(seq 0.10 0.02 0.20)
 SD_LIST=(0.1)
 #SCALE_LIST=$(seq 0.6 0.05 1.0)
 #SEED_LIST=(1)
 SEED_LIST=$(seq 1 100)
 #SOLVER_LIST=("nnm")  # runtime for nnm is longer, set to 1h
-SOLVER_LIST=("svt")   # runtime for svt is shorter, set to 30min
+SOLVER_LIST=("svt" "nnm")   # runtime for svt is shorter, set to 30min
 
 
 # Slurm parameters
