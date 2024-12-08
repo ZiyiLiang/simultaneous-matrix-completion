@@ -2,7 +2,7 @@
 
 # Parameters
 
-SCALE_LIST=$(seq 0.10 0.10 0.20)
+SCALE_LIST=$(seq 0.10 0.02 0.20)
 #SCALE_LIST=(0.2)
 #SEED_LIST=(1)
 SEED_LIST=$(seq 1 20)
