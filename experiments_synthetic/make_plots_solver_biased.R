@@ -56,38 +56,6 @@ if (plot_full){
 
 results_filtered <- results %>% filter(k==5, sd==0.1)
 
-runtime <- results_filtered %>%
-  group_by(Solver) %>%
-  summarise(
-    mean_runtime = mean(Solver_runtime, na.rm = TRUE),
-    se_runtime = sd(Solver_runtime, na.rm = TRUE) / sqrt(n())
-  )
-
-frob_error <- results_filtered %>%
-  group_by(Solver) %>%
-  summarise(
-    mean_frob = mean(Frobenius_error, na.rm = TRUE),
-    se_frob = sd(Frobenius_error, na.rm = TRUE) / sqrt(n())
-  )
-
-frob <- results_filtered%>% 
-  select("Solver", "Frobenius_error")
-
-# Plot histograms of Frobenius error for each Solver
-ggplot(frob, aes(x = Frobenius_error, fill = Solver)) +
-  geom_histogram(bins = 30, alpha = 0.7, position = "dodge") +
-  facet_wrap(~ Solver, scales = "free") +
-  labs(title = "Histogram of Frobenius Error by Solver",
-       x = "Frobenius Error",
-       y = "Frequency") +
-  theme_minimal() +
-  theme(legend.position = "none")  # Hide legend since facet wrap shows solver
-
-frob_counts <- frob %>%
-  group_by(Solver) %>%
-  summarise(count_frob_gte_1 = sum(Frobenius_error >= 1))
-
-print(frob_counts)
 
 ## Make nice plots for paper
 make_plot <- function(results, xmax=2000, sv=TRUE) {
@@ -99,10 +67,11 @@ make_plot <- function(results, xmax=2000, sv=TRUE) {
 
   pp <- results %>%
     mutate(k = paste0("K: ", k))%>%
+    mutate(Solver = toupper(Solver)) %>%
     ggplot(aes(x=scale, y=Value, color=Method, shape=Method)) +
     geom_point(alpha=0.75) +
     geom_line() +
-    geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.03) +
+    geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.006) +
     geom_hline(data=df.nominal, aes(yintercept=Value)) +
     geom_hline(data=df.placeholder, aes(yintercept=Value), alpha=0) +
     ggh4x::facet_grid2(Key~Solver, scales="free_y", independent = "y") +
@@ -113,11 +82,11 @@ make_plot <- function(results, xmax=2000, sv=TRUE) {
     ylab("") +
     theme_bw()
   if (sv == TRUE){
-    ggsave(sprintf("%s/exp_biased_obs_%s.pdf", fig.dir, exp), pp, device=NULL, width=5.4, height=height)}
+    ggsave(sprintf("%s/exp_solver_biased.pdf", fig.dir), pp, device=NULL, width=5.4, height=height)}
   else{
     print(pp)
   }
 }
 
-make_plot(results_filtered, sv=FALSE)
+make_plot(results_filtered)
 

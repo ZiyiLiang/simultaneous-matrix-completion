@@ -57,39 +57,6 @@ if (plot_full){
     summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
 }
 
-runtime <- results_filtered %>%
-    group_by(Solver) %>%
-    summarise(
-      mean_runtime = mean(Solver_runtime, na.rm = TRUE),
-      se_runtime = sd(Solver_runtime, na.rm = TRUE) / sqrt(n())
-      )
-
-frob_error <- results_filtered %>%
-  group_by(Solver) %>%
-  summarise(
-    mean_frob = mean(Frobenius_error, na.rm = TRUE),
-    se_frob = sd(Frobenius_error, na.rm = TRUE) / sqrt(n())
-  )
-
-frob <- results_filtered%>% 
-  select("Solver", "Frobenius_error")
-
-# Plot histograms of Frobenius error for each Solver
-ggplot(frob, aes(x = Frobenius_error, fill = Solver)) +
-  geom_histogram(bins = 30, alpha = 0.7, position = "dodge") +
-  facet_wrap(~ Solver, scales = "free") +
-  labs(title = "Histogram of Frobenius Error by Solver",
-       x = "Frobenius Error",
-       y = "Frequency") +
-  theme_minimal() +
-  theme(legend.position = "none")  # Hide legend since facet wrap shows solver
-
-frob_counts <- frob %>%
-  group_by(Solver) %>%
-  summarise(count_frob_gte_1 = sum(Frobenius_error >= 1))
-
-print(frob_counts)
-
 ## Make nice plots for paper
 make_plot <- function(results, solvers, xmax=2000, sv=TRUE) {
   plot.alpha <- 0.9
@@ -100,6 +67,7 @@ make_plot <- function(results, solvers, xmax=2000, sv=TRUE) {
   
   pp <- results %>%
     filter(Solver %in% solvers)%>%
+    mutate(Solver = toupper(Solver)) %>%
     ggplot(aes(x=k, y=Value, color=Method, shape=Method)) +
     geom_point(alpha=0.9) +
     geom_line() +
