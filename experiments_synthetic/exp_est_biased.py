@@ -51,7 +51,7 @@ const=13
 ratio = alpha/2
 sd = 0.1
 
-k_list = [2,5,8]
+k_list = np.arange(2,9)
 repetition = 5
 
 

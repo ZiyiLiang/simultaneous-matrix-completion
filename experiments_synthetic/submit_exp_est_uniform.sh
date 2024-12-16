@@ -4,7 +4,7 @@
 
 MU_LIST=(15)
 #SEED_LIST=(1)
-SEED_LIST=$(seq 1 10)
+SEED_LIST=$(seq 1 30)
 #R_LIST=(1)
 R_LIST=(1 3 5 7)
 

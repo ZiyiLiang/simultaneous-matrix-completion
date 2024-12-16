@@ -25,6 +25,14 @@ results.als <- do.call("rbind", lapply(ifile_als.list, function(ifile) {
   df <- read_delim(sprintf("%s/%s", idir_als, ifile), delim=",", col_types=cols())
 }))
 
+results.als$Solver <- 'als'
+results.als <- filter(results.als, mu==15)
+
+combined_results <- rbind(
+  results.als %>% select(intersect(names(.), names(results.raw))),
+  results.raw %>% select(intersect(names(.), names(results.als)))
+)
+
 Method.values <- c("conformal", "Bonferroni", "Uncorrected")
 Method.labels <- c("Simultaneous", "Bonferroni", "Unadjusted")
 
@@ -45,7 +53,7 @@ if (plot_full){
   height <- 2.5
 }
 
-results_filtered <- results.raw %>% filter(mu==15)
+results_filtered <- combined_results %>% filter(mu==15)
   
 if (plot_full){
   results <- results_filtered %>%
@@ -88,11 +96,11 @@ make_plot <- function(results, solvers, xmax=2000, sv=TRUE) {
     ylab("") +
     theme_bw()
   if (sv == TRUE){
-    ggsave(sprintf("%s/exp_solver_uniform.pdf", fig.dir), pp, device=NULL, width=5.4, height=height)
+    ggsave(sprintf("%s/exp_solver_uniform.pdf", fig.dir), pp, device=NULL, width=6.5, height=height)
   }else{
     print(pp)
   }
 }
 
-solver_list <- c("nnm", "svt")
-make_plot(results, solver_list, sv=FALSE)
+solver_list <- c("als", "nnm", "svt")
+make_plot(results, solver_list, sv=TRUE)

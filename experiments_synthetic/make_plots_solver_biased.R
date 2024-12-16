@@ -14,6 +14,22 @@ results.raw <- do.call("rbind", lapply(ifile.list, function(ifile) {
   df <- read_delim(sprintf("%s/%s", idir, ifile), delim=",", col_types=cols())
 }))
 
+idir_als <- "results/exp_biased_obs/"
+ifile_als.list <- list.files(idir_als)
+
+results.als <- do.call("rbind", lapply(ifile_als.list, function(ifile) {
+  df <- read_delim(sprintf("%s/%s", idir_als, ifile), delim=",", col_types=cols())
+}))
+
+results.als$Solver <- 'als'
+results.als <- filter(results.als, scale==0.14)
+
+combined_results <- rbind(
+  results.als %>% select(intersect(names(.), names(results.raw))),
+  results.raw %>% select(intersect(names(.), names(results.als)))
+)
+
+
 Method.values <- c("conformal", "Bonferroni", "Uncorrected")
 Method.labels <- c("Simultaneous", "Bonferroni", "Unadjusted")
 
@@ -37,24 +53,24 @@ if (plot_full){
 }
 dir.create(fig.dir, showWarnings = FALSE)
 
+
+results_filtered <- combined_results %>% filter(scale==0.14, sd==0.1)
+
 if (plot_full){
-  results <- results.raw %>%
+  results <- results_filtered %>%
     mutate(Method = factor(Method, Method.values, Method.labels)) %>%
     pivot_longer(cols=c("Query_coverage", "Coverage", "Size", "Inf_prop"), names_to='Key', values_to='Value') %>%
     mutate(Key = factor(Key, key.values, key.labels)) %>%
     group_by(Method, Solver, scale,k, Key,sd) %>%
     summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
 }else{
-  results <- results.raw %>%
+  results <- results_filtered %>%
     mutate(Method = factor(Method, Method.values, Method.labels)) %>%
     pivot_longer(cols=c("Query_coverage", "Size"), names_to='Key', values_to='Value') %>%
     mutate(Key = factor(Key, key.values, key.labels)) %>%
     group_by(Method, Solver, scale,k, Key,sd) %>%
     summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
 }
-
-
-results_filtered <- results %>% filter(k==5, sd==0.1)
 
 
 ## Make nice plots for paper
@@ -66,9 +82,9 @@ make_plot <- function(results, xmax=2000, sv=TRUE) {
     mutate(Key = factor(Key, key.values, key.labels))
 
   pp <- results %>%
-    mutate(k = paste0("K: ", k))%>%
+    # mutate(k = paste0("K: ", k))%>%
     mutate(Solver = toupper(Solver)) %>%
-    ggplot(aes(x=scale, y=Value, color=Method, shape=Method)) +
+    ggplot(aes(x=k, y=Value, color=Method, shape=Method)) +
     geom_point(alpha=0.75) +
     geom_line() +
     geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.006) +
@@ -78,7 +94,7 @@ make_plot <- function(results, xmax=2000, sv=TRUE) {
     scale_color_manual(values=color.scale) +
     scale_shape_manual(values=shape.scale) +
     scale_alpha_manual(values=alpha.scale) +
-    xlab("Missingness heterogeneity") +
+    xlab("Group size K") +
     ylab("") +
     theme_bw()
   if (sv == TRUE){
@@ -88,5 +104,5 @@ make_plot <- function(results, xmax=2000, sv=TRUE) {
   }
 }
 
-make_plot(results_filtered)
+make_plot(results, sv=TRUE)
 
