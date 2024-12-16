@@ -11,7 +11,7 @@ R_LIST=(1 3 5 7)
 
 # Slurm parameters
 MEMO=1G                             # Memory required (1 GB)
-TIME=00-00:45:00                    # Time required (2 h)
+TIME=00-01:00:00                    # Time required (2 h)
 #TIME=00-00:30:00
 CORE=1                              # Cores required (1)
 
