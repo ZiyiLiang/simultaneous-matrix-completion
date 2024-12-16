@@ -13,7 +13,7 @@ SOLVER_LIST=("svt" "nnm")   # runtime for svt is shorter, set to 30min
 
 # Slurm parameters
 MEMO=2G                             # Memory required (1 GB)
-TIME=00-03:00:00                    # Time required (2 h)
+TIME=00-04:00:00                    # Time required (2 h)
 #TIME=00-01:00:00
 CORE=1                              # Cores required (1)
 
