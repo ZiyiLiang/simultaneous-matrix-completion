@@ -79,18 +79,17 @@ make_plot <- function(results, exp, val, xmax=2000, sv=TRUE) {
     if (sv == TRUE){
       ggsave(sprintf("%s/exp_biased_obs_%s.pdf", fig.dir, exp), pp, device=NULL, width=6.5, height=height)}
     else{
-      pp
+      print(pp)
     }
   }
   else{
     pp <- results %>%
       filter(k %in% val)%>%
-      filter(!(scale %in% c(0.5, 0.55)))%>%
       mutate(k = paste0("K: ", k))%>%
       ggplot(aes(x=scale, y=Value, color=Method, shape=Method)) +
       geom_point(alpha=0.75) +
       geom_line() +
-      geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.03) +
+      geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.006) +
       geom_hline(data=df.nominal, aes(yintercept=Value)) +
       geom_hline(data=df.placeholder, aes(yintercept=Value), alpha=0) +
       ggh4x::facet_grid2(Key~k, scales="free_y", independent = "y") +
@@ -103,14 +102,15 @@ make_plot <- function(results, exp, val, xmax=2000, sv=TRUE) {
     if (sv == TRUE){
       ggsave(sprintf("%s/exp_biased_obs_%s.pdf", fig.dir, exp), pp, device=NULL, width=6.5, height=height)}
     else{
-      pp
+      print(pp)
     }
   }
 }
 
 exp_list <- c("vary_k", "vary_scale")
 k_list <- c(2,5,8)
-scale_list <-  seq(0.2, 1, 0.8)
+scale_list <-  c(0.2, 0.14, 0.1)
+sv <- FALSE
 
 for (exp in exp_list) {
   if (exp == "vary_k"){
@@ -118,7 +118,7 @@ for (exp in exp_list) {
   }else{
     val = k_list
   }
-  make_plot(results, exp, val)
+  make_plot(results, exp, val, sv=sv)
 }
 
 results <- results.raw %>%
