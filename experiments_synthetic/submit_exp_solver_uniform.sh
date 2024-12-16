@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Parameters
-MU_LIST=(0)
-#MU_LIST=(15)
-SEED_LIST=$(seq 1 100)
-#SOLVER_LIST=("pmf" "svt" "nnm")
+#MU_LIST=(0)
+MU_LIST=(15)
+SEED_LIST=$(seq 1 300)
 SOLVER_LIST=("svt" "nnm")
+#SOLVER_LIST=("svt" "nnm")
 #SEED_LIST=(1)
 
 # Slurm parameters
