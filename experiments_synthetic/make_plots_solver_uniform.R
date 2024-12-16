@@ -18,6 +18,12 @@ results.raw <- do.call("rbind", lapply(ifile.list, function(ifile) {
   df <- read_delim(sprintf("%s/%s", idir, ifile), delim=",", col_types=cols())
 }))
 
+idir_als <- "results/exp_uniform/"
+ifile_als.list <- list.files(idir_als)
+
+results.als <- do.call("rbind", lapply(ifile_als.list, function(ifile) {
+  df <- read_delim(sprintf("%s/%s", idir_als, ifile), delim=",", col_types=cols())
+}))
 
 Method.values <- c("conformal", "Bonferroni", "Uncorrected")
 Method.labels <- c("Simultaneous", "Bonferroni", "Unadjusted")
@@ -89,4 +95,4 @@ make_plot <- function(results, solvers, xmax=2000, sv=TRUE) {
 }
 
 solver_list <- c("nnm", "svt")
-make_plot(results, solver_list)
+make_plot(results, solver_list, sv=FALSE)

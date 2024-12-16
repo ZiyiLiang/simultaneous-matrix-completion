@@ -50,7 +50,7 @@ allow_inf = False
 alpha = 0.1
 ratio = alpha/2
 
-k_list = [2,5,8]
+k_list = np.arange(2,9)
 repetition = 1
 
 

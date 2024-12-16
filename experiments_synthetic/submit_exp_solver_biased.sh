@@ -2,9 +2,9 @@
 
 # Parameters
 
-SCALE_LIST=$(seq 0.10 0.02 0.20)
 SD_LIST=(0.1)
-#SCALE_LIST=$(seq 0.6 0.05 1.0)
+#SCALE_LIST=(0.10 0.14 0.20)
+SCALE_LIST=(0.14)
 #SEED_LIST=(1)
 SEED_LIST=$(seq 1 300)
 #SOLVER_LIST=("nnm")  # runtime for nnm is longer, set to 1h
@@ -13,7 +13,7 @@ SOLVER_LIST=("svt" "nnm")   # runtime for svt is shorter, set to 30min
 
 # Slurm parameters
 MEMO=2G                             # Memory required (1 GB)
-TIME=00-01:30:00                    # Time required (2 h)
+TIME=00-03:00:00                    # Time required (2 h)
 #TIME=00-01:00:00
 CORE=1                              # Cores required (1)
 
@@ -30,7 +30,7 @@ incomp=0
 OUT_DIR="results/exp_solver_biased"
 mkdir -p $OUT_DIR
 for SEED in $SEED_LIST; do
-    for SCALE in $SCALE_LIST; do
+    for SCALE in "${SCALE_LIST[@]}"; do
         for SD in "${SD_LIST[@]}"; do
             for SOLVER in "${SOLVER_LIST[@]}"; do
                 JOBN=$SOLVER"_scale"$SCALE"_sd"$SD"_seed"$SEED
