@@ -97,6 +97,7 @@ make_plot <- function(results, exp, val, xmax=2000, sv=TRUE) {
       scale_color_manual(values=color.scale) +
       scale_shape_manual(values=shape.scale) +
       scale_alpha_manual(values=alpha.scale) +
+      scale_x_reverse() +
       xlab("Missingness heterogeneity") +
       ylab("") +
       theme_bw()

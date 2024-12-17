@@ -14,8 +14,13 @@ ifile.list <- list.files(idir)
 fig.dir <- "C:/Users/liang/Documents/GitHub/conformal-matrix-completion/results/figures/exp_est_uniform"
 dir.create(fig.dir, showWarnings = FALSE)
 
-results.raw <- do.call("rbind", lapply(ifile.list, function(ifile) {
-  df <- read_delim(sprintf("%s/%s", idir, ifile), delim=",", col_types=cols())
+# Read all files and store in a list
+data_list <- lapply(ifile.list, function(ifile) {
+  read_delim(sprintf("%s/%s", idir, ifile), delim=",", col_types=cols())
+})
+common_columns <- Reduce(intersect, lapply(data_list, colnames))
+results.raw <- bind_rows(lapply(data_list, function(df) {
+  df %>% select(all_of(common_columns))
 }))
 
 Method.values <- c("conformal", "est")
@@ -33,8 +38,8 @@ if (plot_full){
   key.labels <- c("Group cov.", "Coverage", "Avg. width", "Inf_prop")
   height <- 3.5
 }else{
-  key.values <- c("Query_coverage","Size","avg_gap")
-  key.labels <- c("Group cov.","Avg. width", "Avg. gap")
+  key.values <- c("Query_coverage","Size")
+  key.labels <- c("Group cov.","Avg. width")
   height <- 2.5
 }
 
@@ -43,18 +48,20 @@ results_filtered <- results.raw %>% filter(mu==15)
 if (plot_full){
   results <- results_filtered %>%
     mutate(Method = factor(Method, Method.values, Method.labels)) %>%
-    pivot_longer(cols=c("Query_coverage", "Coverage", "Size", "avg_gap","Inf_prop"), names_to='Key', values_to='Value') %>%
+    pivot_longer(cols=c("Query_coverage", "Coverage", "Size", "Inf_prop"), names_to='Key', values_to='Value') %>%
     mutate(Key = factor(Key, key.values, key.labels)) %>%
     group_by(Method, r_est, k, Key) %>%
     summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
 }else{
   results <- results_filtered%>%
     mutate(Method = factor(Method, Method.values, Method.labels)) %>%
-    pivot_longer(cols=c("Query_coverage", "Size", "avg_gap"), names_to='Key', values_to='Value') %>%
+    pivot_longer(cols=c("Query_coverage", "Size"), names_to='Key', values_to='Value') %>%
     mutate(Key = factor(Key, key.values, key.labels)) %>%
     group_by(Method, r_est, k, Key) %>%
     summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
 }
+
+r_est_labeller <- as_labeller(function(x) paste("guessed rank:", x))
 
 ## Make nice plots for paper
 make_plot <- function(results, val, xmax=2000, sv=TRUE) {
@@ -72,7 +79,7 @@ make_plot <- function(results, val, xmax=2000, sv=TRUE) {
     geom_errorbar(aes(ymin=Value-Value.se, ymax=Value+Value.se), width=0.3) +
     geom_hline(data=df.nominal, aes(yintercept=Value)) +
     geom_hline(data=df.placeholder, aes(yintercept=Value), alpha=0) +
-    ggh4x::facet_grid2(Key~r_est, scales="free_y", independent = "y") +
+    ggh4x::facet_grid2(Key~r_est, scales="free_y", independent = "y", labeller = labeller(r_est = r_est_labeller)) +
     scale_color_manual(values=color.scale) +
     scale_shape_manual(values=shape.scale) +
     scale_alpha_manual(values=alpha.scale) +
@@ -80,10 +87,11 @@ make_plot <- function(results, val, xmax=2000, sv=TRUE) {
     ylab("") +
     theme_bw()
   if (sv == TRUE){
-    ggsave(sprintf("%s/exp_solver_uniform.pdf", fig.dir), pp, device=NULL, width=5.4, height=height)
+    ggsave(sprintf("%s/exp_est_uniform.pdf", fig.dir), pp, device=NULL, width=6.5, height=height)
   }else{
     print(pp)
   }
 }
 
-val <-c(1,3,5,7)
+val <-c(3,5,7)
+make_plot(results, val, sv=TRUE)

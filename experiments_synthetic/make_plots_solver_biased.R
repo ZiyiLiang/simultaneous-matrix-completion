@@ -98,7 +98,7 @@ make_plot <- function(results, xmax=2000, sv=TRUE) {
     ylab("") +
     theme_bw()
   if (sv == TRUE){
-    ggsave(sprintf("%s/exp_solver_biased.pdf", fig.dir), pp, device=NULL, width=5.4, height=height)}
+    ggsave(sprintf("%s/exp_solver_biased.pdf", fig.dir), pp, device=NULL, width=6.5, height=height)}
   else{
     print(pp)
   }
