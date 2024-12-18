@@ -153,7 +153,7 @@ class SamplingBias():
 
 
 class Movielens_weights():
-    def __init__(self, demo, genre, normalize=True):
+    def __init__(self, demo, genre, normalize=True, epsilon=1e-2):
         self.demo = demo
         self.genre = genre
 
@@ -161,6 +161,8 @@ class Movielens_weights():
         self.n = len(demo)
         self.shape = (self.m, self.n)
         self.std = normalize
+        self.epsilon = epsilon  # Small constant to avoid zero weights
+
 
     def demo_weights(self, var="age", **kwargs):
         # Initialize weights for users (rows)
@@ -176,11 +178,11 @@ class Movielens_weights():
 
         elif var == "female":
             # Assign weight 1 to females and 0 to males
-            user_weights = np.where(self.demo['gender'] == 'F', 1, 0)
+            user_weights = np.where(self.demo['gender'] == 'F', 1, 0) + self.epsilon
             
         elif var == "male":
             # Assign weight 1 to males and 0 to females
-            user_weights = np.where(self.demo['gender'] == 'M', 1, 0)
+            user_weights = np.where(self.demo['gender'] == 'M', 1, 0) + self.epsilon
         
         else:
             raise ValueError("Unsupported variable for weighting. Use 'age', 'female', or 'male'.")
@@ -199,7 +201,7 @@ class Movielens_weights():
             raise ValueError(f"Genre '{genre}' not found in the dataset.")
         
         # Create a column of weights: 1 if movie belongs to the genre, 0 otherwise
-        movie_weights = self.genre[genre].values
+        movie_weights = self.genre[genre].values + self.epsilon
         
         # Create the full weight matrix by repeating movie weights for each user
         weight_matrix = np.tile(movie_weights[:, np.newaxis], (1, self.n))  # Shape: (m, n)

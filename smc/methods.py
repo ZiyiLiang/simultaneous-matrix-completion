@@ -404,6 +404,7 @@ class SimulCI():
             
             # Compute the prob of the ith query being the test query
             prob_test = w_test[idx_i[0][0], idx_i[1][0]]
+            
             sw_diff = 0
             if row_i != row_test:
                 if self.n_miss[row_i] < self.k:
@@ -419,6 +420,7 @@ class SimulCI():
                     sw_diff -= sw_test
                 if self.n_miss[row_i] < self.k:
                     sw_diff += sr_miss[row_i]
+                                
                 prob_test /= (sr_prune[row_i] + csum_i[-1] - csum_i[j-1] + sw_diff)
 
             # Compute the prob of sampling the given calibration queries

@@ -4,7 +4,6 @@ library(tidyverse)
 library(kableExtra)
 library(ggplot2)
 
-plot_full <- FALSE
 exp <- "conditional"
 
 idir <- sprintf("results/exp_movielens_conditional")
@@ -24,6 +23,7 @@ color.scale <- c( "blue", "#56b5e9")
 shape.scale <- c(15, 4 )
 alpha.scale <- c(1, 0.5)
 
+plot_full <- TRUE
 
 if (plot_full){
   key.values <- c("Query_coverage", "Coverage", "Size", "Inf_prop")
@@ -43,14 +43,14 @@ if (plot_full){
     mutate(Method = factor(Method, Method.values, Method.labels)) %>%
     pivot_longer(cols=c("Query_coverage", "Coverage", "Size", "Inf_prop"), names_to='Key', values_to='Value') %>%
     mutate(Key = factor(Key, key.values, key.labels)) %>%
-    group_by(Method,  n1, n2, scale, k, Key) %>%
+    group_by(Method,  n1, n2, genre, k, Key) %>%
     summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
 }else{
   results <- results.raw %>%
     mutate(Method = factor(Method, Method.values, Method.labels)) %>%
     pivot_longer(cols=c("Query_coverage", "Size"), names_to='Key', values_to='Value') %>%
     mutate(Key = factor(Key, key.values, key.labels)) %>%
-    group_by(Method,  n1, n2, scale, k, Key) %>%
+    group_by(Method,  n1, n2, genre, k, Key) %>%
     summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
 }
 
