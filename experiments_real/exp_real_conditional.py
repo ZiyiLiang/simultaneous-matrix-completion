@@ -70,10 +70,10 @@ n1,n2 = M.shape
 
 # Load additional demographic and item information
 demo = loader.load_demographics()
-genre = loader.load_movie_info()
-bias=Movielens_weights(demo,genre)
+movie_info = loader.load_movie_info()
+bias=Movielens_weights(demo, movie_info)
 w_test = bias.genre_weights(genre=genre)
-del loader, demo, genre, bias
+del loader, demo, movie_info, bias
 
 
 ###############
