@@ -66,6 +66,7 @@ k_list = np.arange(1,5)
 loader = Load_MovieLens(base_path)
 M, mask_avail, _ = loader.load_data(replace_nan=-1, num_columns=num_columns, num_rows=num_rows, 
                                     random_state=matrix_generation_seed)
+n1,n2 = M.shape
 
 # Load additional demographic and item information
 demo = loader.load_demographics()
