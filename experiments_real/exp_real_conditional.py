@@ -81,7 +81,7 @@ del loader, demo, genre, bias
 ###############
 outdir = f"./results/exp_movielens_conditional/"
 os.makedirs(outdir, exist_ok=True)
-outfile_name = f"scale{scale:.2f}_cal{max_calib_queries}_seed{seed}"
+outfile_name = f"scale{scale:.1f}_cal{max_calib_queries}_seed{seed}"
 outfile = outdir + outfile_name + ".txt"
 print("Output file: {:s}".format(outfile), end="\n")
 sys.stdout.flush()
