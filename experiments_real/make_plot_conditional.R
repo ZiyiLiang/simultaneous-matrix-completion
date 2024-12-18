@@ -60,7 +60,7 @@ make_plot <- function(results, exp, xmax=2000, sv=TRUE) {
   plot.alpha <- 0.9
   df.nominal <- tibble(Key=c("Query_coverage"), Value=plot.alpha) %>%
     mutate(Key = factor(Key, key.values, key.labels))   
-  df.placeholder <- tibble(Key=c("Query_coverage"), Value=c(1, 0.58)) %>%
+  df.placeholder <- tibble(Key=c("Query_coverage"), Value=c(0.95, 0.85)) %>%
     mutate(Key = factor(Key, key.values, key.labels))
   
   pp <- results %>%
@@ -72,7 +72,7 @@ make_plot <- function(results, exp, xmax=2000, sv=TRUE) {
     geom_hline(data=df.placeholder, aes(yintercept=Value), alpha=0) +
     scale_color_manual(values=color.scale) +
     scale_shape_manual(values=shape.scale) +
-    facet_grid(Key~scale, scales="free") +
+    facet_grid(Key~genre, scales="free") +
     xlab("Group size K") +
     ylab("") +
     theme_bw()
@@ -82,4 +82,6 @@ make_plot <- function(results, exp, xmax=2000, sv=TRUE) {
     print(pp)
   }
 }
+
+make_plot(results, exp, sv=FALSE)
 
