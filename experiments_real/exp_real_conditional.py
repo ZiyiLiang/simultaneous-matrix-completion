@@ -29,7 +29,7 @@ if True:
         print("Error: incorrect number of parameters.")
         quit()
 
-    scale = float(sys.argv[1])
+    genre = float(sys.argv[1])
     cal = int(sys.argv[2])
     seed = int(sys.argv[3])
     
@@ -72,7 +72,7 @@ n1,n2 = M.shape
 demo = loader.load_demographics()
 genre = loader.load_movie_info()
 bias=Movielens_weights(demo,genre)
-w_test = bias.demo_weights(var='age', scale=scale)
+w_test = bias.genre_weights(genre=genre)
 del loader, demo, genre, bias
 
 
@@ -81,7 +81,7 @@ del loader, demo, genre, bias
 ###############
 outdir = f"./results/exp_movielens_conditional/"
 os.makedirs(outdir, exist_ok=True)
-outfile_name = f"scale{scale:.1f}_cal{max_calib_queries}_seed{seed}"
+outfile_name = f"{genre}_cal{max_calib_queries}_seed{seed}"
 outfile = outdir + outfile_name + ".txt"
 print("Output file: {:s}".format(outfile), end="\n")
 sys.stdout.flush()
@@ -90,7 +90,7 @@ sys.stdout.flush()
 def add_header(df):
     df["n1"] = n1
     df["n2"] = n2
-    df['scale'] = scale
+    df['genre'] = genre
     df['alpha'] = alpha
     df['r_solver'] = r_solver
     df['prop_test'] = 1-prop_train

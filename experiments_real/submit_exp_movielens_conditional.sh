@@ -2,7 +2,7 @@
 
 # Parameters
 #SCALE_LIST=$(seq 0 0.5 2)
-SCALE_LIST=(1.0 5.0 10.0)
+GENRE_LIST=("Action" "Drama" "Children's" "Sci-Fi" "Horror") 
 SEED_LIST=$(seq 1 30)
 #SEED_LIST=(1)
 #CAL_LIST=(2000 3000)
@@ -27,9 +27,9 @@ incomp=0
 OUT_DIR="results/exp_movielens_conditional"
 mkdir -p $OUT_DIR
 for SEED in $SEED_LIST; do
-    for SCALE in "${SCALE_LIST[@]}"; do
+    for GENRE in "${GENRE_LIST[@]}"; do
         for CAL in "${CAL_LIST[@]}"; do
-            JOBN="scale"$SCALE"_cal"$CAL"_seed"$SEED
+            JOBN=$GENRE"_cal"$CAL"_seed"$SEED
             OUT_FILE=$OUT_DIR"/"$JOBN".txt"
             COMPLETE=0
             #ls $OUT_FILE
@@ -41,7 +41,7 @@ for SEED in $SEED_LIST; do
             if [[ $COMPLETE -eq 0 ]]; then
             ((incomp++))
             # Script to be run
-            SCRIPT="exp_real_conditional.sh $SCALE $CAL $SEED"
+            SCRIPT="exp_real_conditional.sh $GENRE $CAL $SEED"
             # Define job name
             OUTF=$LOGS"/"$JOBN".out"
             ERRF=$LOGS"/"$JOBN".err"

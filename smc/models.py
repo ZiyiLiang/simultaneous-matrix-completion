@@ -185,9 +185,25 @@ class Movielens_weights():
         else:
             raise ValueError("Unsupported variable for weighting. Use 'age', 'female', or 'male'.")
         
-        # Create the full weight matrix by repeating user weights for each column (movie)
+        # Create the full weight matrix by repeating user weights for each row (movie)
         weight_matrix = np.tile(user_weights, (self.m, 1))  # Shape: (m, n)
 
+        # Optionally normalize weights
+        if self.std:
+            weight_matrix = weight_matrix / np.sum(weight_matrix)
+        
+        return weight_matrix
+    
+    def genre_weights(self, genre):
+        if genre not in self.genre.columns[1:]:  # Assuming first column is 'movieid'
+            raise ValueError(f"Genre '{genre}' not found in the dataset.")
+        
+        # Create a column of weights: 1 if movie belongs to the genre, 0 otherwise
+        movie_weights = self.genre[genre].values
+        
+        # Create the full weight matrix by repeating movie weights for each user
+        weight_matrix = np.tile(movie_weights[:, np.newaxis], (1, self.n))  # Shape: (m, n)
+        
         # Optionally normalize weights
         if self.std:
             weight_matrix = weight_matrix / np.sum(weight_matrix)
