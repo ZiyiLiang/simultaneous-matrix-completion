@@ -2,7 +2,7 @@
 
 # Parameters
 #SCALE_LIST=$(seq 0 0.5 2)
-GENRE_LIST=("Action" "Drama" "Children's" "Sci-Fi" "Horror") 
+GENRE_LIST=("Drama" "Comedy" "Thriller" "Romance" "Action" "Adventure" "Children's" "Crime" "Horror" "Sci-Fi" "War" "Musical" "Documentary" "Mystery" "Animation") 
 SEED_LIST=$(seq 1 30)
 #SEED_LIST=(1)
 #CAL_LIST=(2000 3000)
@@ -11,7 +11,7 @@ CAL_LIST=(2000)
 
 # Slurm parameters
 MEMO=13G                             # Memory required (1 GB)
-TIME=00-00:30:00                    # Time required (2 h)
+TIME=00-00:40:00                    # Time required (2 h)
 CORE=1                              # Cores required (1)
 
 # Assemble order                                               prefix
