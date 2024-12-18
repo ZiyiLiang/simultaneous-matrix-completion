@@ -60,7 +60,7 @@ num_columns, num_rows = 800, 1000
 prop_train = 0.8
 max_test_queries = 100
 ll, uu = 1, 5
-k_list = np.arange(2,9)
+k_list = np.arange(1,5)
 
 # Load rating matrix 
 loader = Load_MovieLens(base_path)
