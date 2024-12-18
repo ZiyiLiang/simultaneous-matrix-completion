@@ -2,16 +2,16 @@
 
 # Parameters
 #SCALE_LIST=$(seq 0 0.5 2)
-SCALE_LIST=(1)
-#SEED_LIST=$(seq 1 50)
-SEED_LIST=(1)
+SCALE_LIST=(1 5 10)
+SEED_LIST=$(seq 1 30)
+#SEED_LIST=(1)
 #CAL_LIST=(2000 3000)
 CAL_LIST=(2000)
 
 
 # Slurm parameters
 MEMO=13G                             # Memory required (1 GB)
-TIME=00-01:00:00                    # Time required (2 h)
+TIME=00-00:30:00                    # Time required (2 h)
 CORE=1                              # Cores required (1)
 
 # Assemble order                                               prefix
@@ -27,7 +27,7 @@ incomp=0
 OUT_DIR="results/exp_movielens_conditional"
 mkdir -p $OUT_DIR
 for SEED in $SEED_LIST; do
-    for SCALE in $SCALE_LIST; do
+    for SCALE in "${SCALE_LIST[@]}"; do
         for CAL in "${CAL_LIST[@]}"; do
             JOBN="scale"$SCALE"_cal"$CAL"_seed"$SEED
             OUT_FILE=$OUT_DIR"/"$JOBN".txt"

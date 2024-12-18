@@ -48,7 +48,7 @@ r_solver = 3
 verbose = True
 allow_inf = False
 alpha = 0.1
-repetition = 1
+repetition = 2
 
 
 ###############
@@ -60,7 +60,7 @@ num_columns, num_rows = 800, 1000
 prop_train = 0.8
 max_test_queries = 100
 ll, uu = 1, 5
-k_list = np.arange(1,5)
+k_list = np.arange(1,6)
 
 # Load rating matrix 
 loader = Load_MovieLens(base_path)
