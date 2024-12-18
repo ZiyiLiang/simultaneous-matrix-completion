@@ -29,7 +29,7 @@ if True:
         print("Error: incorrect number of parameters.")
         quit()
 
-    genre = float(sys.argv[1])
+    genre = sys.argv[1]
     cal = int(sys.argv[2])
     seed = int(sys.argv[3])
     
