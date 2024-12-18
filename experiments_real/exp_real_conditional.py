@@ -64,7 +64,7 @@ k_list = np.arange(1,5)
 
 # Load rating matrix 
 loader = Load_MovieLens(base_path)
-M, mask_avail, _ = loader.load_data(replace_nan=-1, num_columns=num_cols, num_rows=num_rows, 
+M, mask_avail, _ = loader.load_data(replace_nan=-1, num_columns=num_columns, num_rows=num_rows, 
                                     random_state=matrix_generation_seed)
 
 # Load additional demographic and item information
