@@ -31,7 +31,8 @@ if True:
 
     genre = sys.argv[1]
     cal = int(sys.argv[2])
-    seed = int(sys.argv[3])
+    full_miss = int(sys.argv[3])
+    seed = int(sys.argv[4])
     
 # Fixed data parameters
 max_calib_queries = cal
@@ -79,7 +80,11 @@ del loader, demo, movie_info, bias
 ###############
 # Output file #
 ###############
-outdir = f"./results/exp_movielens_conditional/"
+outdir = f"./results/exp_movielens_conditional"
+if full_miss:
+    outdir += "_fullmiss/"
+else:
+    outdir += "/" 
 os.makedirs(outdir, exist_ok=True)
 outfile_name = f"{genre}_cal{max_calib_queries}_seed{seed}"
 outfile = outdir + outfile_name + ".txt"
@@ -129,6 +134,8 @@ def run_single_experiment(M, k, alpha, prop_train, w_test, max_test_queries, max
     #------Sample test queries------#
     #-------------------------------#
     n_test_queries = min(int(0.99 * np.sum(np.sum(mask_test, axis=1) // k)), max_test_queries)
+    if full_miss:
+        mask_test = np.array(1-mask_obs)
     idxs_test= sampler.sample_test(mask_test, k, test_size=n_test_queries, w=w_test, replace=True, random_state=random_state)  
     del mask_test
     
