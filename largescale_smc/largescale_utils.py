@@ -1,8 +1,11 @@
 """This file contains utility functions for processing largescale datasets.
     Functions are adpated from the Surprise repo: https://github.com/NicolasHug/Surprise/tree/master"""
 
+import numpy as np
 from surprise import Trainset
 from collections import defaultdict
+from typing import List, Tuple, Callable
+
 
 class DataReader:
     """Reader class for parsing rating files.
@@ -127,3 +130,74 @@ def construct_trainset(raw_trainset, rating_scale):
     )
 
     return trainset
+
+
+def create_batch_rating_predictor(algo) -> Callable[[List[Tuple]], Tuple[List[float], List[bool]]]:
+    """
+    Adapter Factory: Takes a trained Surprise algorithm and returns a unified
+    batch prediction function.
+    [Note] This adapter does not handle unseen user/item since surpirse give a 
+    default prediction for unseen indices. Make adjustment if algo does not handle
+    this corner case.
+
+    Args:
+        algo: A trained algorithm object from the Surprise library (or any
+              object with a .predict(uid, iid) method that returns an
+              object with an '.est' attribute).
+
+    Returns:
+        A function that adheres to the unified prediction interface.
+    """
+    def batch_predictor(indices: List[Tuple]) -> List[float]:
+        results = [
+            (p.est, p.details['was_impossible']) 
+            for p in (algo.predict(uid, iid) for uid, iid in indices)
+        ]
+        predictions, was_impossible = zip(*results)
+    
+        return list(predictions), list(was_impossible)
+    
+    return batch_predictor
+
+
+def default_weight(indices: List[Tuple]) -> List[float]:
+    return np.ones(len(indices))
+
+
+def evaluate_SCI_ls(lower, upper, k, ratings, is_inf=None, 
+                    metric='mean', method=None):
+    """ This function evaluates the coverage over test queries
+    """
+
+    val = ratings 
+    n_test_queries = len(ratings) // int(k) 
+    
+    covered = np.array((lower <= val) & (upper >= val))
+    query_covered = [np.prod(covered[k*i:k*(i+1)]) for i in range(n_test_queries)]
+    query_coverage = np.mean(query_covered)
+    coverage = np.mean(covered)
+    sizes = upper - lower
+    if metric == 'mean':
+        size = np.mean(sizes)
+    elif metric == 'median':
+        size = np.median(sizes)
+    elif metric == 'no_inf':
+        if is_inf is None:
+            print('Must provide inf locations for the no_inf metric.')
+        else:
+            query_no_inf = [not np.any(is_inf[k*i:k*(i+1)]) for i in range(n_test_queries)]
+            idxs_no_inf = [element for element in query_no_inf for _ in range(int(k))]
+        size = np.mean(sizes[idxs_no_inf])
+    else:
+        print(f'Unknown evaluation metric {metric}')
+    results = pd.DataFrame({})
+    results["Query_coverage"] = [query_coverage]
+    results["Coverage"] = [coverage]
+    results["Size"] = [size]
+    results["metric"] = [metric]
+    if type(is_inf) != type(None):
+        query_is_inf = [np.any(is_inf[k*i:k*(i+1)]) for i in range(n_test_queries)]
+        results["Inf_prop"] = [np.mean(query_is_inf)]
+    if method:
+        results["Method"] = [method]
+    return results

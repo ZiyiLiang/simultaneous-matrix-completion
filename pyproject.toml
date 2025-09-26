@@ -1,0 +1,12 @@
+# pyproject.toml
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scmc"
+version = "0.1.0"
+
+[tool.setuptools.packages.find]
+where = ["."]

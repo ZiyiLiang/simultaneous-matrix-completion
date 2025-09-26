@@ -3,7 +3,7 @@ import pdb
 import sys
 from scipy.sparse import csr_matrix
 import implicit
-
+import warnings
 
 
 class LogisticMFProbs:
@@ -89,7 +89,16 @@ class LogisticMFProbs:
         # Store only the factors
         self.user_factors = model.user_factors
         self.item_factors = model.item_factors
-        
+
+        # # Get the corresponding factor vectors for only the observed pairs
+        # observed_user_vecs = self.user_factors[user_indices]
+        # observed_item_vecs = self.item_factors[item_indices]
+
+        # # Calculate the logits for every observed pair and then find the mean
+        # observed_logits = np.sum(observed_user_vecs * observed_item_vecs, axis=1)
+        observed_logits = [np.sum(self.user_factors[u] * self.item_factors[i]) for u, i in zip(user_indices, item_indices)]
+        self.global_mean_logit = np.mean(observed_logits)
+
         return self
         
     def __call__(self, indices):
@@ -118,18 +127,40 @@ class LogisticMFProbs:
         user_idx = np.array([self.raw2inner_id_users.get(u, -1) for u in user_raw])
         item_idx = np.array([self.raw2inner_id_items.get(i, -1) for i in item_raw])
         
-        # Check for invalid IDs
-        if np.any(user_idx == -1) or np.any(item_idx == -1):
-            invalid_users = [u for u, idx in zip(user_raw, user_idx) if idx == -1]
-            invalid_items = [i for i, idx in zip(item_raw, item_idx) if idx == -1]
-            raise ValueError(f"Invalid user IDs: {invalid_users}, Invalid item IDs: {invalid_items}")
+        logits = np.zeros(len(indices), dtype=float)
+
+        # Boolean mask for impossible pairs.
+        impossible_mask = (user_idx == -1) | (item_idx == -1)
+
+        # Check for invalid IDs        
+        if np.any(impossible_mask):
+            missing_users = {u for u, m in zip(user_raw, user_idx == -1) if m}
+            missing_items = {i for i, m in zip(item_raw, item_idx == -1) if m}
+            warnings.warn(
+                f"Estimating observation probability for some pairs were impossible. Using default. "
+                f"Missing users: {missing_users or 'None'}. "
+                f"Missing items: {missing_items or 'None'}.",
+                UserWarning
+            )
+            
+            # Assign the default value to all impossible slots.
+            logits[impossible_mask] = self.global_mean_logit
+
+        possible_mask = ~impossible_mask
+        if np.any(possible_mask):
+            valid_user_vecs = self.user_factors[user_idx[possible_mask]]
+            valid_item_vecs = self.item_factors[item_idx[possible_mask]]
+            
+            # Compute all valid logits.
+            possible_logits = np.sum(valid_user_vecs * valid_item_vecs, axis=1)
+            
+            # Assign the results to all possible slots.
+            logits[possible_mask] = possible_logits
+            
+        probabilities = (1 / (1 + np.exp(-logits))).tolist()
+        was_impossible = impossible_mask.tolist()
         
-        # Efficient probability computation
-        user_vecs = self.user_factors[user_idx]
-        item_vecs = self.item_factors[item_idx]
-        logits = np.sum(user_vecs * item_vecs, axis=1)
-        
-        return 1 / (1 + np.exp(-logits))
+        return probabilities, was_impossible
 
 
 
