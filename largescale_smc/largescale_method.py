@@ -356,22 +356,34 @@ class SimulCI_ls():
         delta = 0.0      # Sum of sampling weights on the missing set
         all_observed_weights = []
 
-        pdb.set_trace()
-
-        for key in self.n_obs.keys():
+        if self.verbose:
+            print("Start computing universal quantities invariant to the test query...")
+            sys.stdout.flush()
+        
+        for key in tqdm(self.n_obs.keys(), desc="Universal quantities", leave=True, position=0, 
+                      disable = not self.progress):
             obs_entries = set([entry for entry, rating in self.config.key_to_samples[key]])
             all_entries = self.config.user_ids if self.key_dim else self.config.item_ids
             miss_entries = all_entries - obs_entries
-
-            # Update the quantities per key           
-            sr_miss[key] = np.sum(w_test([(key, entry) for entry in miss_entries]))
+            
+            # Update the quantities per key  
+            if self.key_dim == 0:
+                sr_miss[key] = np.sum(w_test([(key, entry) for entry in miss_entries]))
+            else:
+                sr_miss[key] = np.sum(w_test([(entry, key) for entry in miss_entries]))
+            
             sr_prune[key] = 0 if self.n_miss[key] < self.k else sr_miss[key]
             sw_prune += sr_prune[key]
-            delta += np.sum(np.array(self.w_obs([(key, entry) for entry in miss_entries])[0]))
+            if self.key_dim == 0:
+                delta += np.sum(np.array(self.w_obs([(key, entry) for entry in miss_entries])[0]))
+            else:
+                delta += np.sum(np.array(self.w_obs([(entry, key) for entry in miss_entries])[0]))
 
-            # [TODO] fix the following, key and entry should be swapped depending on the key_dim!
             if obs_entries:
-                observed_weights_for_key = self.w_obs([(key, entry) for entry in obs_entries])[0]
+                if self.key_dim == 0:
+                    observed_weights_for_key = self.w_obs([(key, entry) for entry in obs_entries])[0]
+                else:
+                    observed_weights_for_key = self.w_obs([(entry, key) for entry in obs_entries])[0]
                 all_observed_weights.extend(observed_weights_for_key)
 
         def _z(r, w_array, d):
@@ -381,7 +393,11 @@ class SimulCI_ls():
             return d - (1/r) - sum_term
 
         initial_guess = 1 / delta if delta != 0 else 1.0
-        scale = fsolve(_z, initial_guess, args=(np.array(observed_weights_array), delta))[0]
+        scale = fsolve(_z, initial_guess, args=(np.array(all_observed_weights), delta))[0]
+
+        if self.verbose:
+            print("Done!")
+            sys.stdout.flush()
 
         return sr_prune, sw_prune, sr_miss, delta, scale
 
