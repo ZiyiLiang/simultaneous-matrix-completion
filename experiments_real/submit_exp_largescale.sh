@@ -9,7 +9,7 @@ SEED_LIST=$(seq 1 10)
 #SEED_LIST=(1)
 
 # Slurm parameters
-MEMO=8G                            # Memory required 
+MEMO=20G                            # Memory required 
 TIME=00-02:00:00                    # Time required 
 CORE=6                              # Cores required 
 
