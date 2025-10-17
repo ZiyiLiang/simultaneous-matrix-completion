@@ -35,10 +35,10 @@ if True:
 max_test_queries = 2000  
 
 # Other parameters
-# max_iterations = 20   
-# n_factors = 50       
-max_iterations = 2   
-n_factors = 5 
+max_iterations = 20   
+n_factors = 50       
+#max_iterations = 2   
+#n_factors = 5 
 num_worker = 6
 verbose = True
 allow_inf = False
