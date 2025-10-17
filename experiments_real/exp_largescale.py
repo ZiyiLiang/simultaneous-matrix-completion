@@ -58,7 +58,7 @@ ll, uu = 1, 5
 ###############
 # Output file #
 ###############i:
-outdir = f"./results/largescale"
+outdir = f"./results/largescale/"
 os.makedirs(outdir, exist_ok=True)
 outfile_name = f"ncal{max_calib_queries}_k{k}_seed{seed}"
 outfile = outdir + outfile_name + ".txt"
