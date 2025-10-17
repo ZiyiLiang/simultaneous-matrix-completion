@@ -5,17 +5,18 @@ Functions for loading largescale datasets, performing data splitting and constru
 import sys, os
 import numpy as np
 import pandas as pd
-
+import multiprocessing as mp
 import itertools
 import pdb
-from tqdm import tqdm
 
+from tqdm import tqdm
+from time import time
 from scipy.special import binom
 from scipy.optimize import fsolve
-
 from collections import defaultdict
 from numpy.random import default_rng
 from dataclasses import dataclass
+from types import SimpleNamespace
 from typing import Union, List, Set, Dict, Any, Tuple, Callable, Optional
 from numpy.typing import NDArray
 
@@ -168,6 +169,13 @@ class DataSplitter:
             sample_list = [(user, key, rating) for (user, rating) in samples]
         return sample_list
 
+    
+    def _key2list_idxs(self, key, samples):
+        if self.sampling_dim == 'user':
+            sample_list = [(key, item) for item in samples]
+        else:
+            sample_list = [(user, key) for user in samples]
+        return sample_list
 
     def sample_train_calib(self, k, calib_size=0.5, max_n_calib=2000, random_state=0):
         """Splits observed ratings into training and calibration sets.
@@ -219,13 +227,12 @@ class DataSplitter:
         n_queries = self._validate_query_size(calib_size, possible_query_num, max_n_calib, "calib")
 
 
-        for _ in tqdm(range(n_queries)):
+        for _ in tqdm(range(n_queries), desc="Sampling Calib Queries", leave=False):
             keys, prob = list(avail_sample_counts.keys()), list(avail_sample_counts.values())
             
             prob /= np.sum(prob)
-            chosen_key_idx = rng.choice(len(keys), p=prob)
-            chosen_key = keys[chosen_key_idx]
-            
+            chosen_key = rng.choice(keys, p=prob)
+   
             # First k shuffled entries form a calibration query
             calib_samples.extend(self._key2list(chosen_key, avail_samples[chosen_key][:k]))
 
@@ -274,6 +281,114 @@ class DataSplitter:
 
         return train_samples, calib_samples, [missing_users, missing_items]
 
+    def sample_test(self, k, test_size=0.1, max_n_test=2000, random_state=0):
+        """
+        Samples test queries uniformly from missing entries without replacement.
+
+        Parameters
+        ----------
+        k : int
+            The size of each test query.
+        test_size : int or float, optional
+            The proportion or number of queries for the test set.
+        max_n_test : int, optional
+            Maximum number of test queries to sample.
+        random_state : int
+            Seed for the random number generator.
+
+        Returns
+        -------
+        test_samples : list of tuples
+            (user_id, item_id) tuples for the test indices.
+        """
+        rng = default_rng(random_state)
+        key_to_test = {}
+        test_indices = []
+
+        if self.sampling_dim == 'user':
+            all_entries_set = set(self.config.item_ids)
+        else:
+            all_entries_set = set(self.config.user_ids)
+
+        avail_miss_counts = {
+            key: len(all_entries_set) - count
+            for key, count in self.config.key_sample_counts.items()
+            if (len(all_entries_set) - count) >= k
+        }
+
+        if not avail_miss_counts:
+            warnings.warn("No keys have enough missing entries to form a test query of size k.", UserWarning)
+            return []
+
+        possible_query_num = sum(avail_miss_counts[key] // k for key in list(avail_miss_counts.keys()))
+        n_queries = self._validate_query_size(test_size, possible_query_num, max_n_test, "test")
+
+        for _ in tqdm(range(n_queries), desc="Sampling Test Queries", leave=False):
+            if not avail_miss_counts:
+                warnings.warn(f"Ran out of eligible keys after sampling {_} queries.", UserWarning)
+                break
+
+            keys, prob = list(avail_miss_counts.keys()), list(avail_miss_counts.values())
+            prob /= np.sum(prob)
+            chosen_key = rng.choice(keys, p=prob)
+
+            # Sample k entries for the chosen key
+            observed_entries = {entry for entry, rating in self.config.key_to_samples.get(chosen_key, [])}
+            already_tested_entries = key_to_test.get(chosen_key, set())
+            excluded_entries = observed_entries.union(already_tested_entries)
+
+            available_entries = list(all_entries_set - excluded_entries)
+            selected_entries = rng.choice(available_entries, size=k, replace=False)
+            test_indices.extend(self._key2list_idxs(chosen_key, selected_entries))
+            
+            # Store the newly sampled entries
+            if chosen_key not in key_to_test:
+                key_to_test[chosen_key] = set()
+            key_to_test[chosen_key].update(selected_entries)
+
+            # Update the available missing entry count
+            avail_miss_counts[chosen_key] -= k
+            if avail_miss_counts[chosen_key] < k:
+                del avail_miss_counts[chosen_key]
+
+        return test_indices    
+        
+
+
+_UNIV_STATE = None
+
+def _init_universal_worker(global_state):
+    # Called once per process
+    global _UNIV_STATE
+    _UNIV_STATE = global_state
+
+def _universal_worker(key):
+    # Runs in child process
+    g = _UNIV_STATE
+    
+    # observed/missing sets
+    obs_entries = set(entry for entry, _ in g.key_to_samples[key])
+    all_entries = g.all_users if g.key_dim else g.all_items
+    miss_entries = all_entries - obs_entries
+
+    # index tuples
+    if g.key_dim == 0:
+        obs_indices = [(key, entry) for entry in obs_entries]
+        miss_indices = [(key, entry) for entry in miss_entries]
+    else:
+        obs_indices = [(entry, key) for entry in obs_entries]
+        miss_indices = [(entry, key) for entry in miss_entries]
+
+    # per-key quantities
+    sr_miss_k = np.sum(g.w_test(miss_indices))
+    sr_prune_k = 0.0 if g.n_miss[key] < g.k_thresh else sr_miss_k
+    delta_k = np.sum(g.w_obs(miss_indices)[0])
+
+    if obs_entries:
+        obs_wts = g.w_obs(obs_indices)[0]
+
+    return key, sr_miss_k, sr_prune_k, delta_k, obs_wts
+
 
 class SimulCI_ls():
     """ 
@@ -281,17 +396,19 @@ class SimulCI_ls():
     Designed for handling largescale data. 
     """
     def __init__(self, data_config: DataConfig, calib_samples: list, k: int,
-                 Mhat: Callable[[List[Tuple]], Tuple[List[float], List[bool]]],
-                 w_obs: Callable[[List[Tuple]], Tuple[List[float], List[bool]]],
-                 verbose=True, progress=True):
+                 Mhat: Callable[[List[Tuple]], Tuple[np.ndarray, np.ndarray]],
+                 w_obs: Callable[[List[Tuple]], Tuple[np.ndarray, np.ndarray]],
+                 num_workers=4, verbose=True, progress=True):
         self.config = data_config
         self.k = k
+        self.num_workers = num_workers
         self.verbose = verbose
         self.progress = progress
 
         # Callables for point predictions
         self.Mhat = Mhat
         self.w_obs = w_obs
+        self.w_test = None
 
         # Pre-compute some fixed quantities
         self.key_dim = 0 if self.config.sampling_dim == "user" else 1
@@ -348,55 +465,75 @@ class SimulCI_ls():
         return df
     
 
-    def _compute_universal(self, w_test):
-        # Universal quantities invariant to the test query
-        sr_miss = {}     # Sum of test weights for missing set by key
-        sr_prune = {}    # Sum of test weights for pruned missing set by key
-        sw_prune = 0.0   # Sum of test weights for pruned missing set
-        delta = 0.0      # Sum of sampling weights on the missing set
-        all_observed_weights = []
+    def _compute_universal_mp(self):
+        sr_miss = {}
+        sr_prune = {}
+        sw_prune = 0.0
+        delta = 0.0
+        observed_chunks = []
 
         if self.verbose:
+            start_time = time()
             print("Start computing universal quantities invariant to the test query...")
             sys.stdout.flush()
-        
-        for key in tqdm(self.n_obs.keys(), desc="Universal quantities", leave=True, position=0, 
-                      disable = not self.progress):
-            obs_entries = set([entry for entry, rating in self.config.key_to_samples[key]])
-            all_entries = self.config.user_ids if self.key_dim else self.config.item_ids
-            miss_entries = all_entries - obs_entries
-            
-            # Update the quantities per key  
-            if self.key_dim == 0:
-                sr_miss[key] = np.sum(w_test([(key, entry) for entry in miss_entries]))
-            else:
-                sr_miss[key] = np.sum(w_test([(entry, key) for entry in miss_entries]))
-            
-            sr_prune[key] = 0 if self.n_miss[key] < self.k else sr_miss[key]
-            sw_prune += sr_prune[key]
-            if self.key_dim == 0:
-                delta += np.sum(np.array(self.w_obs([(key, entry) for entry in miss_entries])[0]))
-            else:
-                delta += np.sum(np.array(self.w_obs([(entry, key) for entry in miss_entries])[0]))
 
-            if obs_entries:
-                if self.key_dim == 0:
-                    observed_weights_for_key = self.w_obs([(key, entry) for entry in obs_entries])[0]
-                else:
-                    observed_weights_for_key = self.w_obs([(entry, key) for entry in obs_entries])[0]
-                all_observed_weights.extend(observed_weights_for_key)
+        keys = list(self.n_obs.keys())
+
+        # Picklable state
+        global_state = SimpleNamespace(
+            key_to_samples=self.config.key_to_samples,
+            all_users=self.config.user_ids,
+            all_items=self.config.item_ids,
+            key_dim=self.key_dim,
+            k_thresh=self.k,
+            n_miss=self.n_miss,
+            w_test=self.w_test,
+            w_obs=self.w_obs,
+        )
+
+        # context: use 'fork' on Unix if available (faster), else default
+        try:
+            ctx = mp.get_context("fork")
+        except ValueError:
+            ctx = mp.get_context()
+
+        num_workers = getattr(self, "num_workers", None) or max(1, (mp.cpu_count() or 1) - 1)
+        if self.verbose:
+            print(f"Number of worker:{num_workers}.")
+            sys.stdout.flush()
+
+        with ctx.Pool(processes=num_workers, initializer=_init_universal_worker, initargs=(global_state,)) as pool:
+            for key, sr_miss_k, sr_prune_k, delta_k, obs_wts in tqdm(
+                pool.imap_unordered(_universal_worker, keys),
+                total=len(keys),
+                desc="Universal quantities",
+                leave=True,
+                disable=not self.progress,
+            ):
+                sr_miss[key] = sr_miss_k
+                sr_prune[key] = sr_prune_k
+                sw_prune += sr_prune_k
+                delta += delta_k
+                if obs_wts.size:
+                    observed_chunks.append(obs_wts)
+
+        all_observed_weights = (
+            np.concatenate(observed_chunks) if observed_chunks else np.empty(0, dtype=np.float64)
+        )
 
         def _z(r, w_array, d):
-            denominators = np.power(2, r * w_array) - 1
-            safe_denominators = np.where(denominators == 0, 1e-9, denominators)   
+            denominators = np.power(2.0, r * w_array) - 1.0
+            safe_denominators = np.where(denominators == 0.0, 1e-9, denominators)
             sum_term = np.sum(w_array / safe_denominators)
-            return d - (1/r) - sum_term
+            return d - (1.0 / r) - sum_term
 
-        initial_guess = 1 / delta if delta != 0 else 1.0
-        scale = fsolve(_z, initial_guess, args=(np.array(all_observed_weights), delta))[0]
+        initial_guess = 1.0 / delta if delta != 0 else 1.0
+        scale = fsolve(_z, initial_guess, args=(all_observed_weights, delta))[0]
 
         if self.verbose:
             print("Done!")
+            self._t_universal = time()-start_time
+            print(f"Elapsed time: {self._t_universal} seconds")
             sys.stdout.flush()
 
         return sr_prune, sw_prune, sr_miss, delta, scale
@@ -408,23 +545,23 @@ class SimulCI_ls():
         weights = np.ones(self.n_calib_queries + 1)
 
         # Sum of test sampling weights for the test query
-        sw_test = np.sum(w_test[idx_test])
+        sw_test = np.sum(w_test(idx_test))
         # Sum of observation sampling weights for the test query
-        w_obs_test = self.w_obs[idx_test][0]
-        sw_obs_test = np.sum(np.array(w_obs_test))
+        w_obs_test = self.w_obs(idx_test)[0]
+        sw_obs_test = np.sum(w_obs_test)
 
         # Augmented index set
         idxs_full = self.idxs_calib + idx_test
-        keys_full = self.keys_calib + key_test
+        keys_full = self.keys_calib + [key_test]
 
         # Compute the quantile inflation weights
         for i in range(self.n_calib_queries + 1):
             idx_i = idxs_full[self.k*i : self.k*(i+1)]
             key_i = keys_full[i]
-            csum_i = np.cumsum(w_test[idx_i])
+            csum_i = np.cumsum(w_test(idx_i))
 
             # Compute the prob of the ith query being the test query
-            prob_test = np.prod(w_test[idx_i])    # the numerator
+            prob_test = np.prod(w_test(idx_i))    # the numerator
 
             sw_diff = 0
             if key_i != key_test:
@@ -452,15 +589,15 @@ class SimulCI_ls():
                     prob_cal *= (self.n_obs_drop[key_i]-j)/(self.n_obs_drop[key_test]+self.k-j)
 
             # Compute the prob of sampling the given observation entries
-            w_obs_i = self.w_obs[idx_i][0]
-            diff = np.sum(np.array(w_obs_i)) - sw_obs_test
+            w_obs_i = self.w_obs(idx_i)[0]
+            diff = np.sum(w_obs_i) - sw_obs_test
             prob_obs = 0.5**(scale * diff)*(delta + diff)/delta
             for j in range(self.k):
                 prob_obs *= 1 - 0.5**(scale * w_obs_test[j])
                 prob_obs /= 1 - 0.5**(scale * w_obs_i[j])
 
             # Assemble the final weight
-            weight[i] = prob_test * prob_cal * prob_obs
+            weights[i] = prob_test * prob_cal * prob_obs
         
         weights /= np.sum(weights)
 
@@ -519,16 +656,27 @@ class SimulCI_ls():
             sys.stdout.flush()
 
         # Compute constant components in weights that are invariant to test query
-        # [Note] Only need once for each set of w_test, move outside if working with batches of testing points 
-        #   with the same w_test.
-        sr_prune, sw_prune, sr_miss, delta, scale = self._compute_universal(w_test)  
+        # Only need once for each set of w_test, skip redundant computation if w_test is the identical to the previously stored one. 
+        if self.w_test is not None and w_test is self.w_test:
+            if self.verbose:
+                print("Skipping some duplicated computations: w_test is unchanged.")
+                sys.stdout.flush()
+        else:
+            self.w_test = w_test
+            self.sr_prune, self.sw_prune, self.sr_miss, self.delta, self.scale = self._compute_universal_mp() 
 
         for i in tqdm(range(n_test_queries), desc="CI", leave=True, position=0, 
                       disable = not self.progress):
             idx_test = idxs_test[self.k*i : self.k*(i+1)]
             key_test = idx_test[0][self.key_dim]
 
-            weights = self._weight_single(idx_test, key_test, w_test, sr_prune, sw_prune, sr_miss, delta, scale, store_weights)
+            if key_test not in set(self.n_obs.keys()):
+                # Impossible to compute the conformalization weights since test key is unobserved.
+                weights = np.zeros(self.n_calib_queries)  
+            else:
+                weights = self._weight_single(idx_test, key_test, w_test, 
+                                            self.sr_prune, self.sw_prune, self.sr_miss, self.delta, self.scale, 
+                                            store_weights)
 
             cweights = np.cumsum(weights[self.calib_order])
             est, is_impossible_est = self.Mhat(idx_test)

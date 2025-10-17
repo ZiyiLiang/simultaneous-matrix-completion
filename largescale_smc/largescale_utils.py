@@ -1,6 +1,8 @@
 """This file contains utility functions for processing largescale datasets.
     Functions are adpated from the Surprise repo: https://github.com/NicolasHug/Surprise/tree/master"""
 
+import pdb
+import pandas as pd
 import numpy as np
 from surprise import Trainset
 from collections import defaultdict
@@ -132,7 +134,7 @@ def construct_trainset(raw_trainset, rating_scale):
     return trainset
 
 
-def create_batch_rating_predictor(algo) -> Callable[[List[Tuple]], Tuple[List[float], List[bool]]]:
+def create_batch_rating_predictor(algo) -> Callable[[List[Tuple]], Tuple[np.ndarray, np.ndarray]]:
     """
     Adapter Factory: Takes a trained Surprise algorithm and returns a unified
     batch prediction function.
@@ -148,30 +150,66 @@ def create_batch_rating_predictor(algo) -> Callable[[List[Tuple]], Tuple[List[fl
     Returns:
         A function that adheres to the unified prediction interface.
     """
-    def batch_predictor(indices: List[Tuple]) -> List[float]:
-        results = [
-            (p.est, p.details['was_impossible']) 
-            for p in (algo.predict(uid, iid) for uid, iid in indices)
-        ]
-        predictions, was_impossible = zip(*results)
-    
-        return list(predictions), list(was_impossible)
-    
+    def batch_predictor(indices: List[Tuple]) -> Tuple[np.ndarray, np.ndarray]:
+        n = len(indices)
+        predictions = np.empty(n, dtype=np.float64)
+        was_impossible = np.empty(n, dtype=np.bool_)
+
+        for i, (uid, iid) in enumerate(indices):
+            p = algo.predict(uid, iid)
+            predictions[i] = p.est
+            was_impossible[i] = bool(p.details.get('was_impossible', False))
+
+        return predictions, was_impossible
+
     return batch_predictor
 
 
-def default_weight(indices: List[Tuple]) -> List[float]:
-    return np.ones(len(indices))
+def default_weight(indices: List[Tuple]) -> np.ndarray:
+    return np.ones(len(indices), dtype=np.float64)
 
 
-def evaluate_SCI_ls(lower, upper, k, ratings, is_inf=None, 
-                    metric='mean', method=None):
+def evaluate_SCI_ls(lower, upper, k, ratings, is_inf=None, is_impossible=None,
+                    metric='mean', filter_impossible=True, method=None):
     """ This function evaluates the coverage over test queries
     """
+    
+    # Get the original number of queries before any filtering
+    n_original_queries = len(ratings) // int(k)
+    impossible_prop = 0.0
 
+    # Filter if requested and the 'is_impossible' array is provided
+    if filter_impossible and is_impossible is not None:
+        # Reshape to (n_queries, k) and sum along the query axis to find impossible counts
+        impossible_counts_per_query = np.sum(np.array(is_impossible).reshape(n_original_queries, int(k)), axis=1)
+
+        valid_queries_mask = impossible_counts_per_query == 0
+        
+        # Calculate the proportion of queries that were filtered out
+        n_impossible_queries = n_original_queries - np.sum(valid_queries_mask)
+        if n_original_queries > 0:
+            impossible_prop = n_impossible_queries / n_original_queries
+
+        # Create a boolean mask for the original flat arrays by repeating the query mask
+        valid_indices_mask = np.repeat(valid_queries_mask, int(k))
+
+        # Apply the filter to all relevant data arrays
+        lower = np.array(lower)[valid_indices_mask]
+        upper = np.array(upper)[valid_indices_mask]
+        ratings = np.array(ratings)[valid_indices_mask]
+        if is_inf is not None:
+            is_inf = np.array(is_inf)[valid_indices_mask]
+
+        print(f'Filtered out {n_impossible_queries} impossible queries out of {n_original_queries} queries.')
+    
     val = ratings 
     n_test_queries = len(ratings) // int(k) 
-    
+    if n_test_queries == 0:
+        print(f'No valid test queries for evaluation!')
+        return
+    else:
+        print(f'Evaluating {n_test_queries} queries...')
+
     covered = np.array((lower <= val) & (upper >= val))
     query_covered = [np.prod(covered[k*i:k*(i+1)]) for i in range(n_test_queries)]
     query_coverage = np.mean(query_covered)
@@ -195,9 +233,12 @@ def evaluate_SCI_ls(lower, upper, k, ratings, is_inf=None,
     results["Coverage"] = [coverage]
     results["Size"] = [size]
     results["metric"] = [metric]
+    results["Impossible_prop"] = [impossible_prop]
     if type(is_inf) != type(None):
         query_is_inf = [np.any(is_inf[k*i:k*(i+1)]) for i in range(n_test_queries)]
         results["Inf_prop"] = [np.mean(query_is_inf)]
     if method:
         results["Method"] = [method]
+
+    print(f'Done!')
     return results

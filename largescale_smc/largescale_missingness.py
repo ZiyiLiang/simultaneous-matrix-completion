@@ -118,14 +118,10 @@ class LogisticMFProbs:
         """
         if self.user_factors is None:
             raise ValueError("Model not fitted. Call fit() first.")
-        
-        # Extract user and item IDs from list of tuples
-        user_raw = [uid for uid, _ in indices]
-        item_raw = [iid for _, iid in indices]
-        
-        # Convert to internal indices
-        user_idx = np.array([self.raw2inner_id_users.get(u, -1) for u in user_raw])
-        item_idx = np.array([self.raw2inner_id_items.get(i, -1) for i in item_raw])
+
+        # Extract user and item IDs from list of tuples and convert to internal indices
+        user_idx = np.array([self.raw2inner_id_users.get(u, -1) for u, _ in indices])
+        item_idx = np.array([self.raw2inner_id_items.get(i, -1) for _, i in indices])
         
         logits = np.zeros(len(indices), dtype=float)
 
@@ -134,12 +130,8 @@ class LogisticMFProbs:
 
         # Check for invalid IDs        
         if np.any(impossible_mask):
-            missing_users = {u for u, m in zip(user_raw, user_idx == -1) if m}
-            missing_items = {i for i, m in zip(item_raw, item_idx == -1) if m}
             warnings.warn(
-                f"Estimating observation probability for some pairs were impossible. Using default. "
-                f"Missing users: {missing_users or 'None'}. "
-                f"Missing items: {missing_items or 'None'}.",
+                f"Estimating observation probability for {np.sum(impossible_mask)} pairs were impossible. Using default. ",
                 UserWarning
             )
             
@@ -157,8 +149,8 @@ class LogisticMFProbs:
             # Assign the results to all possible slots.
             logits[possible_mask] = possible_logits
             
-        probabilities = (1 / (1 + np.exp(-logits))).tolist()
-        was_impossible = impossible_mask.tolist()
+        probabilities = 1.0 / (1.0 + np.exp(-logits))
+        was_impossible = impossible_mask.astype(np.bool_)
         
         return probabilities, was_impossible
 
