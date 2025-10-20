@@ -35,7 +35,7 @@ if True:
 max_test_queries = 2000  
 
 # Other parameters
-max_iterations = 20   
+max_iterations = 30   
 n_factors = 100       
 #max_iterations = 2   
 #n_factors = 5 
@@ -130,7 +130,6 @@ def run_single_experiment(k, alpha, max_test_queries, max_calib_queries, random_
 
     print(f"Done missingness estimation! Took {t_missing}s.\n")
     sys.stdout.flush()
-    del trainset
     
     #------Compute intervals--------# 
     #-------------------------------#
