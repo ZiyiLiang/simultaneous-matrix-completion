@@ -10,8 +10,8 @@ SEED_LIST=$(seq 1 10)
 
 # Slurm parameters
 MEMO=20G                            # Memory required 
-TIME=00-02:00:00                    # Time required 
-CORE=6                              # Cores required 
+TIME=00-01:30:00                    # Time required 
+CORE=8                              # Cores required 
 
 # Assemble order                                               prefix
 ORDP="sbatch --mem="$MEMO" --nodes=1 --ntasks=1 --cpus-per-task="$CORE" --time="$TIME" --account=sesia_1124 --partition=main"

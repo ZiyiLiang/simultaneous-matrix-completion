@@ -36,7 +36,7 @@ max_test_queries = 2000
 
 # Other parameters
 max_iterations = 20   
-n_factors = 50       
+n_factors = 100       
 #max_iterations = 2   
 #n_factors = 5 
 num_worker = 6
@@ -111,20 +111,26 @@ def run_single_experiment(k, alpha, max_test_queries, max_calib_queries, random_
 
     start_time = time()
     trainset = construct_trainset(train_samples, reader.rating_scale)
-    algo = SVD(n_factors=n_factors, n_epochs=max_iterations, biased=False, verbose=verbose)
+    algo = SVD(n_factors=n_factors, n_epochs=max_iterations, biased=False, random_state=random_state, verbose=verbose)
     algo.fit(trainset)
     Mhat = create_batch_rating_predictor(algo)
     t_train = time()-start_time
 
-    print("Done training!\n")
+    print(f"Done training! Took {t_train}s.\n")
     sys.stdout.flush()
     del trainset
 
     print("Estimating missingness on the splitted training set...")
+    sys.stdout.flush()
+
     start_time = time()
-    w_obs=LogisticMFProbs(random_state=random_state)
+    w_obs=LogisticMFProbs(factors=n_factors, iterations=max_iterations, random_state=random_state)
     w_obs.fit(train_samples+calib_samples)
     t_missing = time()-start_time
+
+    print(f"Done missingness estimation! Took {t_missing}s.\n")
+    sys.stdout.flush()
+    del trainset
     
     #------Compute intervals--------# 
     #-------------------------------#
