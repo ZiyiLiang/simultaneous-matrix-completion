@@ -124,7 +124,7 @@ def run_single_experiment(k, alpha, max_test_queries, max_calib_queries, random_
     sys.stdout.flush()
 
     start_time = time()
-    w_obs=LogisticMFProbs(factors=n_factors, iterations=max_iterations, random_state=random_state)
+    w_obs=LogisticMFProbs(random_state=random_state)
     w_obs.fit(train_samples+calib_samples)
     t_missing = time()-start_time
 
