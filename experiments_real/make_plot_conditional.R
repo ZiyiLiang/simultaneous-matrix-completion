@@ -94,7 +94,11 @@ make_plot <- function(results, k_list, genres, exp, xmax=2000, sv=TRUE, fullmiss
   }
 }
 
+<<<<<<< Updated upstream
 k_list <- c(2,3,4,5)
 genres <- c("Children's", "Crime", "Drama", "Romance")
 make_plot(results, k_list, genres, exp, sv=TRUE, fullmiss=fullmiss)
+=======
+make_plot(results, exp, sv=FALSE)
+>>>>>>> Stashed changes
 
