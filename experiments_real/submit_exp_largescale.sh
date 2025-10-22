@@ -3,14 +3,14 @@
 # Parameters
 K_LIST=(2 3 4 5 6)
 #K_LIST=(5)
-#N_CAL_LIST=(1000 1500 2000 2500 3000)
-N_CAL_LIST=(2000)
+N_CAL_LIST=(2000 2500 3000 3500 4000)
+#N_CAL_LIST=(2000)
 SEED_LIST=$(seq 1 10)
 #SEED_LIST=(1)
 
 # Slurm parameters
 MEMO=20G                            # Memory required 
-TIME=00-01:30:00                    # Time required 
+TIME=00-00:30:00                    # Time required 
 CORE=8                              # Cores required 
 
 # Assemble order                                               prefix
