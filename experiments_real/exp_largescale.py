@@ -13,7 +13,7 @@ from largescale_smc.largescale_missingness import *
 from largescale_smc.largescale_utils import *
 from largescale_smc.largescale_method import *
 
-from surprise import SVD
+from surprise import SVD, SVDpp
 from surprise import accuracy
 
 #########################
@@ -23,7 +23,7 @@ if True:
     # Parse input arguments
     print ('Number of arguments:', len(sys.argv), 'arguments.')
     print ('Argument List:', str(sys.argv))
-    if len(sys.argv) != 4:
+    if len(sys.argv) != 5:
         print("Error: incorrect number of parameters.")
         quit()
 
@@ -36,7 +36,8 @@ max_test_queries = 2000
 
 # Other parameters
 max_iterations = 30   
-n_factors = 100       
+SVD_factors = 100 
+SVDpp_factors = 20      
 #max_iterations = 2   
 #n_factors = 5 
 num_worker = 8
@@ -106,17 +107,26 @@ def run_single_experiment(k, alpha, max_test_queries, max_calib_queries, random_
 
     #--------Model Training---------#
     #-------------------------------#
-    print("Running matrix completion algorithm on the splitted training set...")
+    print("Running SVD on the splitted training set...")
     sys.stdout.flush()
 
     start_time = time()
     trainset = construct_trainset(train_samples, reader.rating_scale)
-    algo = SVD(n_factors=n_factors, n_epochs=max_iterations, biased=False, random_state=random_state, verbose=verbose)
+    algo = SVD(n_factors=SVD_factors, n_epochs=max_iterations, biased=False, random_state=random_state, verbose=verbose)
     algo.fit(trainset)
     Mhat = create_batch_rating_predictor(algo)
-    t_train = time()-start_time
+    t_svd = time()-start_time
 
-    print(f"Done training! Took {t_train}s.\n")
+    print(f"Done training with SVD! Took {t_svd}s.\n")
+    print("Running SVDpp on the splitted training set...")
+    sys.stdout.flush()
+
+    start_time = time()
+    alt_algo = SVDpp(n_factors=SVDpp_factors, n_epochs=max_iterations, cache_ratings=True, random_state=random_state, verbose=verbose)
+    alt_algo.fit(trainset)
+    t_svdpp = time()-start_time
+
+    print(f"Done training with SVDpp! Took {t_svdpp}s.\n")
     sys.stdout.flush()
     del trainset
 
