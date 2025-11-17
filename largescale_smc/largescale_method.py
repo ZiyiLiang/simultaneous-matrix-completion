@@ -199,6 +199,7 @@ class DataSplitter:
         calib_samples : list of tuples
             (user_id, item_id, rating) tuples for the calibration set.
         """
+
         rng = default_rng(random_state)
 
         # Create a temporary copy for shuffling and sampling.
