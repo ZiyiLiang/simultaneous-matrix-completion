@@ -23,7 +23,7 @@ if True:
     # Parse input arguments
     print ('Number of arguments:', len(sys.argv), 'arguments.')
     print ('Argument List:', str(sys.argv))
-    if len(sys.argv) != 5:
+    if len(sys.argv) != 4:
         print("Error: incorrect number of parameters.")
         quit()
 
@@ -35,11 +35,12 @@ if True:
 max_test_queries = 2000  
 
 # Other parameters
-max_iterations = 30   
-SVD_factors = 100 
-SVDpp_factors = 20      
-#max_iterations = 2   
-#n_factors = 5 
+# max_iterations = 30   
+# SVD_factors = 100 
+# SVDpp_factors = 20
+SVD_factors = 2 
+SVDpp_factors = 2       
+max_iterations = 2    
 num_worker = 8
 verbose = True
 allow_inf = False
@@ -166,7 +167,8 @@ def run_single_experiment(k, alpha, max_test_queries, max_calib_queries, random_
     res['Test_queries'] = n_test_queries
     res['random_state'] = random_state
 
-    res['t_train'] = t_train
+    res['t_svd'] = t_svd
+    res['t_svdpp'] = t_svdpp
     res['t_missing'] = t_missing
     res['t_sample_calib'] = t_sample_calib
     res['t_init'] = t_init
