@@ -35,12 +35,12 @@ if True:
 max_test_queries = 2000  
 
 # Other parameters
-# max_iterations = 30   
-# SVD_factors = 100 
-# SVDpp_factors = 20
-SVD_factors = 2 
-SVDpp_factors = 2       
-max_iterations = 2    
+max_iterations = 30   
+SVD_factors = 100 
+SVDpp_factors = 20
+# SVD_factors = 2 
+# SVDpp_factors = 2       
+# max_iterations = 2    
 num_worker = 8
 verbose = True
 allow_inf = False
