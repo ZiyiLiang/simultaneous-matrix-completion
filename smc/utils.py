@@ -118,3 +118,51 @@ def compute_error(M, Mhat, mask):
     frobenius_error = np.linalg.norm(pred - truth, 'fro') / np.linalg.norm(truth, 'fro')
 
     return mae, rmse, frobenius_error
+
+
+def compute_extremeness_weights(M, rho=1.0, normalize=True):
+    """
+    Compute observation weights based on how extreme values are relative to the data distribution.
+    More extreme values (farther from center, in the tails of the distribution) have
+    higher probability of being observed.
+
+    Parameters
+    ----------
+    M : ndarray
+        The matrix values (possibly noisy observations).
+    rho : float, optional
+        Base of exponential weighting function controlling MNAR strength.
+        - rho = 1: uniform weights (MAR), since 1^x = 1 for all x
+        - rho > 1: extreme values have higher weights (MNAR)
+        - Continuously transitions from MAR to MNAR as rho increases from 1
+        Typical values: 1.0 (MAR), 1.1, 1.2, 1.5
+    normalize : bool, optional
+        Whether to normalize weights to sum to 1. Default is True.
+
+    Returns
+    -------
+    w : ndarray
+        Observation weights with the same shape as M.
+
+    Notes
+    -----
+    The weight function measures extremeness relative to the data distribution:
+    w_ij = rho^extremeness_ij
+    where extremeness_ij = |M_ij - median(M)|
+
+    This gives continuous control over the MNAR mechanism:
+    - When rho=1: w_ij = 1 for all i,j (uniform sampling, MAR)
+    - When rho>1: rho^(larger extremeness) > rho^(smaller extremeness)
+      so more extreme values get exponentially higher weights
+    """
+    # Compute extremeness (distance from median)
+    median_val = np.median(M)
+    extremeness = np.abs(M - median_val)
+
+    # Compute weights: rho^extremeness
+    w = rho ** extremeness
+
+    if normalize:
+        w = w / np.sum(w)
+
+    return w
