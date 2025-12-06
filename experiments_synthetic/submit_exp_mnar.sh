@@ -4,9 +4,10 @@
 N1=200
 N2=200
 R_LIST=(30)
-MU_LIST=$(seq 0 3 30)
-RHO_LIST=(1.0 1.05 1.1 1.15 1.2)  # MNAR parameter: 1.0 = MAR, >1 = MNAR
-SEED_LIST=$(seq 101 150)
+MU_LIST=(15 30)
+#MU_LIST=$(seq 0 3 30)
+RHO_LIST=(1.0 1.05 1.1 1.15 1.2)  # MNAR parameter
+SEED_LIST=$(seq 1 50)
 #MU_LIST=(15)
 #RHO_LIST=(1.0 1.1)
 #SEED_LIST=(101)
@@ -30,7 +31,7 @@ OUT_DIR="results/exp_mnar"
 mkdir -p $OUT_DIR
 for SEED in $SEED_LIST; do
     for RHO in "${RHO_LIST[@]}"; do
-        for MU in $MU_LIST; do
+        for MU in "${MU_LIST[@]}"; do
             for R in "${R_LIST[@]}"; do
                 JOBN=$N1"by"$N2"_r"$R"_mu"$MU"_rho"$RHO"_seed"$SEED
                 OUT_FILE=$OUT_DIR"/"$JOBN".txt"

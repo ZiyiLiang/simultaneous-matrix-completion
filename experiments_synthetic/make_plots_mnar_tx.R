@@ -5,7 +5,7 @@ library(kableExtra)
 library(ggplot2)
 
 
-rho_selected <- 1.20
+rho_selected <- 1.15
 
 
 # setwd("C:/Users/xieti/Dropbox/simultaneous-matrix-completion/experiments_synthetic/results_hpc")
@@ -141,3 +141,14 @@ for (exp in exp_list) {
 }
 
 cat(sprintf("\nPlots saved with rho = %s in filenames\n", rho_selected))
+
+# Summary of repetitions per setting
+cat("\n=== Repetitions per setting ===\n")
+rep_summary <- results %>%
+  select(Method, mu, k, num) %>%
+  distinct() %>%
+  arrange(mu, k, Method)
+print(rep_summary, n = Inf)
+
+cat(sprintf("\nMin repetitions: %d, Max repetitions: %d\n", 
+            min(rep_summary$num), max(rep_summary$num)))
