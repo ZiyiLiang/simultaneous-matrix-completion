@@ -5,10 +5,10 @@
 SD_LIST=(0.1)
 #SCALE_LIST=(0.10 0.14 0.20)
 SCALE_LIST=(0.14)
-#SEED_LIST=(1)
-SEED_LIST=$(seq 1 300)
-#SOLVER_LIST=("nnm")  # runtime for nnm is longer, set to 1h
-SOLVER_LIST=("svt" "nnm")   # runtime for svt is shorter, set to 30min
+SEED_LIST=(1)
+#SEED_LIST=$(seq 1 300)
+SOLVER_LIST=("ncf")
+#SOLVER_LIST=("svt" "nnm" "ncf")   # runtime for svt is shorter, runtime for nnm is longer
 
 
 # Slurm parameters
