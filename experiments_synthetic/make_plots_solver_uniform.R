@@ -102,5 +102,5 @@ make_plot <- function(results, solvers, xmax=2000, sv=TRUE) {
   }
 }
 
-solver_list <- c("als", "nnm", "svt")
-make_plot(results, solver_list, sv=TRUE)
+solver_list <- c("als", "nnm", "svt", "ncf")
+make_plot(results, solver_list, sv=FALSE)
