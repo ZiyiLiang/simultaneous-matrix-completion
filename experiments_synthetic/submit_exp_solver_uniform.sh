@@ -3,9 +3,10 @@
 # Parameters
 #MU_LIST=(0)
 MU_LIST=(15)
-SEED_LIST=$(seq 1 150)
-SOLVER_LIST=("svt" "nnm")
-#SEED_LIST=(1)
+#SEED_LIST=$(seq 1 150)
+#SOLVER_LIST=("svt" "nnm" "pmf" "ncf")
+SOLVER_LIST=("ncf")
+SEED_LIST=(1)
 
 # Slurm parameters
 MEMO=1G                             # Memory required (1 GB)

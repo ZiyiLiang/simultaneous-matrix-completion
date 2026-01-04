@@ -1,7 +1,11 @@
 import numpy as np
 import cvxpy as cp
+import pandas as pd
+import tensorflow as tf
 import sys
 
+from libreco.data import DatasetPure
+from libreco.algorithms import NCF
 from sklearn.utils.extmath import randomized_svd
 from scipy.sparse.linalg import svds
 from sklearn.metrics import mean_squared_error
@@ -208,3 +212,80 @@ def pmf_solve(M,
         prev_X = X
 
     return X, U, V
+
+
+
+def ncf_solve(M, 
+              mask_train, 
+              embed_size=16, 
+              n_epochs=10, 
+              lr=0.01, 
+              batch_size=256, 
+              verbose=True, 
+              random_state=None, **kwargs):
+    """
+    Wrapper for Libreco NCF to act as a matrix completion solver.
+    The implementation of NCF(Neural Collaborative Filtering) follows the paper: https://arxiv.org/abs/1708.05031    
+    
+    Args:
+        M (np.ndarray): matrix to complete
+        mask_train (np.ndarray): Binary mask (same shape as M) indicating training entries (1=observed).
+        embed_size (int): Latent factor size.
+        n_epochs (int): Training epochs.
+        lr (float): Learning rate.
+        batch_size (int): Batch size.
+        verbose (bool): Whether to print training progress.
+        random_state (int): Seed for reproducibility.
+        
+    Returns:
+        Mhat (np.ndarray): The fully reconstructed estimated matrix.
+    """
+    
+    # Reset Tensorflow Graph to prevent memory leaks in loops
+    tf.compat.v1.reset_default_graph() 
+    if random_state is not None:
+        np.random.seed(random_state)
+        tf.random.set_seed(random_state)
+
+    # LibRecommender requires specific column names: 'user', 'item', 'label'
+    rows, cols = np.where(mask_train > 0)
+    ratings = M[rows, cols]
+    
+    train_df = pd.DataFrame({
+        'user': rows,
+        'item': cols,
+        'label': ratings
+    })
+
+    # Build Libreco Dataset
+    train_data, data_info = DatasetPure.build_trainset(train_df)
+
+    # Initialize NCF Model
+    # IMPORTANT: task='rating' ensures we are doing regression (MSE), not classification for implicit data
+    model = NCF(
+        task="rating", 
+        data_info=data_info, 
+        embed_size=embed_size, 
+        n_epochs=n_epochs, 
+        lr=lr, 
+        batch_size=batch_size,
+        reg=0.0, 
+        **kwargs
+    )
+
+    # Train
+    if verbose:
+        print("Training NCF...")
+    model.fit(train_data, neg_sampling=False, verbose=2 if verbose else 0, eval_data=None, metrics=None)
+
+    # Predict Full Matrix 
+    n_users, n_items = M.shape
+    all_users = np.repeat(np.arange(n_users), n_items)
+    all_items = np.tile(np.arange(n_items), n_users)
+    
+    # Note: We set cold_start='average' to handle rows/cols that might have been 
+    # masked out entirely in the training set
+    predictions = model.predict(user=all_users, item=all_items, cold_start="average")
+    Mhat = predictions.reshape(n_users, n_items)
+    
+    return Mhat
