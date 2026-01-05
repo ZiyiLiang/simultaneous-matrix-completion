@@ -5,8 +5,8 @@
 SD_LIST=(0.1)
 #SCALE_LIST=(0.10 0.14 0.20)
 SCALE_LIST=(0.14)
-SEED_LIST=(1)
-#SEED_LIST=$(seq 1 300)
+#SEED_LIST=(1)
+SEED_LIST=$(seq 1 300)
 SOLVER_LIST=("ncf")
 #SOLVER_LIST=("svt" "nnm" "ncf")   # runtime for svt is shorter, runtime for nnm is longer
 
