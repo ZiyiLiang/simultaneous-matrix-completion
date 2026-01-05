@@ -96,11 +96,11 @@ make_plot <- function(results, solvers, xmax=2000, sv=TRUE) {
     ylab("") +
     theme_bw()
   if (sv == TRUE){
-    ggsave(sprintf("%s/exp_solver_uniform.pdf", fig.dir), pp, device=NULL, width=6.5, height=height)
+    ggsave(sprintf("%s/exp_solver_uniform.pdf", fig.dir), pp, device=NULL, width=8, height=height)
   }else{
     print(pp)
   }
 }
 
 solver_list <- c("als", "nnm", "svt", "ncf")
-make_plot(results, solver_list, sv=FALSE)
+make_plot(results, solver_list, sv=TRUE)
