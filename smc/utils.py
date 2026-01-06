@@ -166,3 +166,48 @@ def compute_extremeness_weights(M, rho=1.0, normalize=True):
         w = w / np.sum(w)
 
     return w
+
+
+def compute_extremeness_weights_linear(M, rho=1.0, normalize=True):
+    """
+    Compute observation weights using linear extremeness (without normalization by e_max).
+    More extreme values (farther from median) have higher probability of being observed.
+
+    Parameters
+    ----------
+    M : ndarray
+        The matrix values (possibly noisy observations).
+    rho : float, optional
+        Linear weighting parameter controlling MNAR strength.
+        - rho = 1: all weights equal 1 (MCAR)
+        - rho > 1: weights increase linearly with extremeness (MNAR)
+        Typical values: 1.0 (MCAR), 1.5, 2.0, 3.0
+    normalize : bool, optional
+        Whether to normalize weights to sum to 1. Default is True.
+
+    Returns
+    -------
+    w : ndarray
+        Observation weights with the same shape as M.
+
+    Notes
+    -----
+    The weight function is:
+    w_{r,c} = 1 + (rho - 1) * e_{r,c}
+    where e_{r,c} = |M_{r,c} - median(M)| is the extremeness (absolute deviation from median).
+
+    This gives continuous control over the MNAR mechanism:
+    - When rho=1: w_{r,c} = 1 for all r,c (uniform sampling, MCAR)
+    - When rho>1: weights increase linearly with extremeness
+    """
+    # Compute extremeness (absolute deviation from median)
+    median_val = np.median(M)
+    extremeness = np.abs(M - median_val)
+
+    # Compute weights: w = 1 + (rho - 1) * e
+    w = 1 + (rho - 1) * extremeness
+
+    if normalize:
+        w = w / np.sum(w)
+
+    return w

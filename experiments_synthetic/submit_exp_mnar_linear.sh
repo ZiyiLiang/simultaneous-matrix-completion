@@ -6,7 +6,7 @@ N2=200
 R_LIST=(30)
 MU_LIST=(9 15 30)
 #MU_LIST=$(seq 0 3 30)
-RHO_LIST=(1.0 1.05 1.1 1.15 1.2)  # MNAR parameter
+RHO_LIST=(1.0 1.1 1.2 1.3 1.4 1.5)  # MNAR parameter
 SEED_LIST=$(seq 1 50)
 #MU_LIST=(15)
 #RHO_LIST=(1.0 1.1)
@@ -21,13 +21,13 @@ CORE=1                              # Cores required (1)
 ORDP="sbatch --mem="$MEMO" --nodes=1 --ntasks=1 --cpus-per-task=1 --time="$TIME
 
 # Create directory for log files
-LOGS="logs/exp_mnar"
+LOGS="logs/exp_mnar_linear"
 mkdir -p $LOGS
 
 comp=0
 incomp=0
 
-OUT_DIR="results/exp_mnar"
+OUT_DIR="results/exp_mnar_linear"
 mkdir -p $OUT_DIR
 for SEED in $SEED_LIST; do
     for RHO in "${RHO_LIST[@]}"; do
@@ -45,7 +45,7 @@ for SEED in $SEED_LIST; do
                 if [[ $COMPLETE -eq 0 ]]; then
                 ((incomp++))
                 # Script to be run
-                SCRIPT="exp_mnar.sh $N1 $N2 $R $MU $RHO $SEED"
+                SCRIPT="exp_mnar_linear.sh $N1 $N2 $R $MU $RHO $SEED"
                 # Define job name
                 OUTF=$LOGS"/"$JOBN".out"
                 ERRF=$LOGS"/"$JOBN".err"

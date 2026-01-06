@@ -5,7 +5,7 @@ library(kableExtra)
 library(ggplot2)
 
 
-rho_selected <- 1.15
+rho_selected <- 1.20
 
 
 # setwd("C:/Users/xieti/Dropbox/simultaneous-matrix-completion/experiments_synthetic/results_hpc")
@@ -152,3 +152,4 @@ print(rep_summary, n = Inf)
 
 cat(sprintf("\nMin repetitions: %d, Max repetitions: %d\n", 
             min(rep_summary$num), max(rep_summary$num)))
+

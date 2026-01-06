@@ -1,11 +1,11 @@
 import numpy as np
 import cvxpy as cp
 import pandas as pd
-import tensorflow as tf
+# import tensorflow as tf
 import sys
 
-from libreco.data import DatasetPure
-from libreco.algorithms import NCF
+# from libreco.data import DatasetPure
+# from libreco.algorithms import NCF
 from sklearn.utils.extmath import randomized_svd
 from scipy.sparse.linalg import svds
 from sklearn.metrics import mean_squared_error
