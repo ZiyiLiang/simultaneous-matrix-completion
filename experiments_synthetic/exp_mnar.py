@@ -169,13 +169,13 @@ def run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_cali
         #------Compute intervals--------#
         #-------------------------------#
         if method == "conformal":
-            ci_method = SimulCI(M, Mhat, mask_obs, idxs_calib, k)
+            ci_method = SimulCI(M, Mhat, mask_obs, idxs_calib, k, w_obs=mnar_weights)
             df = ci_method.get_CI(idxs_test, alpha, allow_inf=allow_inf)
             lower, upper, is_inf= df.loc[0].lower, df.loc[0].upper, df.loc[0].is_inf
             res = pd.concat([res, evaluate_SCI(lower, upper, k, M, idxs_test, is_inf=is_inf, method=method)])
         else:
             a_list = [alpha, alpha * k]
-            ci_method = Bonf_benchmark(M, Mhat, mask_obs, idxs_calib, k)
+            ci_method = Bonf_benchmark(M, Mhat, mask_obs, idxs_calib, k, w_obs=mnar_weights)
             df = ci_method.get_CI(idxs_test, a_list, allow_inf=allow_inf)
             for i, m in enumerate(["Bonferroni", "Uncorrected"]):
                 lower, upper, is_inf= df.loc[i].lower, df.loc[i].upper, df.loc[i].is_inf
