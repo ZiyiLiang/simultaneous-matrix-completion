@@ -150,7 +150,7 @@ def run_single_experiment(M_true, k, alpha, prop_obs, max_test_queries, max_cali
         elif solver == "nnm":
             Mhat = nnm_solve(M, mask_train, verbose=verbose, random_state=random_state)
         elif solver == "ncf":
-            Mhat = ncf_solve(M, mask_train, embed_size=r, n_epochs=10, verbose=verbose, random_state=random_state)
+            Mhat = ncf_solve(M, mask_train, embed_size=r, n_epochs=30, verbose=verbose, random_state=random_state)
 
         tok=time()
         print(f"run time for {solver} is {tok-tik}.")
