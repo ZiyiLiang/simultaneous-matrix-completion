@@ -7,19 +7,25 @@ This software repository provides a software implementation of the methods descr
 
 
 ## Paper abstract
-We develop a conformal inference method to construct joint confidence regions for structured groups of missing entries within a sparsely observed matrix. This method is useful to
-provide reliable uncertainty estimation for group-level collaborative filtering; for example, it
-can be applied to help suggest a movie for a group of friends to watch together. Unlike standard conformal techniques, which make inferences for one individual at a time, our method
-achieves stronger group-level guarantees by carefully assembling a structured calibration data
-set mimicking the patterns expected among the test group of interest. We propose a generalized weighted conformalization framework to deal with the lack of exchangeability arising from
-such structured calibration, and in this process we introduce several innovations to overcome
-computational challenges. The practicality and effectiveness of our method are demonstrated
-through extensive numerical experiments and an analysis of the MovieLens 100K data set.
+We develop a conformal inference method to construct joint prediction regions for structured groups of missing entries in a sparsely observed matrix, with particular focus on groups drawn from the same column. The method is model-agnostic and can be combined with any black-box matrix completion algorithm. In the context of recommender systems, for example, it is useful to quantify uncertainty in the ratings that all members of a group would assign to the same item, enabling more informed decisions when individual preferences may conflict. Unlike existing conformal techniques that estimate uncertainty for one entry at a time, our approach provides group-level guarantees by assembling calibration data with matching structure. To achieve this, we introduce a generalized weighted conformalization framework that addresses the lack of exchangeability induced by structured calibration, along with computational strategies that make the method practical at scale. We demonstrate the effectiveness of our approach through synthetic experiments under various missing-data mechanisms and applications to MovieLens datasets. 
 
 ## Contents
  - `smc/` Python package implementing our methods and some alternative benchmarks.
  - `third_party/` Third-party Python packages imported by our package.
- - `experiments_real/` Codes to replicate the figures for the experiments with the MovieLens 100K data set.
+ - `experiments_real/` Codes to replicate the figures for the experiments with the MovieLens data sets.
  - `experiments_synthetic/` Codes to replicate the figures for the synthetic experiments discussed in the accompanying paper.
  - `notebooks/` Jupyter notebooks with introductory usage examples.
- - `dependencies.txt` Prerequisites with version number for the `smc` package.
+ - `dependencies.txt` Prerequisites with version number for the `smc` package. 
+
+
+## Data
+
+### MovieLens 100K
+
+Download from: https://grouplens.org/datasets/movielens/100k/
+
+### MovieLens 10M (for scalability experiments)
+
+Download from: https://grouplens.org/datasets/movielens/10m/
+
+No additional preprocessing is required. The experiment scripts will load and process the data automatically.
