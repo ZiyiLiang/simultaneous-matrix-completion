@@ -104,5 +104,5 @@ make_plot <- function(results, xmax=2000, sv=TRUE) {
   }
 }
 
-make_plot(results, sv=FALSE)
+make_plot(results, sv=TRUE)
 

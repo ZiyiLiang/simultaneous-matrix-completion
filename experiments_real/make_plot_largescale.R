@@ -4,8 +4,9 @@ library(dplyr)
 library(tidyr)
 library(tidyverse)
 library(kableExtra)
-library(ggplot2)
+library(lubridate) 
 
+# --- Load Data ---
 exp="largescale"
 
 idir <- sprintf("results/%s/", exp)
@@ -17,62 +18,83 @@ results.raw <- do.call("rbind", lapply(ifile.list, function(ifile) {
   df <- read_delim(sprintf("%s/%s", idir, ifile), delim = ",", col_types = cols())
 }))
 
-# Compute inference time for 100 test pairs
-n_test <- 2000
-results.raw$t_test <- (results.raw$t_inference-results.raw$t_universal)/n_test * 100
+# --- Define Helper for Time Formatting ---
+format_hms <- function(seconds) {
+  if(any(is.na(seconds))) return("NA")
 
-# Compute total inference time and model fitting time 
-results.raw$t_fitting <- results.raw$t_train + results.raw$t_missing
-results.raw$t_inference <- results.raw$t_sample_calib + results.raw$t_universal + results.raw$t_test
-
-key.values <- c("t_train", "t_missing", "t_sample_calib", "t_universal", "t_test", "t_fitting", "t_inference")
-key.labels <- c("Point pred.", "Missingness est.", "Calib. sampling", "One-time comp.", "Test inference", "Total fitting", "Total inference")
-
-results <- results.raw %>%
-  pivot_longer(cols=c("t_train", "t_missing", "t_sample_calib", "t_universal",  "t_test","t_fitting", "t_inference"), names_to='Key', values_to='Value') %>%
-  mutate(Key = factor(Key, key.values, key.labels)) %>%
-  filter(k==6) %>%
-  group_by(Calib_queries, Key) %>%
-  summarise(num=n(), Value.se = sd(Value, na.rm=T)/sqrt(n()), Value=mean(Value, na.rm=T))
+  total_seconds <- round(as.numeric(seconds))
   
+  h <- total_seconds %/% 3600
+  m <- (total_seconds %% 3600) %/% 60
+  s <- total_seconds %% 60
+  
+  # Format: H:MM:SS (e.g., 0:01:39)
+  sprintf("%d:%02d:%02d", h, m, s)
+}
 
-# Reshape and organize the data
-latex_table <- results %>%
-  # Filter relevant rows
-  filter(Key %in% c("Point pred.", "Missingness est.", "Total fitting",
-                    "Calib. sampling", "One-time comp.", "Test inference", "Total inference")) %>%
-  # Select relevant columns
-  select(Calib_queries, Key, Value) %>%
-  # Pivot wider to get keys as columns
-  pivot_wider(names_from = Key, values_from = Value) %>%
-  # Rename columns for clarity
-  rename(
-    `Point Pred.` = `Point pred.`,
-    `Missingness Est.` = `Missingness est.`,
-    `Total Fitting` = `Total fitting`,
-    `Calib. Sampling` = `Calib. sampling`,
-    `One-time Comp.` = `One-time comp.`,
-    `Test Inference` = `Test inference`,
-    `Total Inference` = `Total inference`
+# --- Compute Metrics ---
+n_test <- 2000
+
+# Fitting totals
+results.raw$t_fit_svd   <- results.raw$t_svd + results.raw$t_missing
+results.raw$t_fit_svdpp <- results.raw$t_svdpp + results.raw$t_missing
+
+# Inference totals
+results.raw$t_test_marginal <- (results.raw$t_inference - results.raw$t_universal)
+results.raw$t_test_100 <- (results.raw$t_test_marginal / n_test) * 100
+results.raw$t_inf_total <- results.raw$t_sample_calib + results.raw$t_universal + results.raw$t_test_100
+
+# --- Aggregate Data ---
+results_agg <- results.raw %>%
+  filter(k == 6) %>%
+  group_by(Calib_queries) %>%
+  summarise(
+    # Aggregating raw seconds
+    val_svd_pt   = mean(t_svd, na.rm=TRUE),
+    val_svdpp_pt = mean(t_svdpp, na.rm=TRUE),
+    val_missing  = mean(t_missing, na.rm=TRUE),
+    val_fit_svd  = mean(t_fit_svd, na.rm=TRUE),
+    val_fit_svdpp= mean(t_fit_svdpp, na.rm=TRUE),
+    
+    val_calib    = mean(t_sample_calib, na.rm=TRUE),
+    val_univ     = mean(t_universal, na.rm=TRUE),
+    val_test100  = mean(t_test_100, na.rm=TRUE),
+    val_inf_tot  = mean(t_inf_total, na.rm=TRUE)
   ) %>%
-  # Reorder columns
+  ungroup() %>%
+  mutate(across(starts_with("val_"), Vectorize(format_hms)))
+
+# --- Generate Table (a): Fitting ---
+latex_a <- results_agg %>%
   select(Calib_queries, 
-         `Point Pred.`, `Missingness Est.`, `Total Fitting`,
-         `Calib. Sampling`, `One-time Comp.`, `Test Inference`, `Total Inference`)
+         val_missing, 
+         val_svd_pt, val_svdpp_pt, 
+         val_fit_svd, val_fit_svdpp) %>%
+  kbl(format = "latex", booktabs = TRUE, 
+      align = c("l", "c", "c", "c", "c", "c"),
+      col.names = c("$n$",  
+                    "Weight est.",   
+                    "SVD", "SVD++", 
+                    "SVD", "SVD++"),
+      escape = FALSE) %>%
+  add_header_above(c(" " = 2, 
+                     "Point Prediction" = 2, 
+                     "Total Fitting" = 2)) %>%
+  kable_styling(latex_options = c("hold_position"))
 
-# Create LaTeX table with kableExtra
-latex_output <- latex_table %>%
-  kbl(format = "latex", 
-      booktabs = TRUE,
-      digits = 2,
-      col.names = c("Calib Queries", 
-                    "Point Pred.", "Missingness Est.", "Total",
-                    "Calib. Sampling", "One-time Comp.", "Test Inference", "Total"),
-      align = c("l", rep("c", 7))) %>%
-  add_header_above(c(" " = 1, 
-                     "Model Fitting Time" = 3, 
-                     "Inference Time" = 4)) %>%
-  kable_styling(latex_options = c("striped", "hold_position"))
+# --- Generate Table (b): Inference ---
+latex_b <- results_agg %>%
+  select(Calib_queries, val_calib, val_univ, val_test100, val_inf_tot) %>%
+  kbl(format = "latex", booktabs = TRUE, 
+      align = c("l", "c", "c", "c", "c"),
+      col.names = c("$n$", 
+                    "Sampling", 
+                    "Pre-comp.", 
+                    "Test (100)", 
+                    "Total"),
+      escape = FALSE) %>%
+  kable_styling(latex_options = c("hold_position"))
 
-# Print the LaTeX code
-latex_output
+# Print
+print(latex_a)
+print(latex_b)
