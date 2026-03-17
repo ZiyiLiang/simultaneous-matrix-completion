@@ -3,6 +3,7 @@ options(width=160)
 library(tidyverse)
 library(kableExtra)
 library(ggplot2)
+library(ggh4x)
 
 
 setwd("C:/Users/liang/Documents/GitHub/conformal-matrix-completion/experiments_synthetic/results_hpc")

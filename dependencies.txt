@@ -11,4 +11,6 @@ seaborn=0.12.2
 scikit-surprise=1.1.4
 implicit=0.5.2
 librecommender=1.5.2
-
+TensorFlow >= 1.15, < 2.16
+PyTorch >= 1.10
+gensim >= 4.0.0

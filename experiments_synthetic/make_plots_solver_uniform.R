@@ -4,7 +4,7 @@ library(tidyverse)
 library(kableExtra)
 library(ggplot2)
 library(dplyr)
-
+library(ggh4x)
 
 setwd("C:/Users/liang/Documents/GitHub/conformal-matrix-completion/experiments_synthetic/results_hpc")
 idir <- "results/exp_solver_uniform/"

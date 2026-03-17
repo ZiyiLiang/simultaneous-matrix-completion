@@ -3,6 +3,8 @@ options(width=160)
 library(tidyverse)
 library(kableExtra)
 library(ggplot2)
+library(ggh4x)
+
 
 exp = "wsc"
 setwd("~/GitHub/conformal-matrix-completion/experiments_synthetic/results_hpc/")
