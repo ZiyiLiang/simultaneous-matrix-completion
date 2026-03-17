@@ -20,6 +20,7 @@ results.raw <- do.call("rbind", lapply(ifile.list, function(ifile) {
   df <- read_delim(sprintf("%s/%s", idir, ifile), delim=",", col_types=cols())
 }))
 
+
 # Print available rho values for reference
 cat("Available rho values in data:\n")
 print(unique(results.raw$rho))
@@ -100,7 +101,7 @@ make_plot <- function(results, exp, val, rho_str, xmax=2000, sv=TRUE) {
       ylab("") +
       theme_bw()
     if (sv == TRUE){
-      ggsave(sprintf("%s/exp_mnar_%s_rho%s.pdf", fig.dir, exp, rho_str), pp, device=NULL, width=6.5, height=height)}
+      ggsave(sprintf("%s/exp_mnar_exponential_%s_rho%s.pdf", fig.dir, exp, rho_str), pp, device=NULL, width=6.5, height=height)}
     else{print(pp)}
   }
   else{
@@ -122,7 +123,7 @@ make_plot <- function(results, exp, val, rho_str, xmax=2000, sv=TRUE) {
       ylab("") +
       theme_bw()
     if (sv == TRUE){
-      ggsave(sprintf("%s/exp_mnar_%s_rho%s.pdf", fig.dir, exp, rho_str), pp, device=NULL, width=6.5, height=height)}
+      ggsave(sprintf("%s/exp_mnar_exponential_%s_rho%s.pdf", fig.dir, exp, rho_str), pp, device=NULL, width=6.5, height=height)}
     else{print(pp)}
   }
 }
