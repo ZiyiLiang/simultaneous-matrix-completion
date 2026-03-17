@@ -139,6 +139,10 @@ dmypy.json
 /archived/results
 /archived/results_hpc
 
+# --- Allow specific zipped results for replication ---
+!/experiments_synthetic/results_hpc/results/results_synthetic.zip
+!/experiments_real/results_hpc/results/results_real.zip
+
 # cluster setup
 /setup.sh
 
