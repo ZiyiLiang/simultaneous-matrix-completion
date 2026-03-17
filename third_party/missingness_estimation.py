@@ -1,10 +1,27 @@
+"""
+Third-party Attribution: conf-mc
+---------------------------------------------------------------------------------
+Source Repository: https://github.com/yugjerry/conf-mc/
+Commit Hash: bdfa590f95fc32f5952cf0ed868ef88836529083
+
+Local Modifications:
+Bundled multiple modules (SPG.py, proj.py, utils.py) into a single 
+utility file to reduce dependency overhead.
+
+Reason for Bundling:
+The source repository is not a registered package (pip/conda) and functions are 
+tightly coupled with experimental scripts. Bundling ensures a stable, immutable 
+version for reproducibility.
+"""
+
 import numpy as np
 import pdb
 import sys
 
-# The following functions are adapted from third party sources: 
-# https://github.com/yugjerry/conf-mc/blob/main/python/SPG.py
 
+#-------------- Source of functions in this block -------------------#
+# https://github.com/yugjerry/conf-mc/blob/main/python/proj.py
+#--------------------------------------------------------------------#
 def euclidean_proj_simplex(v, s=1):
     """ Compute the Euclidean projection on a positive simplex
     Solves the optimisation problem (using the algorithm from [1]):
@@ -86,6 +103,10 @@ def euclidean_proj_l1ball(v, s=1):
     return w
 
 
+
+#-------------- Source of functions in this block -------------------#
+# https://github.com/yugjerry/conf-mc/blob/main/python/SPG.py
+#--------------------------------------------------------------------#
 
 # NOT IMPLEMENTED:
 # Cubic line search is not implemented (Currently only halving)
@@ -350,6 +371,11 @@ def auto_grad(x, funObj, options):
     return f, g
 
 
+
+
+#-------------- Source of functions in this block -------------------#
+# https://github.com/yugjerry/conf-mc/blob/main/python/utils.py
+#--------------------------------------------------------------------#
 
 def f_(x,q):
     return q/(1+np.exp(-x))
