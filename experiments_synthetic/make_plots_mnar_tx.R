@@ -5,20 +5,20 @@ library(kableExtra)
 library(ggplot2)
 library(ggh4x)
 
+
 rho_selected <- 1.2
 
+setwd("C:/Users/liang/Documents/GitHub/conformal-matrix-completion/experiments_synthetic/results_hpc")
+idir <- "results/exp_mnar/"
+ifile.list <- list.files(idir)
 
-# setwd("C:/Users/xieti/Dropbox/simultaneous-matrix-completion/experiments_synthetic/results_hpc")
-# idir <- "exp_mnar/"
-# ifile.list <- list.files(idir)
-# 
-# # Output directory
-# fig.dir <- "C:/Users/xieti/Dropbox/simultaneous-matrix-completion/results/figures/exp_mnar"
-# dir.create(fig.dir, showWarnings = FALSE)
-# 
-# results.raw <- do.call("rbind", lapply(ifile.list, function(ifile) {
-#   df <- read_delim(sprintf("%s/%s", idir, ifile), delim=",", col_types=cols())
-# }))
+# Output directory
+fig.dir <- "C:/Users/liang/Documents/GitHub/conformal-matrix-completion/results/figures/exp_mnar"
+dir.create(fig.dir, showWarnings = FALSE)
+
+results.raw <- do.call("rbind", lapply(ifile.list, function(ifile) {
+  df <- read_delim(sprintf("%s/%s", idir, ifile), delim=",", col_types=cols())
+}))
 
 # Print available rho values for reference
 cat("Available rho values in data:\n")

@@ -7,7 +7,7 @@ library(ggh4x)
 
 
 exp = "wsc"
-setwd("~/GitHub/conformal-matrix-completion/experiments_synthetic/results_hpc/")
+setwd("C:/Users/liang/Documents/GitHub/conformal-matrix-completion/experiments_synthetic/results_hpc/")
 idir <- sprintf("results/exp_conditional_%s/", exp)
 ifile.list <- list.files(idir)
 
@@ -29,12 +29,12 @@ if (plot_full){
   key.values <- c("Query_coverage", "Coverage", "Size", "Inf_prop")
   key.labels <- c("Group cov.", "Coverage", "Avg. width", "Inf prop.")
   height <- 3.5
-  fig.dir <- "~/GitHub/conformal-matrix-completion/results/figures/exp_conditional_full/"
+  fig.dir <- "C:/Users/liang/Documents/GitHub/conformal-matrix-completion/results/figures/exp_conditional_full/"
 }else{
   key.values <- c("Query_coverage","Size")
   key.labels <- c("Group cov.","Avg. width")
   height <- 2.5
-  fig.dir <-"~/GitHub/conformal-matrix-completion/results/figures/exp_conditional/"
+  fig.dir <-"C:/Users/liang/Documents/GitHub/conformal-matrix-completion/results/figures/exp_conditional/"
 }
 dir.create(fig.dir, showWarnings = FALSE)
 
