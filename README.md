@@ -29,3 +29,15 @@ Download from: https://grouplens.org/datasets/movielens/100k/
 Download from: https://grouplens.org/datasets/movielens/10m/
 
 No additional preprocessing is required. The experiment scripts will load and process the data automatically.
+
+
+## Installation for NCF Solver
+
+The Neural Collaborative Filtering (NCF) solver (`ncf_solve()`) implemented in `smc/solvers.py` is utilized exclusively in the synthetic experiments exploring performance of the proposed framework under different matrix completion solvers (`experiments_synthetic/exp_solver_biased.py` and `experiments_synthetic/exp_solver_uniform.py`). 
+
+Replicating these specific experiments requires the following dependencies (which are included in `dependencies.txt` and `environment.yml`):
+* `LibRecommender` (provides the NCF implementation)
+* `TensorFlow` (Dependency of `LibRecommender`)
+* `Gensim` (Dependency of `LibRecommender`)
+
+For detailed installation instructions and platform-specific guidance, please refer to the official [LibRecommender Installation Guide](https://librecommender.readthedocs.io/en/latest/installation.html). If you do not intend to replicate the NCF-based synthetic experiments, these dependencies can be safely ignored, and the related code in `smc/solvers.py` can be removed.
