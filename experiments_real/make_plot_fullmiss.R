@@ -7,7 +7,7 @@ library(ggplot2)
 exp="movielens"
 
 idir <- sprintf("results/est_%s_fullmiss/", exp)
-setwd("~/GitHub/conformal-matrix-completion/experiments_real/results_hpc/")
+setwd("C:/Users/liang/Documents/GitHub/conformal-matrix-completion/experiments_real/results_hpc/")
 ifile.list <- list.files(idir)
 
 results.raw <- do.call("rbind", lapply(ifile.list, function(ifile) {
@@ -26,7 +26,7 @@ alpha.scale <- c(1, 0.5, 0.8)
 
 key.values <- c("Size")
 key.labels <- c("Avg. width")
-fig.dir <- sprintf("~/GitHub/conformal-matrix-completion/results/figures/%s/", exp)
+fig.dir <- sprintf("C:/Users/liang/Documents/GitHub/conformal-matrix-completion/results/figures/%s/", exp)
 
 dir.create(fig.dir, showWarnings = FALSE)
 
@@ -42,7 +42,13 @@ results <- results.raw %>%
 
 
 ## Make nice plots for paper
-make_plot <- function(results, exp, xmax=2000, sv=TRUE) {
+make_plot <- function(results, exp, xmax=2000, sv=TRUE, two_benchmark = FALSE) {
+  
+  # Filter if flag is TRUE
+  if (two_benchmark) {
+    results <- results %>% filter(Method != "Unadjusted")
+  }
+  
   pp <- results %>%
     filter(!(r %in% c(10, 15)))%>%
     mutate(r = sprintf("Guessed rank: %i", r))%>%
@@ -56,11 +62,14 @@ make_plot <- function(results, exp, xmax=2000, sv=TRUE) {
     xlab("Group size K") +
     ylab("") +
     theme_bw()
+  
   if (sv == TRUE){
-    ggsave(sprintf("%s/%s_fullmiss.pdf", fig.dir, exp), pp, device=NULL, width=6.5, height=1.6)}
+    # Add suffix if flag is TRUE
+    suffix <- if(two_benchmark) "_2bm" else ""
+    ggsave(sprintf("%s/%s_fullmiss%s.pdf", fig.dir, exp, suffix), pp, device=NULL, width=6.5, height=1.6)}
   else{
     print(pp)
   }
 }
 
-make_plot(results, exp=exp, sv=TRUE)
+make_plot(results, exp=exp, sv=TRUE, two_benchmark = FALSE)

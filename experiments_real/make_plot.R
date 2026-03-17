@@ -6,7 +6,7 @@ library(ggplot2)
 
 plot_full = FALSE
 plot_preview = FALSE
-plot_presentation = TRUE
+plot_presentation = FALSE
 est=TRUE
 exp="movielens"
 
@@ -97,7 +97,7 @@ make_plot <- function(results, exp, xmax=2000, sv=TRUE) {
     ylab("") +
     theme_bw()
   if (sv == TRUE){
-    ggsave(sprintf("%s/est_%s.pdf", fig.dir, exp), pp, device=NULL, width=6.5, height=height)}
+    ggsave(sprintf("%s/%s_est.pdf", fig.dir, exp), pp, device=NULL, width=6.5, height=height)}
   else{
     print(pp)
   }

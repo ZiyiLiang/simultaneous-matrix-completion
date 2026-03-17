@@ -64,6 +64,10 @@ results_agg <- results.raw %>%
   ungroup() %>%
   mutate(across(starts_with("val_"), Vectorize(format_hms)))
 
+# --- Define Save Directory ---
+save_dir <- sprintf("C:/Users/liang/Documents/GitHub/conformal-matrix-completion/results/tables/%s/", exp)
+dir.create(save_dir, showWarnings = FALSE, recursive = TRUE)
+
 # --- Generate Table (a): Fitting ---
 latex_a <- results_agg %>%
   select(Calib_queries, 
@@ -80,7 +84,8 @@ latex_a <- results_agg %>%
   add_header_above(c(" " = 2, 
                      "Point Prediction" = 2, 
                      "Total Fitting" = 2)) %>%
-  kable_styling(latex_options = c("hold_position"))
+
+save_kable(latex_a, file = sprintf("%s/%s_fitting.tex", save_dir, exp))
 
 # --- Generate Table (b): Inference ---
 latex_b <- results_agg %>%
@@ -93,7 +98,8 @@ latex_b <- results_agg %>%
                     "Test (100)", 
                     "Total"),
       escape = FALSE) %>%
-  kable_styling(latex_options = c("hold_position"))
+
+save_kable(latex_b, file = sprintf("%s/%s_inference.tex", save_dir, exp))
 
 # Print
 print(latex_a)
