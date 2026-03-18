@@ -50,5 +50,6 @@ Replicating these specific experiments requires the following dependencies (whic
 * `LibRecommender` (provides the NCF implementation)
 * `TensorFlow` (Dependency of `LibRecommender`)
 * `Gensim` (Dependency of `LibRecommender`)
+* `PyTorch` (Dependency of `LibRecommender`)
 
 For detailed installation instructions and platform-specific guidance, please refer to the official [LibRecommender Installation Guide](https://librecommender.readthedocs.io/en/latest/installation.html). If you do not intend to replicate the NCF-based synthetic experiments, these dependencies can be safely ignored, and the related code in `smc/solvers.py` can be removed.
