@@ -15,7 +15,12 @@ We develop a conformal inference method to construct joint prediction regions fo
  - `third_party/` Third-party Python packages imported by our package.
  - `experiments_real/` Codes to replicate the figures for the experiments with the MovieLens datasets.
  - `experiments_synthetic/` Codes to replicate the figures for the synthetic experiments discussed in the accompanying paper.
- - `notebooks/` Contains Jupyter notebooks with introductory usage examples and `wallenius_plot.nb`, a Mathematica notebook to reproduce the plots in Appendix A2.3 of the accompanying paper.
+ - `notebooks/` Contains Jupyter notebooks with introductory usage examples and `wallenius_plot.nb`, a Mathematica notebook (Mathematica v13.2; requires no external packages) to reproduce the plots in Appendix A2.3 of the accompanying paper.
+
+### Results Reproduction
+To facilitate immediate reproduction of the figures and tables in the manuscript without re-running the full computational experiments, we provide pre-computed results in the following compressed files:
+ - `experiments_synthetic/results_hpc/results/results_synthetic.zip`
+ - `experiments_real/results_hpc/results/results_real.zip`
 
 ### Dependency Management
 To facilitate the reproduction of our computational environment, we provide several specification files:
